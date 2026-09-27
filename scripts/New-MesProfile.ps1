@@ -488,8 +488,8 @@ switch ($Pattern) {
       <Description>
         [MES Event Action]
         [ChangeZoneByName:true]
-        [ZoneNames:${ModPrefix}_Zone_${Name}]
-        [ZoneRadiusChangeTypes:Increase]
+        [ZoneNames:${ModPrefix} ${Name} Zone]
+        [ZoneRadiusChangeTypes:Add]
         [ZoneRadiusChangeAmounts:5000]
         [ChangeCounters:true]
         [DecreaseCounters:${ModPrefix}_${Name}_Points]
@@ -535,8 +535,8 @@ switch ($Pattern) {
       <Description>
         [MES Event Action]
         [ChangeZoneByName:true]
-        [ZoneNames:${ModPrefix}_Zone_${Name}]
-        [ZoneRadiusChangeTypes:Decrease]
+        [ZoneNames:${ModPrefix} ${Name} Zone]
+        [ZoneRadiusChangeTypes:Subtract]
         [ZoneRadiusChangeAmounts:5000]
         [ChangeCounters:true]
         [IncreaseCounters:${ModPrefix}_${Name}_Points]

@@ -56,15 +56,15 @@
     ]
   },
   "metadata": {
-    "generated_at": "2026-09-25T05:15:11.130229+00:00",
+    "generated_at": "2026-09-27T16:24:31.476591+00:00",
     "mes_path": "C:\\Users\\blayl\\AppData\\Roaming\\SpaceEngineers\\Mods\\Modular-Encounters-Systems\\Data\\Scripts\\ModularEncountersSystems",
-    "source_hash": "15cb8e3247cfade7",
+    "source_hash": "20c1b97b4a410b44",
     "git_commit": {
-      "sha": "537c875f574f5fb305451a62ab20044323ce4296",
-      "date": "2026-09-24",
-      "subject": "Fixes #365 : fix for payment success on deductions of player credits, implement proper variable use for faction credits. Adds ChangeNpcFactionCreditsAmountCounter . Untested."
+      "sha": "517d666a4775fb4856b64883ea15f138f150aa21",
+      "date": "2026-09-27",
+      "subject": "2.74.04"
     },
-    "total_tags": 1842,
+    "total_tags": 1847,
     "total_profiles": 41
   },
   "tags": [
@@ -6349,6 +6349,14 @@
       "parser": "TagBoolCheck"
     },
     {
+      "profile": "MES Spawn Conditions",
+      "tag": "EnableItemTriggeredContracts",
+      "type": "bool (true/false)",
+      "file": "SpawnConditionsProfile.cs",
+      "line": 989,
+      "parser": "TagBoolCheck"
+    },
+    {
       "profile": "MES Spawn Conditions Group",
       "tag": "SpawnConditionProfiles",
       "type": "TagSpawnConditionsProfileCheck",
@@ -6681,7 +6689,7 @@
       "tag": "Active",
       "type": "bool (true/false)",
       "file": "Zone.cs",
-      "line": 427,
+      "line": 437,
       "parser": "TagBoolCheck"
     },
     {
@@ -6689,7 +6697,7 @@
       "tag": "Persistent",
       "type": "bool (true/false)",
       "file": "Zone.cs",
-      "line": 434,
+      "line": 444,
       "parser": "TagBoolCheck"
     },
     {
@@ -6697,7 +6705,7 @@
       "tag": "Strict",
       "type": "bool (true/false)",
       "file": "Zone.cs",
-      "line": 441,
+      "line": 451,
       "parser": "TagBoolCheck"
     },
     {
@@ -6705,7 +6713,7 @@
       "tag": "NoSpawnZone",
       "type": "bool (true/false)",
       "file": "Zone.cs",
-      "line": 448,
+      "line": 458,
       "parser": "TagBoolCheck"
     },
     {
@@ -6713,7 +6721,7 @@
       "tag": "PlayerKnownLocation",
       "type": "bool (true/false)",
       "file": "Zone.cs",
-      "line": 455,
+      "line": 465,
       "parser": "TagBoolCheck"
     },
     {
@@ -6721,7 +6729,7 @@
       "tag": "Name",
       "type": "string",
       "file": "Zone.cs",
-      "line": 462,
+      "line": 472,
       "parser": "TagStringCheck"
     },
     {
@@ -6729,7 +6737,7 @@
       "tag": "PublicName",
       "type": "string",
       "file": "Zone.cs",
-      "line": 469,
+      "line": 479,
       "parser": "TagStringCheck"
     },
     {
@@ -6737,7 +6745,7 @@
       "tag": "UseAllowedFactions",
       "type": "bool (true/false)",
       "file": "Zone.cs",
-      "line": 476,
+      "line": 486,
       "parser": "TagBoolCheck"
     },
     {
@@ -6745,7 +6753,7 @@
       "tag": "AllowedFactions",
       "type": "List<string> (comma-separated)",
       "file": "Zone.cs",
-      "line": 483,
+      "line": 493,
       "parser": "TagStringListCheck"
     },
     {
@@ -6753,7 +6761,7 @@
       "tag": "UseRestrictedFactions",
       "type": "bool (true/false)",
       "file": "Zone.cs",
-      "line": 493,
+      "line": 503,
       "parser": "TagBoolCheck"
     },
     {
@@ -6761,7 +6769,7 @@
       "tag": "RestrictedFactions",
       "type": "List<string> (comma-separated)",
       "file": "Zone.cs",
-      "line": 500,
+      "line": 510,
       "parser": "TagStringListCheck"
     },
     {
@@ -6769,7 +6777,7 @@
       "tag": "Coordinates",
       "type": "Vector3D ({X:0 Y:0 Z:0})",
       "file": "Zone.cs",
-      "line": 510,
+      "line": 520,
       "parser": "TagVector3DCheck"
     },
     {
@@ -6777,7 +6785,7 @@
       "tag": "Radius",
       "type": "double",
       "file": "Zone.cs",
-      "line": 517,
+      "line": 527,
       "parser": "TagDoubleCheck"
     },
     {
@@ -6785,7 +6793,7 @@
       "tag": "CoordinateRadiusPairs",
       "type": "TagVector3DDoublePairListCheck",
       "file": "Zone.cs",
-      "line": 524,
+      "line": 534,
       "parser": "TagVector3DDoublePairListCheck"
     },
     {
@@ -6793,7 +6801,7 @@
       "tag": "PlanetaryZone",
       "type": "bool (true/false)",
       "file": "Zone.cs",
-      "line": 531,
+      "line": 541,
       "parser": "TagBoolCheck"
     },
     {
@@ -6801,7 +6809,7 @@
       "tag": "PlanetName",
       "type": "string",
       "file": "Zone.cs",
-      "line": 538,
+      "line": 548,
       "parser": "TagStringCheck"
     },
     {
@@ -6809,7 +6817,7 @@
       "tag": "Direction",
       "type": "Vector3D ({X:0 Y:0 Z:0})",
       "file": "Zone.cs",
-      "line": 545,
+      "line": 555,
       "parser": "TagVector3DCheck"
     },
     {
@@ -6817,7 +6825,7 @@
       "tag": "HeightOffset",
       "type": "double",
       "file": "Zone.cs",
-      "line": 552,
+      "line": 562,
       "parser": "TagDoubleCheck"
     },
     {
@@ -6825,7 +6833,7 @@
       "tag": "UseZoneTimer",
       "type": "bool (true/false)",
       "file": "Zone.cs",
-      "line": 559,
+      "line": 569,
       "parser": "TagBoolCheck"
     },
     {
@@ -6833,7 +6841,7 @@
       "tag": "MinutesToExpiration",
       "type": "int",
       "file": "Zone.cs",
-      "line": 566,
+      "line": 576,
       "parser": "TagIntCheck"
     },
     {
@@ -6841,7 +6849,7 @@
       "tag": "PlayerPresenceResetsTimer",
       "type": "bool (true/false)",
       "file": "Zone.cs",
-      "line": 573,
+      "line": 583,
       "parser": "TagBoolCheck"
     },
     {
@@ -6849,7 +6857,7 @@
       "tag": "UseMaxSpawnedEncounters",
       "type": "bool (true/false)",
       "file": "Zone.cs",
-      "line": 580,
+      "line": 590,
       "parser": "TagBoolCheck"
     },
     {
@@ -6857,7 +6865,7 @@
       "tag": "MaxSpawnedEncounters",
       "type": "int",
       "file": "Zone.cs",
-      "line": 587,
+      "line": 597,
       "parser": "TagIntCheck"
     },
     {
@@ -6865,7 +6873,7 @@
       "tag": "UseAllowedSpawnGroups",
       "type": "bool (true/false)",
       "file": "Zone.cs",
-      "line": 594,
+      "line": 604,
       "parser": "TagBoolCheck"
     },
     {
@@ -6873,7 +6881,7 @@
       "tag": "AllowedSpawnGroups",
       "type": "List<string> (comma-separated)",
       "file": "Zone.cs",
-      "line": 601,
+      "line": 611,
       "parser": "TagStringListCheck"
     },
     {
@@ -6881,7 +6889,7 @@
       "tag": "UseRestrictedSpawnGroups",
       "type": "bool (true/false)",
       "file": "Zone.cs",
-      "line": 608,
+      "line": 618,
       "parser": "TagBoolCheck"
     },
     {
@@ -6889,7 +6897,7 @@
       "tag": "RestrictedSpawnGroups",
       "type": "List<string> (comma-separated)",
       "file": "Zone.cs",
-      "line": 615,
+      "line": 625,
       "parser": "TagStringListCheck"
     },
     {
@@ -6897,7 +6905,7 @@
       "tag": "UseAllowedModIDs",
       "type": "bool (true/false)",
       "file": "Zone.cs",
-      "line": 622,
+      "line": 632,
       "parser": "TagBoolCheck"
     },
     {
@@ -6905,7 +6913,7 @@
       "tag": "AllowedModIDs",
       "type": "TagUlongListCheck",
       "file": "Zone.cs",
-      "line": 629,
+      "line": 639,
       "parser": "TagUlongListCheck"
     },
     {
@@ -6913,7 +6921,7 @@
       "tag": "UseRestrictedModIDs",
       "type": "bool (true/false)",
       "file": "Zone.cs",
-      "line": 636,
+      "line": 646,
       "parser": "TagBoolCheck"
     },
     {
@@ -6921,7 +6929,7 @@
       "tag": "RestrictedModIDs",
       "type": "TagUlongListCheck",
       "file": "Zone.cs",
-      "line": 643,
+      "line": 653,
       "parser": "TagUlongListCheck"
     },
     {
@@ -6929,7 +6937,7 @@
       "tag": "UseZoneAnnounce",
       "type": "bool (true/false)",
       "file": "Zone.cs",
-      "line": 650,
+      "line": 660,
       "parser": "TagBoolCheck"
     },
     {
@@ -6937,7 +6945,7 @@
       "tag": "ZoneEnterAnnounce",
       "type": "string",
       "file": "Zone.cs",
-      "line": 657,
+      "line": 667,
       "parser": "TagStringCheck"
     },
     {
@@ -6945,7 +6953,7 @@
       "tag": "ZoneLeaveAnnounce",
       "type": "string",
       "file": "Zone.cs",
-      "line": 664,
+      "line": 674,
       "parser": "TagStringCheck"
     },
     {
@@ -6953,7 +6961,7 @@
       "tag": "FlashZoneRadius",
       "type": "bool (true/false)",
       "file": "Zone.cs",
-      "line": 671,
+      "line": 681,
       "parser": "TagBoolCheck"
     },
     {
@@ -6961,7 +6969,7 @@
       "tag": "RequiredSandboxBool",
       "type": "string",
       "file": "Zone.cs",
-      "line": 678,
+      "line": 688,
       "parser": "TagStringCheck"
     },
     {
@@ -6969,7 +6977,7 @@
       "tag": "RequiredFalseSandboxBool",
       "type": "string",
       "file": "Zone.cs",
-      "line": 685,
+      "line": 695,
       "parser": "TagStringCheck"
     },
     {
@@ -6977,7 +6985,7 @@
       "tag": "Type",
       "type": "string",
       "file": "Zone.cs",
-      "line": 707,
+      "line": 717,
       "parser": "TagStringCheck"
     },
     {
@@ -6985,7 +6993,7 @@
       "tag": "ScaleRadiusWithPlanetSize",
       "type": "bool (true/false)",
       "file": "Zone.cs",
-      "line": 721,
+      "line": 731,
       "parser": "TagBoolCheck"
     },
     {
@@ -6993,7 +7001,7 @@
       "tag": "StrictTerritory",
       "type": "bool (true/false)",
       "file": "Zone.cs",
-      "line": 756,
+      "line": 766,
       "parser": "TagBoolCheck"
     },
     {
@@ -7001,7 +7009,7 @@
       "tag": "CoordsX",
       "type": "double",
       "file": "Zone.cs",
-      "line": 763,
+      "line": 773,
       "parser": "TagDoubleCheck"
     },
     {
@@ -7009,7 +7017,7 @@
       "tag": "CoordsY",
       "type": "double",
       "file": "Zone.cs",
-      "line": 770,
+      "line": 780,
       "parser": "TagDoubleCheck"
     },
     {
@@ -7017,7 +7025,7 @@
       "tag": "CoordsZ",
       "type": "double",
       "file": "Zone.cs",
-      "line": 777,
+      "line": 787,
       "parser": "TagDoubleCheck"
     },
     {
@@ -7025,7 +7033,7 @@
       "tag": "AnnounceArriveDepart",
       "type": "bool (true/false)",
       "file": "Zone.cs",
-      "line": 784,
+      "line": 794,
       "parser": "TagBoolCheck"
     },
     {
@@ -7033,7 +7041,7 @@
       "tag": "CustomArriveMessage",
       "type": "string",
       "file": "Zone.cs",
-      "line": 791,
+      "line": 801,
       "parser": "TagStringCheck"
     },
     {
@@ -7041,7 +7049,7 @@
       "tag": "CustomDepartMessage",
       "type": "string",
       "file": "Zone.cs",
-      "line": 798,
+      "line": 808,
       "parser": "TagStringCheck"
     },
     {
@@ -7049,7 +7057,7 @@
       "tag": "PlanetGeneratorName",
       "type": "string",
       "file": "Zone.cs",
-      "line": 805,
+      "line": 815,
       "parser": "TagStringCheck"
     },
     {
@@ -11277,6 +11285,30 @@
       "parser": "TagDoubleCheck"
     },
     {
+      "profile": "RivalAI Autopilot",
+      "tag": "EscortUsesRelativeDampening",
+      "type": "bool (true/false)",
+      "file": "AutoPilotProfile.cs",
+      "line": 1167,
+      "parser": "TagBoolCheck"
+    },
+    {
+      "profile": "RivalAI Autopilot",
+      "tag": "EscortSpeedMatchMinDistance",
+      "type": "double",
+      "file": "AutoPilotProfile.cs",
+      "line": 1173,
+      "parser": "TagDoubleCheck"
+    },
+    {
+      "profile": "RivalAI Autopilot",
+      "tag": "EscortSpeedMatchMaxDistance",
+      "type": "double",
+      "file": "AutoPilotProfile.cs",
+      "line": 1179,
+      "parser": "TagDoubleCheck"
+    },
+    {
       "profile": "RivalAI Behavior",
       "tag": "BehaviorName",
       "type": "custom / block parse",
@@ -13621,10 +13653,18 @@
     },
     {
       "profile": "RivalAI Spawn",
+      "tag": "StartsReady",
+      "type": "bool (true/false)",
+      "file": "SpawnProfile.cs",
+      "line": 301,
+      "parser": "TagBoolCheck"
+    },
+    {
+      "profile": "RivalAI Spawn",
       "tag": "FirstSpawnTimeMs",
       "type": "float",
       "file": "SpawnProfile.cs",
-      "line": 302,
+      "line": 308,
       "parser": "TagFloatCheck"
     },
     {
@@ -13632,7 +13672,7 @@
       "tag": "SpawnMinCooldown",
       "type": "float",
       "file": "SpawnProfile.cs",
-      "line": 309,
+      "line": 315,
       "parser": "TagFloatCheck"
     },
     {
@@ -13640,7 +13680,7 @@
       "tag": "SpawnMaxCooldown",
       "type": "float",
       "file": "SpawnProfile.cs",
-      "line": 316,
+      "line": 322,
       "parser": "TagFloatCheck"
     },
     {
@@ -13648,7 +13688,7 @@
       "tag": "MaxSpawns",
       "type": "int",
       "file": "SpawnProfile.cs",
-      "line": 323,
+      "line": 329,
       "parser": "TagIntCheck"
     },
     {
@@ -13656,7 +13696,7 @@
       "tag": "SpawnGroups",
       "type": "List<string> (comma-separated)",
       "file": "SpawnProfile.cs",
-      "line": 330,
+      "line": 336,
       "parser": "TagStringListCheck"
     },
     {
@@ -13664,7 +13704,7 @@
       "tag": "UseRelativeSpawnPosition",
       "type": "bool (true/false)",
       "file": "SpawnProfile.cs",
-      "line": 337,
+      "line": 343,
       "parser": "TagBoolCheck"
     },
     {
@@ -13672,7 +13712,7 @@
       "tag": "MinDistance",
       "type": "double",
       "file": "SpawnProfile.cs",
-      "line": 344,
+      "line": 350,
       "parser": "TagDoubleCheck"
     },
     {
@@ -13680,7 +13720,7 @@
       "tag": "MaxDistance",
       "type": "double",
       "file": "SpawnProfile.cs",
-      "line": 351,
+      "line": 357,
       "parser": "TagDoubleCheck"
     },
     {
@@ -13688,7 +13728,7 @@
       "tag": "MinAltitude",
       "type": "double",
       "file": "SpawnProfile.cs",
-      "line": 358,
+      "line": 364,
       "parser": "TagDoubleCheck"
     },
     {
@@ -13696,7 +13736,7 @@
       "tag": "MaxAltitude",
       "type": "double",
       "file": "SpawnProfile.cs",
-      "line": 365,
+      "line": 371,
       "parser": "TagDoubleCheck"
     },
     {
@@ -13704,7 +13744,7 @@
       "tag": "RelativeSpawnOffset",
       "type": "Vector3D ({X:0 Y:0 Z:0})",
       "file": "SpawnProfile.cs",
-      "line": 372,
+      "line": 378,
       "parser": "TagVector3DCheck"
     },
     {
@@ -13712,7 +13752,7 @@
       "tag": "RelativeSpawnVelocity",
       "type": "Vector3D ({X:0 Y:0 Z:0})",
       "file": "SpawnProfile.cs",
-      "line": 379,
+      "line": 385,
       "parser": "TagVector3DCheck"
     },
     {
@@ -13720,7 +13760,7 @@
       "tag": "IgnoreSafetyChecks",
       "type": "bool (true/false)",
       "file": "SpawnProfile.cs",
-      "line": 386,
+      "line": 392,
       "parser": "TagBoolCheck"
     },
     {
@@ -13728,7 +13768,7 @@
       "tag": "InheritNpcAltitude",
       "type": "bool (true/false)",
       "file": "SpawnProfile.cs",
-      "line": 393,
+      "line": 399,
       "parser": "TagBoolCheck"
     },
     {
@@ -13736,7 +13776,7 @@
       "tag": "ForceSameFactionOwnership",
       "type": "bool (true/false)",
       "file": "SpawnProfile.cs",
-      "line": 400,
+      "line": 406,
       "parser": "TagBoolCheck"
     },
     {
@@ -13744,7 +13784,7 @@
       "tag": "SpawningType",
       "type": "TagSpawnTypeEnumCheck",
       "file": "SpawnProfile.cs",
-      "line": 407,
+      "line": 413,
       "parser": "TagSpawnTypeEnumCheck"
     },
     {
@@ -13752,7 +13792,7 @@
       "tag": "CustomRelativeForward",
       "type": "Direction enum",
       "file": "SpawnProfile.cs",
-      "line": 414,
+      "line": 420,
       "parser": "TagDirectionEnumCheck"
     },
     {
@@ -13760,7 +13800,7 @@
       "tag": "CustomRelativeUp",
       "type": "Direction enum",
       "file": "SpawnProfile.cs",
-      "line": 421,
+      "line": 427,
       "parser": "TagDirectionEnumCheck"
     },
     {
@@ -13768,7 +13808,7 @@
       "tag": "ParentGridNameRequirement",
       "type": "string",
       "file": "SpawnProfile.cs",
-      "line": 428,
+      "line": 434,
       "parser": "TagStringCheck"
     },
     {
@@ -13776,7 +13816,7 @@
       "tag": "FailedAttemptsToIncreaseCount",
       "type": "TagShortCheck",
       "file": "SpawnProfile.cs",
-      "line": 435,
+      "line": 441,
       "parser": "TagShortCheck"
     },
     {
@@ -13784,7 +13824,7 @@
       "tag": "ProcessAsAdminSpawn",
       "type": "bool (true/false)",
       "file": "SpawnProfile.cs",
-      "line": 442,
+      "line": 448,
       "parser": "TagBoolCheck"
     },
     {
@@ -13792,7 +13832,7 @@
       "tag": "UseWaypoint",
       "type": "bool (true/false)",
       "file": "SpawnProfile.cs",
-      "line": 449,
+      "line": 455,
       "parser": "TagBoolCheck"
     },
     {
@@ -13800,7 +13840,7 @@
       "tag": "Waypoint",
       "type": "string",
       "file": "SpawnProfile.cs",
-      "line": 456,
+      "line": 462,
       "parser": "TagStringCheck"
     },
     {
@@ -13808,7 +13848,7 @@
       "tag": "CustomCountersVariables",
       "type": "TagStringIntDictCheck",
       "file": "SpawnProfile.cs",
-      "line": 463,
+      "line": 469,
       "parser": "TagStringIntDictCheck"
     },
     {
@@ -13816,7 +13856,7 @@
       "tag": "TransferCustomCountersVariables",
       "type": "List<string> (comma-separated)",
       "file": "SpawnProfile.cs",
-      "line": 470,
+      "line": 476,
       "parser": "TagStringListCheck"
     },
     {
@@ -13824,7 +13864,7 @@
       "tag": "CustomCountersVariablesReferences",
       "type": "TagStringStringDictCheck",
       "file": "SpawnProfile.cs",
-      "line": 477,
+      "line": 483,
       "parser": "TagStringStringDictCheck"
     },
     {

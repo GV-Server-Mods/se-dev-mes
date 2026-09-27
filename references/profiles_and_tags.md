@@ -65,12 +65,12 @@ Every profile must be defined inside an `<EntityComponent xsi:type="MyObjectBuil
     - `CommandReceived`: Fires on receiving a broadcast code (`CommandReceiveCode`).
     - `BehaviorTriggerA`–`G`: Triggered internally by AI behaviors (e.g. waypoint arrival, strike breakaway).
     - `Session`: Fires once per game session/load.
-    - `ButtonPress`: Fires from a button panel on **this** grid (`[ButtonPanelName:]` supports variables since MES 2.74.00; buttons on other grids no longer fire it since the cross-grid fix merged 2026-09-21).
+    - `ButtonPress`: Fires from a button panel on **this** grid (`[ButtonPanelName:]` supports variables since MES 2.74.00; buttons on other grids no longer fire it since MES 2.74.03).
     - `HealthPercentage`: **[HARD]** fires while grid integrity is **at or above** `[PercentageOfHealthRemaining:]` (`TriggerChecks.cs:386` uses `>=`), not when it drops below. For "below X%", use a `Damage` trigger with a Condition `[CheckHealthPercentage:true]` + `[MaxPercentageOfHealthRemaining:X]`.
     - `PaymentSuccess` / `PaymentFailure`: Fire after a `[ChangePlayerCredits:true]` / `[ChangeNpcFactionCredits:true]` action.
     - Also: `AcquiredTarget`, `ChangedTarget`, `SwitchedTarget`, `LostTarget`, `HasTarget`, `NoTarget`, `NoWeapon`, `TurretTarget`, `TargetInSafezone`, `PlayerFar`, `PlayerKnownLocation`, `Position`, `WaypointNear`/`WaypointFar` (see crash note in `diagnostics_and_troubleshooting.md` §4.4), `InsideActiveZone`/`OutsideActiveZone` (and the non-Active variants), `HealthPercentage`, `ActiveWeaponsPercentage`/`ActiveGunsPercentage`/`ActiveTurretsPercentage`, `SensorActive`/`SensorIdle`, `JumpRequested`/`JumpCompleted`, `Weather`, `Retreat`, `Despawn`/`DespawnNear`/`DespawnFar`/`DespawnMES`.
     - `Manual` (convention): MES has no check for this value, so the trigger never fires on its own — only `[ManuallyActivateTrigger:true]` + `[ManuallyActivatedTriggerNames:]`/`[ManuallyActivatedTriggerTags:]` fires it (that path ignores `Type` entirely, §6). Any other unrecognized `Type` value behaves the same way, silently.
-  - `[StartsReady:bool]`: If `true`, fires immediately on spawn without waiting for initial cooldown.
+  - `[StartsReady:bool]`: If `true`, fires immediately on spawn without waiting for initial cooldown. (Also a `[RivalAI Chat]` tag, and a `[RivalAI Spawn]` tag since MES 2.74.04.)
   - `[MaxActions:<int>]`: Execution limit (`-1` = infinite, `1` = one-shot).
   - `[Conditions:<SubtypeId>]`: Reference to `[RivalAI Condition]`.
   - `[Actions:<SubtypeId>]`: Reference to `[RivalAI Action]`.
@@ -83,11 +83,13 @@ Every profile must be defined inside an `<EntityComponent xsi:type="MyObjectBuil
   - **Spawning**: `[SpawnEncounter:true]` + `[Spawner:<SubtypeId>]`.
   - **Chat/Audio**: `[UseChatBroadcast:true]` + `[ChatData:<SubtypeId>]`, `[PlayDialogueCue:true]` + `[DialogueCueId:<string>]`.
   - **Weapons**: `[SetWeaponsToMaxRange:true]` / `[SetWeaponsToMinRange:true]`. (Weapon randomization is a spawn-time `[MES Manipulation]` feature; no action re-rolls weapons.)
-  - **Credits** *(fixed in MES 537c875, 2026-09-24 — upstream marked untested)*: `[ChangePlayerCredits:true]` + `[ChangePlayerCreditsAmount:]` (or `[ChangePlayerCreditsAmountCounter:{CounterName}]`, 2.74.00), and `[ChangeNpcFactionCredits:true]` + `[ChangeNpcFactionCreditsAmount:]` (or the new `[ChangeNpcFactionCreditsAmountCounter:{CounterName}]`). A deduction now fails (→ `PaymentFailure`) only when it would take the balance below zero; before the fix, deductions always "succeeded", and the NPC-faction path read the *player* amount/counter tags.
+  - **Credits** *(fixed in MES 2.74.03)*: `[ChangePlayerCredits:true]` + `[ChangePlayerCreditsAmount:]` (or `[ChangePlayerCreditsAmountCounter:{CounterName}]`, 2.74.00), and `[ChangeNpcFactionCredits:true]` + `[ChangeNpcFactionCreditsAmount:]` (or the new `[ChangeNpcFactionCreditsAmountCounter:{CounterName}]`). A deduction now fails (→ `PaymentFailure`) only when it would take the balance below zero; before the fix, deductions always "succeeded", and the NPC-faction path read the *player* amount/counter tags.
   - **Autopilot**: `[ChangeAutopilotProfile:true]` + `[AutopilotProfile:Primary/Secondary]`, `[ChangeAutopilotSpeed:true]` + `[NewAutopilotSpeed:<float>]`, `[ChangeAutopilotMinAltitude:true]` + `[NewAutopilotMinAltitude:<float>]` (use `-1` to reset).
   - **Trigger Control**: `[EnableTriggers:true]` + `[EnableTriggerNames:...]`, `[DisableTriggers:true]` + `[DisableTriggerNames:...]`, `[ResetCooldownTimeOfTriggers:true]` + `[ResetTriggerCooldownNames:...]`.
   - **Tag-Based Trigger/Event Broadcasts**: `[ManuallyActivateTrigger:true]` + `[ManuallyActivatedTriggerTags:...]`, `[EnableTriggerTags:...]`, `[DisableTriggerTags:...]`, `[ResetTriggerCooldownTags:...]`, `[ActivateEvent:true]` + `[ActivateEventTags:...]`, `[ToggleEvents:true]` + `[ToggleEventTags:...]`, `[ResetCooldownTimeOfEvents:true]` + `[ResetEventCooldownTags:...]` — full pool/master-gate/token-support table: §6 below.
   - **Command Broadcasting**: `[BroadcastCommandProfiles:true]` + `[CommandProfileIds:...]`.
+  - **Zones & Known Player Locations**: `[ChangeZoneAtPosition:true]`/`[ChangeZoneOnlyByName:true]` + `[ZoneName:<PublicName>]` for radius, active state and zone custom bools/counters; `[CreateKnownPlayerArea:true]` for KPLs. Custom bool/counter changes only work from MES 2.74.04 — see `events_and_zones.md` §4 rules 2, 6, 7.
+  - **Share Mode**: `[ChangeBlocksShareModeAll:true]` + `[BlockNamesShareModeAll:...]` (exact block `CustomName`, all linked grids; fixed in 2.74.04).
   - **Store Updates**: `[ApplyStoreProfiles:true]`, `[ClearStoreContentsFirst:true]`, `[StoreBlocks:...]`, `[StoreProfiles:...]`.
   - **Container Loot**: `[ApplyContainerTypeToInventoryBlock:true]` + `[ContainerTypeBlockNames:...]` + `[ContainerTypeSubtypeIds:...]`.
   - **SafeZone Generation**: `[CreateSafeZone:true]`, `[SafeZoneProfile:...]`, `[LinkSafeZoneToRemoteControl:true]`, `[SafeZonePositionGridCenter:true]`.
@@ -156,18 +158,17 @@ Every profile must be defined inside an `<EntityComponent xsi:type="MyObjectBuil
   - `[CheckPlayerNear:true]` -> `[PlayerNearCoords:]`, `[PlayerNearDistanceFromCoords:]`.
   - `[CheckThreatScore:true]` -> `[ThreatScoreAmount:]`, `[ThreatScoreDistance:]`.
 
-### J. MES Event Template & TemplateGroup Profiles (Phase 4)
-- **`[MES Event TemplateGroup]`** (`TemplateEventGroup`): A named pool container. Link to a `[MES Event]` via `[TemplateGroupId:<SubtypeId>]` on the Event. Lists templates with `[Templates:<SubtypeId>]` (repeating tag, one per template).
-- **`[MES Event Template]`**: An individual action payload variant. Uses the exact same master-gate system as `[MES Event Action]` (§2.A). Selected randomly from the group each time the Event fires.
-- **[HARD] Phase 4 registration**: Both are registered in Phase 4, **after** `[MES Event]` (Phase 3). The Event profile lookup completes at runtime, not at load time, so registration order is safe.
-- **[HARD] `[ContractBlocks:<DisplayName>]`**: The display block name on the grid. **Single-use per profile** — only the first occurrence is parsed. A second `[ContractBlocks:]` line in the same profile silently overwrites the first. Use exactly one per profile block. Example:
+### J. MES Event Template & Instance Event Group Profiles
+- **`[MES Event TemplateGroup]`** (`TemplateEventGroup`): lists `[MES Event Template]` ids with `[TemplateEventIds:<SubtypeId>]`, one per tag line. Instantiated by `[AddInstanceEventGroup:true]` + `[InstanceEventGroupId:]` (+ `[InstanceEventGroupReplaceKeys:]`/`[InstanceEventGroupReplaceValues:]`) on an Event or RivalAI Action, or by a `[MES Mission]`. **All** templates in the group become live event instances; there is no random pick and no `[TemplateGroupId:]`/`[Templates:]` tag.
+- **`[MES Event Template]`** / **`[MES Event Condition Template]`** / **`[MES Event Action Template]`**: full Event / Event Condition / Event Action bodies stored as text and token-replaced per instance (replace keys + `{InstanceId}`).
+- **[HARD] `[ContractBlocks:<CustomName>]`** (RivalAI Action): string list paired by index with `[ContractBlockProfiles:]`, gated by `[ApplyContractProfiles:true]`. Several boards per action are fine. Example:
   ```
   [ApplyContractProfiles:true]
   [ClearContractContentsFirst:true]
   [ContractBlocks:NPC Contracts]
   [ContractBlockProfiles:GVK-EscortContracts-Board]
   ```
-- Full hierarchy, limits, and example: [`references/events_and_zones.md`](references/events_and_zones.md) §5.
+- Full mechanics and example: [`references/events_and_zones.md`](references/events_and_zones.md) §5.
 
 ### K. Manipulation Profiles
 - **Header**: `[MES Manipulation]`
@@ -205,7 +206,7 @@ Every profile must be defined inside an `<EntityComponent xsi:type="MyObjectBuil
 | Parser Function in MES | SBC Tag Syntax | Expected Format / Example |
 | :--- | :--- | :--- |
 | `TagBoolCheck` | `[TagName:true]` | `true` or `false` (`bool.TryParse`, case-insensitive) |
-| `TagCheckEnumCheck` | `[GridDestructible:Yes]` | **`Yes`, `No` or `Ignore` only, case-sensitive.** `true`/`false`/`yes` are silently ignored and the field stays `Ignore`, so the action does nothing. Used by `GridDestructible`, `SubGridsDestructible`, `GridEditable`, `SubGridsEditable` (RivalAI Action) and `IsStatic` (RivalAI Target). |
+| `TagCheckEnumCheck` | `[GridDestructible:Yes]` | **`Yes`, `No` or `Ignore` only, case-sensitive.** `true`/`false`/`yes` are ignored and the field stays `Ignore`, so the action does nothing; since MES 2.74.04 each bad value is logged (`Could not parse tag ... (expected Yes, No or Ignore)`). Used by `GridDestructible`, `SubGridsDestructible`, `GridEditable`, `SubGridsEditable` (RivalAI Action) and `IsStatic` (RivalAI Target). |
 | `TagBoolEnumCheck` | `[TagName:True]` | `True`, `False` or `None` (case-insensitive); anything else resets the field to `None` |
 | `TagIntOrDayCheck` | `[KnownPlayerAreaTimer:30]` | Integer, or the literal `Day` (one in-game day-cycle length in minutes) |
 | `TagStringCheck` | `[TagName:Value]` | Plain text string |
@@ -219,7 +220,7 @@ Every profile must be defined inside an `<EntityComponent xsi:type="MyObjectBuil
 | `TagCompareEnumCheck` | `[TagName:GreaterOrEqual]` | `Greater`, `GreaterOrEqual`, `Less`, `LessOrEqual`, `Equal`, `NotEqual` |
 | `TagDirectionEnumCheck`| `[TagName:Forward]` | `Forward`, `Backward`, `Left`, `Right`, `Up`, `Down` |
 
-**[HARD]** Every `TagParse` value parser fails silently: a value it can't parse leaves the field at its default (or `None` for `TagBoolEnumCheck`), with no log line. `scripts/audit_unknown_tags.py` checks bool, Yes/No/Ignore, BoolEnum, int, long, float, double and int-or-Day values against the parser each tag actually uses (the cache records it as `parser`).
+**[HARD]** Every `TagParse` value parser except `TagCheckEnumCheck` (logs since 2.74.04) fails silently: a value it can't parse leaves the field at its default (or `None` for `TagBoolEnumCheck`), with no log line. `TagModifierEnumCheck` (`[ZoneRadiusChangeType(s):]`, `[ZoneCustomCounterChangeType:]`) accepts only `Set`, `Add`, `Subtract`, `Multiply`, `Divide`. `scripts/audit_unknown_tags.py` checks bool, Yes/No/Ignore, BoolEnum, ModifierEnum, int, long, float, double and int-or-Day values against the parser each tag actually uses (the cache records it as `parser`).
 
 ---
 

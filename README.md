@@ -23,7 +23,7 @@ To ensure complete accuracy and eliminate the guesswork that often plagues Space
 1. **Code-Verified Accuracy, Not Guesswork**:
    - Online wikis and guides can be outdated, incomplete, or describe legacy workarounds. Nothing takes precedence over the MES C# codebase itself.
    - Every rule is classified as **`[HARD]`** (code-verified against local C# source and Keen binaries) or **`[SOFT]`** (field-tested operational heuristic), so you always know how much to trust it.
-   - Known engine bugs are documented down to the exact source line (e.g. `ActionSystem.cs:2412` index bug, `TriggerChecks.cs:77` `CargoShipWaypoints` out-of-bounds crash).
+   - Known engine bugs are documented down to the exact source line (e.g. `TriggerChecks.cs:77` `CargoShipWaypoints` out-of-bounds crash).
 2. **Automated Staleness Detection**:
    - `check_mes_sync.py` compares the skill's offline tag cache against your local MES install, so you know right away if the skill's knowledge has drifted from the version you're actually running.
 3. **Token Optimization & Progressive Disclosure for AI Agents**:
@@ -65,7 +65,7 @@ se-dev-mes/
 │   ├── automated_economy_store.sbc         # Mike Dude GVK automated store inventory refresh loop
 │   └── merchant_safezone_station.sbc       # TOC safezone station ([CreateSafeZone:true]) + merchant
 └── scripts/                                # Automation, diagnostics, and scaffolding suite
-    ├── mes_tag_cache.json                  # Offline database of 1,842 tags across 41 profile types + trigger Type values
+    ├── mes_tag_cache.json                  # Offline database of 1,847 tags across 41 profile types + trigger Type values
     ├── query_mes_tags.py                   # Tag inspector CLI (search local MES source or cache)
     ├── audit_unknown_tags.py               # Finds tags MES silently ignores and values its parsers reject (e.g. true on a Yes/No tag)
     ├── wc_shootmode.py                     # List/set the WeaponCore shoot mode in prefabs; classify fixed guns vs turrets
@@ -152,7 +152,7 @@ powershell -ExecutionPolicy Bypass -File scripts/audit_sbc.ps1 -Path ".\Content\
 Detects runtime pitfalls:
 - Zero-stripping bug in `CustomCountersTargets` / `CustomSandboxCountersTargets`.
 - Fatal `WaypointNear` / `WaypointFar` index crashes.
-- Broken `ChangeBlocksShareModeAll` loop indexing.
+- RivalAI zone custom bool/counter actions: missing gates, misaligned lists, and `[KnownPlayerAreaTimer:]` <= 0 (no KPL created).
 - Omission of required boolean master gates (`[ChangeCounters:true]`, `[SpawnEncounter:true]`).
 - Tag list count mismatches (`SetCounters` vs `SetCountersAmount`).
 ```powershell
@@ -160,7 +160,7 @@ powershell -ExecutionPolicy Bypass -File scripts/audit_mes_tags.ps1 -Path ".\Con
 ```
 
 ### 7. Cross-Reference Validator (`audit_mes_references.ps1`)
-Validates that every referenced trigger, action, condition, spawner, spawn group, and prefab exists across the mod files:
+Validates that every referenced trigger, action, condition, spawner, spawn group, and prefab exists across the mod files, and that every `[ZoneName:]`/`[ZoneNames:]` matches a zone's `[PublicName:]`:
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/audit_mes_references.ps1 -Path ".\Content\Data" -WarnOrphans -SkipPrefabs
 ```
@@ -212,7 +212,7 @@ powershell -ExecutionPolicy Bypass -File scripts/New-MesProfile.ps1 -Pattern Bos
 
 - **Zero-Stripping Bug**: `TagParse.cs` strips `0` values from integer lists unless called with `preserveZero: true`. Using `[CustomCountersTargets:0]` produces an empty list and breaks conditions.
 - **Turret 800m Clamp**: On spawn, MES clamps all automated weapon ranges to 800m unless an action executes `[SetWeaponsToMaxRange:true]`.
-- **`ChangeBlocksShareModeAll`**: Loop index bug in `ActionSystem.cs:2412` can crash or fail to iterate terminal blocks.
+- **Zone names**: `[ZoneName:]` / `[ZoneNames:]` match a zone's `[PublicName:]`, never its `[Name:]`; zone change types are `Set/Add/Subtract/Multiply/Divide` (`Increase`/`Decrease` silently fail).
 - **`WaypointNear` / `WaypointFar`**: Unchecked index on `CargoShipWaypoints[0]` crashes the trigger loop if waypoints are empty.
 - **`InsideZone` vs `InsideActiveZone`**: `[Type:InsideZone]` evaluates `true` even when the target zone is deactivated.
 - **Economy Store Grids**: Purchased grids only spawn if registered under a `<FactionType>` with subtype `Builder` in `FactionTypes_Economy.sbc`.

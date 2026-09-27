@@ -167,3 +167,14 @@ flowchart TD
    - When a mod updates an icon path or adds a new store prefab, clients frequently retain stale null references from their cached `.sbcB5` file.
    - **Resolution**: Clients must clear their `.sbcB5` cache, or the mod author must update the mod version/timestamp to force cache regeneration.
 
+---
+
+## 4. Item-Triggered Delivery Contracts on MES Encounters (MES 2.74.03+)
+
+Keen's economy can seed a "data item" (`EncryptedDataStorage`, `InterceptedTransmissions`, `ResearchMaterials`, `SmuggledGoods`, `TechnicalBlueprints`) into an encounter's cargo. A player who picks it up gets a delivery contract to a station. From 2.74.03, MES raises Keen's `MySpawnGroupDefinition.OnSpawnGroupGridsCreated` for its own spawns, so this (and Keen's grid-triggered contracts, if the vanilla `<SpawnGroup>` defines a contract trigger) works on MES encounters.
+
+- **Opt-in per spawn**: `[EnableItemTriggeredContracts:true]` in `[MES Spawn Conditions]` (default `false`). MES forces it `true` for vanilla SpawnGroups it converts (`SpawnGroupManager.cs`, `Context.IsBaseGame`).
+- **[HARD] Requirements** (`MySessionComponentItemTriggeredContracts.OnEncounterSpawned`): server side, world setting **Economy enabled**, and at least one `MyCargoContainer` with an inventory on the spawned grids. The item goes into one random cargo container. Grids without cargo containers never get one.
+- **[HARD] MES overrides the contract definition**: at load, MES re-initializes **every** `SessionComponentItemTriggeredContractsDefinition` (vanilla and other mods') with its own hardcoded values: `SpawnChance 0.35`, `AllowEnemyFactions true`, the five `Deliver_*` entries above at weight 1. Custom tuning of that definition in another mod has no effect while MES is loaded.
+- **Whitelist by SpawnGroup name, per session**: a spawn with the flag adds its SpawnGroup name to the whitelist before the grids are created. The list is not saved, and once a group is on it, any later spawn of that group in the same session qualifies, even through a conditions profile without the flag.
+- **2.74.03 bug, fixed in 2.74.04**: the whitelist started empty, which Keen treats as "all SpawnGroups", so every MES spawn could roll a contract item until the first opted-in group spawned (patch note: "the first encounter type that spawned after a load would always contain an item contract"). 2.74.04 seeds it with a dummy entry.

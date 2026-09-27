@@ -26,7 +26,9 @@
        - Event profiles & templates: [ConditionIds], [PersistantConditionIds], [ActionIds],
          [TemplateEventIds]
        - Contract/mission profiles: [MissionIds], [StoreProfileId], [PlayerConditionIds],
-         [LeadPlayerConditionIds], [PersistantEventConditionIds]
+         [LeadPlayerConditionIds], [PersistantEventConditionIds], [EventConditionIds]
+       - Zone names (separate namespace): [ZoneName]/[ZoneNames] must match a [MES Zone]
+         [PublicName] - MES never looks a zone up by its [Name]
        - Loot/Manipulation profiles: [ContainerTypes], [ContainerTypeAssignSubtypeId],
          [AssignContainerTypesToAllCargo], [ContainerTypeSubtypeIds], [BlockReplacerProfileNames]
     3. Collect and cross-reference the separate string-Tag broadcast system, distinct from
@@ -208,6 +210,12 @@ $eventTagDefinitions = [System.Collections.Generic.HashSet[string]]::new([System
 # A literal broadcast that matches one of these as a wildcard is live, not undeclared.
 $eventTemplateTagPatterns = [System.Collections.Generic.List[string]]::new()
 $tagReferences = [System.Collections.Generic.List[PSObject]]::new()
+
+# Zone-name namespace ([MES Zone] [PublicName:] vs [ZoneName:]/[ZoneNames:] references).
+# Matching is ordinal, mirroring ZoneManager's zone.PublicName == name comparisons.
+$zonePublicNames = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+$zoneInternalNames = @{}
+$zoneReferences = [System.Collections.Generic.List[PSObject]]::new()
 
 # Owning SubtypeId -> profile header marker (e.g. "RivalAI Trigger"), used by the orphan
 # pass to report only profile types that MES never activates on its own.
@@ -509,6 +517,19 @@ foreach ($file in $sbcFiles) {
         # TagParse.TagZoneConditionsProfileCheck: a miss is silently dropped from the list.
         Register-Reference (Parse-CsvTags $block 'ZoneConditions') $file 0 "ZoneConditions"
 
+        # Zone names are their own namespace: every by-name lookup (ZoneManager.cs,
+        # SpawnConditions.cs) compares zone.PublicName. [Name:] is stored but never read.
+        if ($block -match '\[MES Zone\]') {
+            foreach ($zn in (Parse-CsvTags $block 'PublicName')) { [void]$zonePublicNames.Add($zn) }
+            foreach ($zn in (Parse-CsvTags $block 'Name')) { $zoneInternalNames[$zn] = $true }
+        } else {
+            foreach ($zoneTag in 'ZoneName', 'ZoneNames') {
+                foreach ($zn in (Parse-CsvTags $block $zoneTag)) {
+                    $zoneReferences.Add([PSCustomObject]@{ Name = $zn; File = $file; Tag = $zoneTag })
+                }
+            }
+        }
+
         # Zone spawn-group lists (Zone.cs / ZoneManager.cs): literal names, no replace.
         # [RestrictedSpawnGroups:] is only read when [UseRestrictedSpawnGroups:true], so an
         # unresolved name in an inactive list is stale config, not a live bug.
@@ -527,6 +548,8 @@ foreach ($file in $sbcFiles) {
         Register-Reference (Parse-CsvTags $block 'ConditionIds') $file 0 "EventCondition"
         Register-Reference (Parse-CsvTags $block 'PersistantConditionIds') $file 0 "EventCondition"
         Register-Reference (Parse-CsvTags $block 'PersistantEventConditionIds') $file 0 "EventCondition"
+        # [MES Mission] [EventConditionIds:] - only read since MES 2.74.04 (Mission.cs).
+        Register-Reference (Parse-CsvTags $block 'EventConditionIds') $file 0 "EventCondition"
         Register-Reference (Parse-CsvTags $block 'ActionIds') $file 0 "EventAction"
         Register-Reference (Parse-CsvTags $block 'TemplateEventIds') $file 0 "EventTemplate"
 
@@ -689,6 +712,25 @@ foreach ($tref in $tagReferences) {
         }
         Write-Host "[ERROR] Undeclared Tag ($($tref.RefType)): '$tagName' in $($tref.File.Name) does not match any declared $poolLabel ([Tags:] on a matching profile) - this broadcast silently does nothing (MES's tag match is an exact List.Contains(), no error is logged)." -ForegroundColor Red
         $errors++
+    }
+}
+
+# Pass 2c: Validate zone-name references against [MES Zone] [PublicName:] values. Only
+# meaningful when the scan saw at least one zone; zones from other mods can't be seen, so
+# an unknown name is a warning. A name that matches a zone's [Name:] instead is a known
+# silent failure (the lookup never reads [Name:]), so that is an error.
+if ($zonePublicNames.Count -gt 0 -or $zoneInternalNames.Count -gt 0) {
+    Write-Host "Zone PublicNames Declared: $($zonePublicNames.Count) | Zone References Checked: $($zoneReferences.Count)" -ForegroundColor Gray
+    foreach ($zref in $zoneReferences) {
+        $zn = $zref.Name
+        if ($zn -match '\{[^}]+\}' -or $zonePublicNames.Contains($zn)) { continue }
+        if ($zoneInternalNames.ContainsKey($zn)) {
+            Write-Host "[ERROR] Zone Referenced By [Name:] ($($zref.Tag)): '$zn' in $($zref.File.Name) matches a [MES Zone] [Name:], but MES looks zones up by [PublicName:] only (ZoneManager.cs) - this zone reference never matches anything." -ForegroundColor Red
+            $errors++
+        } else {
+            Write-Host "[WARN] Unknown Zone ($($zref.Tag)): '$zn' in $($zref.File.Name) does not match the [PublicName:] of any [MES Zone] in the scanned files (fine only if the zone is defined in another mod)." -ForegroundColor Yellow
+            $warnings++
+        }
     }
 }
 

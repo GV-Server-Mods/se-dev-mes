@@ -59,6 +59,12 @@ VALUE_RULES = {
     "TagFloatCheck": (lambda v: NUM_RE.match(v), "a number", "ignored, field keeps its default"),
     "TagIntOrDayCheck": (lambda v: v.strip() == "Day" or INT_RE.match(v),
                          "a whole number or Day", "ignored, field keeps its default"),
+    # ModifierEnum (Enums.cs): no Increase/Decrease members, and the list overload drops a failed
+    # entry, which silently skips its index-aligned zone/counter change.
+    "TagModifierEnumCheck": (lambda v: v.strip() in ("None", "Set", "Add", "Subtract", "Multiply", "Divide")
+                             or INT_RE.match(v),
+                             "Set, Add, Subtract, Multiply or Divide (case-sensitive)",
+                             "ignored, the change is skipped"),
 }
 # Headers that MES parses with another profile's tag list.
 HEADER_ALIASES = {

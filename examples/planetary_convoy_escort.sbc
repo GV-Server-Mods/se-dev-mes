@@ -11,7 +11,7 @@
         <TypeId>SpawnGroupDefinition</TypeId>
         <SubtypeId>GVK-SpawnGroup-ConvoyLeader</SubtypeId>
       </Id>
-      <Description>[MES Spawn Group]</Description>
+      <Description>[Modular Encounters SpawnGroup]</Description>
       <IsPirate>true</IsPirate>
       <Frequency>1.0</Frequency>
       <Prefabs>
@@ -31,7 +31,7 @@
         <TypeId>SpawnGroupDefinition</TypeId>
         <SubtypeId>GVK-SpawnGroup-ConvoyEscort</SubtypeId>
       </Id>
-      <Description>[MES Spawn Group]</Description>
+      <Description>[Modular Encounters SpawnGroup]</Description>
       <IsPirate>true</IsPirate>
       <Frequency>1.0</Frequency>
       <Prefabs>
@@ -170,10 +170,9 @@
       </Id>
       <Description>
         [RivalAI Autopilot]
-        [LeaderType:Owner]
-        [EngageDistance:600]
-        [DisengageDistance:1500]
-        [BreakFormationOnTarget:true]
+        [IdealMaxSpeed:30]
+        [EscortSpeedMatchMaxDistance:150]
+        [EscortUsesRelativeDampening:true]
       </Description>
     </EntityComponent>
 

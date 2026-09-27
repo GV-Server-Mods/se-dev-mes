@@ -5,7 +5,8 @@
     Scans .sbc files for:
     1. Zero-stripping bugs across all affected tags (CustomCountersTargets, CustomSandboxCountersTargets, etc.).
     2. WaypointNear/WaypointFar trigger crash hazard.
-    3. ChangeBlocksShareModeAll loop index bug.
+    3. [RivalAI Action] zone custom bool/counter changes: missing gates, misaligned lists,
+       comma lists on one-value-per-line tags, and [KnownPlayerAreaTimer:] <= 0 (no KPL created).
     4. [CutVoxels:true] on Spawn Conditions (does not exist in MES).
     5. Missing activation flags ([UseTrigger:true], [UseSpawn:true], [UseChat:true], [UseEvent:true], [UseConditions:true]).
     6. Conflicting Autopilot flags (FlyLevelWithGravity + UseSurfaceHoverThrustMode).
@@ -143,12 +144,6 @@ foreach ($file in $files) {
             $issuesFound++
         }
 
-        # Check 3: ChangeBlocksShareModeAll bug
-        if ($line -match '\[ChangeBlocksShareModeAll:true\]') {
-            Write-Host "[ERROR] $($file.Name):$lineNum - ChangeBlocksShareModeAll has an unhandled indexing bug in MES ActionSystem.cs!" -ForegroundColor Red
-            $issuesFound++
-        }
-
         # Check 4: CutVoxels on Spawn Conditions
         if ($line -match '\[CutVoxels:true\]') {
             Write-Host "[WARN] $($file.Name):$lineNum - [CutVoxels:true] does not exist on MES Spawn Conditions. Use [CutVoxelsAtAirtightCells:true] + [CutVoxelSize:double]." -ForegroundColor Yellow
@@ -276,6 +271,60 @@ foreach ($file in $files) {
             $actCtSubtypes = Get-TagValues $block 'ContainerTypeSubtypeIds'
             if ($actCtBlocks.Count -ne $actCtSubtypes.Count) {
                 Write-Host "[ERROR] $($file.Name) - ContainerTypeBlockNames count ($($actCtBlocks.Count)) does not match ContainerTypeSubtypeIds count ($($actCtSubtypes.Count))!" -ForegroundColor Red
+                $issuesFound++
+            }
+        }
+
+        # Check 3: RivalAI Action zone custom bools/counters and Known Player Areas
+        # (ActionSystem.cs ChangeZoneAtPosition block, CustomValueHelper.cs, KnownPlayerLocationManager.cs).
+        if ($block -match '\[(RivalAI|MES AI) Action\]') {
+            $zoneGateOn = $block -match '\[ChangeZoneAtPosition:\s*true\]' -or $block -match '\[ChangeZoneOnlyByName:\s*true\]'
+            foreach ($kind in 'Bool', 'Counter') {
+                $masterOn = $block -match "\[ZoneCustom${kind}Change:\s*true\]"
+                if ($block -match "\[ZoneCustom${kind}Change(Name|Value|Amount|Type):" -and -not $masterOn) {
+                    Write-Host "[ERROR] $($file.Name) - ZoneCustom${kind}Change tags in [RivalAI Action] without [ZoneCustom${kind}Change:true]!" -ForegroundColor Red
+                    $issuesFound++
+                }
+                if (-not $masterOn) { continue }
+                if (-not $zoneGateOn) {
+                    Write-Host "[ERROR] $($file.Name) - [ZoneCustom${kind}Change:true] needs [ChangeZoneAtPosition:true] or [ChangeZoneOnlyByName:true]; without either, MES skips every zone change in this action." -ForegroundColor Red
+                    $issuesFound++
+                }
+                if ($block -notmatch "\[ZoneCustom${kind}ChangeUseKPL:\s*true\]" -and $block -notmatch '\[ZoneName:\s*[^\]\s]') {
+                    Write-Host "[ERROR] $($file.Name) - [ZoneCustom${kind}Change:true] targets a named zone but [ZoneName:] is missing (set it to the zone's [PublicName:], or use [ZoneCustom${kind}ChangeUseKPL:true])." -ForegroundColor Red
+                    $issuesFound++
+                }
+            }
+            if ($block -match '\[ZoneCustomBoolChange:\s*true\]') {
+                $zbNames = Get-TagValues $block 'ZoneCustomBoolChangeName'
+                $zbValues = Get-TagValues $block 'ZoneCustomBoolChangeValue'
+                if ($zbNames.Count -ne $zbValues.Count) {
+                    Write-Host "[ERROR] $($file.Name) - ZoneCustomBoolChangeName count ($($zbNames.Count)) does not match ZoneCustomBoolChangeValue count ($($zbValues.Count))! MES applies only the shortest list." -ForegroundColor Red
+                    $issuesFound++
+                }
+            }
+            if ($block -match '\[ZoneCustomCounterChange:\s*true\]') {
+                # Amount (TagLongCheck) and Type (TagModifierEnumCheck) take ONE value per tag line:
+                # a comma list fails to parse and adds nothing.
+                $zcNames = Get-TagValues $block 'ZoneCustomCounterChangeName'
+                $zcCounts = @{}
+                foreach ($oneValueTag in 'ZoneCustomCounterChangeAmount', 'ZoneCustomCounterChangeType') {
+                    $lineValues = @([regex]::Matches($block, "\[$oneValueTag\s*:\s*([^\]]+)\]") | ForEach-Object { $_.Groups[1].Value })
+                    foreach ($lv in $lineValues) {
+                        if ($lv -match ',') {
+                            Write-Host "[ERROR] $($file.Name) - [${oneValueTag}:$lv] is a comma list; this tag takes one value per line, so MES drops the whole entry." -ForegroundColor Red
+                            $issuesFound++
+                        }
+                    }
+                    $zcCounts[$oneValueTag] = @($lineValues | Where-Object { $_ -notmatch ',' }).Count
+                }
+                if ($zcNames.Count -ne $zcCounts['ZoneCustomCounterChangeAmount'] -or $zcNames.Count -ne $zcCounts['ZoneCustomCounterChangeType']) {
+                    Write-Host "[ERROR] $($file.Name) - ZoneCustomCounterChange list mismatch! Names ($($zcNames.Count)), Amount lines ($($zcCounts['ZoneCustomCounterChangeAmount'])), Type lines ($($zcCounts['ZoneCustomCounterChangeType'])) must be equal; MES applies only the shortest list." -ForegroundColor Red
+                    $issuesFound++
+                }
+            }
+            if ($block -match '\[CreateKnownPlayerArea:\s*true\]' -and $block -match '\[KnownPlayerAreaTimer:\s*(-?\d+)\s*\]' -and [int]$Matches[1] -le 0) {
+                Write-Host "[ERROR] $($file.Name) - [KnownPlayerAreaTimer:$($Matches[1])] is 0 or less; since MES 2.74.04 no Known Player Area is created (use minutes > 0 or Day)." -ForegroundColor Red
                 $issuesFound++
             }
         }

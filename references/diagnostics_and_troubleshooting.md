@@ -125,6 +125,8 @@ MES can dump internal diagnostic logs directly to your Windows clipboard for fas
 - `/MES.Spawn.Custom [SpawnGroupName]`: Force-spawns an encounter at the player's crosshair.
 - `/MES.Reset.Counters`: Resets all session sandbox counters to 0.
 - `/MES.GPS.Encounters [true/false]`: Toggles GPS waypoints for all active MES encounters in the world.
+- `/MES.Debug.ShowZone.<PublicName|ZoneSubtypeId>`, `/MES.Debug.HideZone.<...>`, `/MES.Debug.ShowAllZones`, `/MES.Debug.HideAllZones` *(2.74.04)*: Draw zone spheres (including multi-sphere zones) in-world, with temporary GPS markers.
+- `/MES.Debug.CreateKPL.<Faction>.<Radius>.<Minutes>.<MaxEncounters>.<MinThreat>`: Creates a Known Player Location at your position. Minutes defaults to `30`; since 2.74.04 a value of `0` or less creates nothing (HUD: `KPL Not Created: Duration Must Be Greater Than 0`).
 
 ### E. Interactive HUD Overlays (`/RivalAI.*`)
 - `/RivalAI.Debug.Toggle`: Toggles on-screen HUD diagnostics showing current behavior state, target coordinates, speed, and active triggers for the targeted grid.
@@ -215,9 +217,8 @@ When troubleshooting encounter loading or execution failures, search `SpaceEngin
 - **Fix**: Use `[Type:TargetNear]` / `[Type:TargetFar]` or `[Type:BehaviorTriggerA]` instead.
 
 ### 5. `System.IndexOutOfRangeException: Index was outside the bounds of the array... ChangeBlocksShareModeAll`
-- **Cause**: Unhandled loop index bug in MES `ActionSystem.cs:2412`.
-- **Result**: Throws unhandled exception during action processing.
-- **Fix**: Do not use `ChangeBlocksShareModeAll`. Use targeted terminal block actions.
+- **Cause**: The inner block loop indexed `AllTerminalBlocks[i]` (the grid index) instead of `[j]`, so the action threw or hit the wrong blocks.
+- **Status**: **Fixed in MES 2.74.04** (PR #369). `[ChangeBlocksShareModeAll:true]` + `[BlockNamesShareModeAll:Name1,Name2]` now sets share-mode All on every terminal block across the NPC's linked grids whose `CustomName` exactly matches. If you still see this exception, the server is running MES older than 2.74.04.
 
 ### 6. Prefab SubtypeId vs. File Name Mismatch (Silent Spawn Failure / `Prefab Not Found`)
 - **Cause**: The `SpawnGroup` references a prefab by its SubtypeId (e.g. `<Prefabs><Prefab SubtypeId="MyPatrolDrone">`), but the prefab file on disk has a different internal SubtypeId.
@@ -312,6 +313,14 @@ When troubleshooting encounter loading or execution failures, search `SpaceEngin
   2. If using custom factions, verify that the defining `Factions.sbc` is loaded in the active world save and contains `<Tag>...</Tag>`.
   3. For unowned derelicts or neutral stations, use the reserved keyword `[FactionOwner:Nobody]`.
   4. Run `powershell -ExecutionPolicy Bypass -File scripts/audit_mes_tags.ps1` to detect undefined faction tags automatically.
+
+### 13. `MES Behavior / Error: <Profile>: Could not parse tag '[GridDestructible:true]' (expected Yes, No or Ignore)`
+- **Cause**: A Yes/No/Ignore (`CheckEnum`) tag was given another value. Since MES 2.74.04 this parser logs to the game log at load (always, no debug flag needed); before, the value was ignored silently. Affects `GridEditable`, `SubGridsEditable`, `GridDestructible`, `SubGridsDestructible` (RivalAI Action) and `IsStatic` (RivalAI Target).
+- **Fix**: Use `Yes`, `No` or `Ignore` (case-sensitive). `scripts/audit_unknown_tags.py` catches this before load.
+
+### 14. Zone / Known Player Location changes do nothing
+- **Log lines** (`/MES.SpawnDebug.Zone.true`): `KnownPlayerLocation Not Created At ...: Duration Must Be Greater Than 0`; `Zone [<name>] At [<coords>] Has Been Removed Because its Timer Expired`.
+- **Checklist**: MES ≥ 2.74.04 (zone custom bool/counter actions were no-ops before); `[ZoneName:]`/`[ZoneNames:]` equals the zone's `[PublicName:]`, not `[Name:]`; the zone is `[Persistent:true]`; `[ZoneRadiusChangeType(s):]`/`[ZoneCustomCounterChangeType:]` use `Set`/`Add`/`Subtract`/`Multiply`/`Divide`; `[KnownPlayerAreaTimer:]` > 0. Details: [`events_and_zones.md`](events_and_zones.md) §4 rules 2, 6, 7.
 
 ---
 

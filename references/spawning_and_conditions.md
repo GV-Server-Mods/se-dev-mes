@@ -93,6 +93,9 @@ MES evaluates player threat score based on block count, weapons, and grid mass i
 - `[CheckCustomSandboxCounters:true]` + `[CustomSandboxCounters:...]` + `[CustomSandboxCountersTargets:...]` + `[SandboxCounterCompareTypes:...]` (targets list is zero-stripped — see `events_and_zones.md` §3).
 - `[UseRandomCustomFaction:bool]` *(MES 2.74.00)*: Completes the random-faction set alongside the existing faction randomizers.
 
+### E. Economy Item Contracts
+- `[EnableItemTriggeredContracts:bool]` *(MES 2.74.03, default `false`; forced `true` for converted vanilla SpawnGroups)*: lets Keen's item-triggered delivery contracts seed a data item into the encounter's cargo. Needs world Economy on. Full mechanics and caveats: [`economy_and_stores.md`](economy_and_stores.md) §4.
+
 ---
 
 ## 4. RivalAI Grid-Bound Spawner (`[RivalAI Spawn]`)
@@ -124,7 +127,7 @@ Used inside Action profiles (`[Spawner:<SubtypeId>]`) to deploy escorts, defense
 - `[SpawningType:CustomSpawn]`: Spawns relative to parent grid.
 - `[MinDistance:<double>]` & `[MaxDistance:<double>]`: Radial distance from parent.
 - `[InheritNpcAltitude:bool]`: Aligns drone altitude to parent grid's altitude.
-- `[FirstSpawnTimeMs:<int>]`, `[SpawnMinCooldown:<int>]` / `[SpawnMaxCooldown:<int>]`, `[MaxSpawns:<int>]`: Timing and cap. `[RivalAI Spawn]` has no `[StartsReady:]` tag (that is a Trigger/Chat/Event tag); it is silently ignored here.
+- `[FirstSpawnTimeMs:<int>]`, `[SpawnMinCooldown:<int>]` / `[SpawnMaxCooldown:<int>]`, `[MaxSpawns:<int>]`: Timing and cap. `[StartsReady:true]` *(parsed since MES 2.74.04; ignored before)* lets the **first** spawn skip the cooldown; later spawns still wait for it (`SpawnProfile.IsReadyToSpawn`).
 
 ---
 

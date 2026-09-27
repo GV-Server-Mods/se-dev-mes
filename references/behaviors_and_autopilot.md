@@ -12,7 +12,7 @@ Every RivalAI behavior profile (`[RivalAI Behavior]`) assigns a `[BehaviorName:<
 | :--- | :--- | :--- | :--- |
 | **`Passive`** | Stationary or drift; non-navigating. Used for stations, derelicts, and static stores. | All | `RAI-Generic-Autopilot-Passive` |
 | **`CargoShip`** | Flies straight between initial spawn and destination despawn waypoint. | Space / Planet | `RAI-Generic-Autopilot-CargoShip` |
-| **`Escort`** | Formations with designated leader grid (`LeaderType:Owner/Faction`); breaks formation when engaging. | Space / Planet | `RAI-Generic-Autopilot-Escort` |
+| **`Escort`** | Holds a formation slot around a parent NPC. The parent's behavior lists the slots in `[EscortOffsets:]` and assigns them on escort request (`EscortSystem.cs`). Speed matching: §3C. | Space / Planet | `RAI-Generic-Autopilot-Escort` |
 | **`Fighter`** | High-speed interceptor; performs strafing runs, breakaway loops, and evasive rolls. | Space / Planet | `RAI-Generic-Autopilot-Fighter` |
 | **`FighterPlane`** | Atmospheric attack plane; continuous diving runs, fixed weapons, forward-velocity climbing breakaway. | Planet | `RAI-Generic-Autopilot-Strike` |
 | **`HorseFighter`**| Hybrid standoff fighter; orbits target at weapon range, making rapid firing passes. | Space / Planet | `RAI-Generic-Autopilot-HorseFighter` |
@@ -93,6 +93,10 @@ flowchart TD
 
 ### C. Speed & Altitude Clamping
 - Speed restoration: Using `-1` in `[ChangeAutopilotSpeed:true]` + `[NewAutopilotSpeed:-1]` and `[ChangeAutopilotMinAltitude:true]` + `[NewAutopilotMinAltitude:-1]` cleanly restores the default autopilot values from the profile!
+- **Escort speed matching** *(tags parsed since MES 2.74.04; before, they were ignored and the defaults always applied)* — `[RivalAI Autopilot]` tags for `Escort` behavior (`Escort.cs`):
+  - `[EscortSpeedMatchMaxDistance:<double>]` (default `150`): within this distance of its escort waypoint, if the parent is slower than the escort's `IdealMaxSpeed`, the escort's max speed is capped to the parent's current speed.
+  - `[EscortSpeedMatchMinDistance:<double>]` (default `25`): **[HARD] no effect.** MES computes a lerped speed from it but never uses the result.
+  - `[EscortUsesRelativeDampening:bool]` (default `false`): once within 250 m of the parent, the escort dampens relative to the parent grid. Useful for convoy escorts that drift at speed.
 
 ---
 
