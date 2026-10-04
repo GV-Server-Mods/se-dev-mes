@@ -5,7 +5,7 @@
     Executes a complete end-to-end synchronization workflow:
     1. Scans local MES installation (%AppData% or Steam Workshop).
     2. Rebuilds the offline tag cache (mes_tag_cache.json).
-    3. Synchronizes the repository to the global skill directory (~/.gemini/config/skills/se-dev-mes).
+    3. Fast-forwards the installed skill clone (~/.gemini/config/skills/se-dev-mes) to this repo's main branch.
     4. Runs pre-flight verification on all examples and scripts.
 .PARAMETER MesPath
     Optional custom path to local MES source.
@@ -101,24 +101,17 @@ if (Test-Path $globalSkillPath) {
     $item = Get-Item $globalSkillPath
     if ($item.Attributes -band [System.IO.FileAttributes]::ReparsePoint) {
         Write-Host "Global skill directory is a live directory junction. All files are automatically in sync!" -ForegroundColor Green
+    } elseif (Test-Path (Join-Path $globalSkillPath ".git")) {
+        # Installed skill is a git clone: fast-forward it to this repo's committed main branch.
+        # Uncommitted changes (such as a freshly rebuilt tag cache) install once they are committed to main.
+        & git -C "$globalSkillPath" pull --ff-only --quiet "$repoRoot" main
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "[WARN] Could not fast-forward the installed clone (local edits or diverged history). Fix it in $globalSkillPath with git." -ForegroundColor Yellow
+        } else {
+            Write-Host "Installed clone fast-forwarded to main. Commit any pending changes to install them." -ForegroundColor Green
+        }
     } else {
-        # Mirror files
-        Copy-Item -Path "$repoRoot/SKILL.md" -Destination "$globalSkillPath/SKILL.md" -Force
-        Copy-Item -Path "$repoRoot/README.md" -Destination "$globalSkillPath/README.md" -Force
-        if (Test-Path "$repoRoot/VERSIONING.md") {
-            Copy-Item -Path "$repoRoot/VERSIONING.md" -Destination "$globalSkillPath/VERSIONING.md" -Force
-        }
-
-        if (Test-Path "$repoRoot/references") {
-            Copy-Item -Path "$repoRoot/references" -Destination $globalSkillPath -Recurse -Force
-        }
-        if (Test-Path "$repoRoot/examples") {
-            Copy-Item -Path "$repoRoot/examples" -Destination $globalSkillPath -Recurse -Force
-        }
-        if (Test-Path "$repoRoot/scripts") {
-            Copy-Item -Path "$repoRoot/scripts" -Destination $globalSkillPath -Recurse -Force
-        }
-        Write-Host "Global skill directory synchronized successfully." -ForegroundColor Green
+        Write-Host "[WARN] $globalSkillPath is neither a junction nor a git clone; skipped. Replace it with a clone of this repo." -ForegroundColor Yellow
     }
 } else {
     Write-Host "[INFO] Global skill path ($globalSkillPath) does not exist yet. Creating junction..." -ForegroundColor Cyan
