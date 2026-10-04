@@ -136,6 +136,9 @@ flowchart TD
   - `Powered`: Ignores unpowered floating wrecks.
   - `OutsideOfSafezone`: Prevents wasting ammunition against safezone shields.
   - Also `Altitude`, `Broadcasting`, `Faction`, `Gravity`, `LineOfSight`, `MovementScore`, `Name`, `PlayerControlled`, `PlayerKnownLocation`, `Shielded`, `Speed`, `Static`, `TargetValue`, `Underwater`, `AirDensity`, `GravityThrust`, `IgnoreStealthDrive`.
+  - **[HARD] `GravityThrust` and `AirDensity` never matched before MES 2.74.05**: both recorded an `Underwater` hit instead of their own (`TargetingSystem.cs:962`, `:998`), so `[MatchAllFilters:GravityThrust]` rejected every target and `[MatchAnyFilters:Underwater]` could pass falsely.
+  - `GravityThrust` (2.74.05+): passes when the target is outside gravity, or when this NPC's working **up-facing** thrusters can lift its mass in the gravity at the target's position (atmospheric thrust if air density there is ≥ 0.7, otherwise in-gravity thrust; recalculated at most every 2.5 s, `ThrustSystem.CalculateMaxGravity`). Use it to stop atmospheric craft chasing targets they cannot reach.
+  - **[HARD] `AirDensity` is still inverted in 2.74.05**: it tests the **NPC's own** air density, not the target's, and the bound checks are reversed (`(Min > -1 || density >= Min) && (Max > -1 || density <= Max)`). On a planet it passes whenever `[MaxAirDensity:]` is set (any value ≥ 0) and fails whenever it is not, whatever the actual density; off-planet it passes only if both bounds are ≤ 0. Do not rely on it.
 - There are no `[UsePriorities:]`, `[TargetRules:]` or `[TargetSubsystems:]` tags; MES ignores them.
 
 ---

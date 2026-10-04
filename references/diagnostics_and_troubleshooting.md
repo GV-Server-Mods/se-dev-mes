@@ -322,6 +322,15 @@ When troubleshooting encounter loading or execution failures, search `SpaceEngin
 - **Log lines** (`/MES.SpawnDebug.Zone.true`): `KnownPlayerLocation Not Created At ...: Duration Must Be Greater Than 0`; `Zone [<name>] At [<coords>] Has Been Removed Because its Timer Expired`.
 - **Checklist**: MES ≥ 2.74.04 (zone custom bool/counter actions were no-ops before); `[ZoneName:]`/`[ZoneNames:]` equals the zone's `[PublicName:]`, not `[Name:]`; the zone is `[Persistent:true]`; `[ZoneRadiusChangeType(s):]`/`[ZoneCustomCounterChangeType:]` use `Set`/`Add`/`Subtract`/`Multiply`/`Divide`; `[KnownPlayerAreaTimer:]` > 0. Details: [`events_and_zones.md`](events_and_zones.md) §4 rules 2, 6, 7.
 
+### 15. NPCs treated as players (wrong targets, `[Owners:NPC]` never matches) on MES 2.73.07-2.74.04
+- **Cause**: `FactionHelper.IsIdentityNPC` returned `false` for any identity without an **online** `IMyPlayer` (`MyAPIGateway.Players.TryGetIdentityId` only searches connected players), which is every normal NPC faction identity. Effects: NPC owners classified as `Player` by the target `Owner` filter (`EntityEvaluator.GetOwnersFromList`), NPC-vs-player relations skipped the reputation lookup (`GetRelationBetweenIdentities`), `[CheckIfDamagerIsNpc:true]` never passed, and spawn-time NPC store setup did not fund the owner for inserted orders. **Fixed in MES 2.74.05** (#375): no Steam id, or an online bot, counts as NPC.
+- **[HARD] Still true in 2.74.05 (since 2.73.07, MES #379)**: `IsIdentityPlayer` also requires an online player, so an **offline** player is not a player to MES. `GetGridOwnerships` classifies grids owned by offline players as `NpcMajority`/`NpcMinority`, and caches the result until the grid's ownership changes (`GridEntity.OwnershipChange`); logging in does not recheck it.
+  - At world load no one is connected (Keen's `LoadPlayerInternal` creates no `MyPlayer` for disconnected players), so `Tasks/NewGrid.cs` gives every loaded player grid blank `NpcData` (`SpawnType OtherNPC`, `SpawnedByMES` false), adds it to `NpcManager.ActiveNpcs`, and saves that `NpcData` into the grid's storage (`ProcessTertiaryAttributes` → `Update()`). The storage entry stays after the grid is later reclassified.
+  - With `UseMaxNpcGrids` on, those grids count toward `MaxGlobalNpcGrids` (`SpawnRequest.cs:288`) and can block all spawns.
+  - Cleanup skips them only while the OtherNPC config keeps `OnlyCleanNpcsFromMes` at its default `true`.
+  - `[CheckIfDamagerIsPlayer:]`, `[CheckIfTargetIsPlayerOwned:]` and `[CheckIfTargetIsNpcOwned:]` misreport offline owners.
+  - Check with `/MES.Info.GetActiveNpcs` (copies to clipboard): player grids listed under `Npc Majority`.
+
 ---
 
 ## 5. Sim-Speed Health & Anti-Clang Physics Mitigations

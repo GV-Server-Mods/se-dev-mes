@@ -129,7 +129,7 @@ When operating on worlds running the Water Mod:
 
 - **Behavior Subclass**: Set `[BehaviorName:Nautical]` in `[RivalAI Behavior]`.
 - **Autopilot Profile**: Use `[RivalAI Autopilot]` configured with nautical buoyancy locks.
-- **Spawn Conditions**: Use `[MES Spawn Conditions]` with `[MustSpawnUnderwater:true]` (or `[CanSpawnUnderwater:true]`), `[MinWaterCoverage:]`/`[MaxWaterCoverage:]`, and for installations `[InstallationSpawnsOnWaterSurface:true]`/`[InstallationSpawnsUnderwater:true]` with `[MinWaterDepth:]`/`[MaxWaterDepth:]` (`MaxWaterDepth` defaults to 0 — always set it; see `spawning_and_conditions.md` §3.B).
+- **Spawn Conditions**: Use `[MES Spawn Conditions]` with `[MustSpawnUnderwater:true]` (or `[CanSpawnUnderwater:true]`), `[MinWaterCoverage:]`/`[MaxWaterCoverage:]`, and for installations `[InstallationSpawnsOnWaterSurface:true]`/`[InstallationSpawnsUnderwater:true]` with `[MinWaterDepth:]`/`[MaxWaterDepth:]` (`MaxWaterDepth` defaults to `-1` = no maximum since MES 2.74.05; on 2.74.03-2.74.04 it defaulted to `0` and had to be set; see `spawning_and_conditions.md` §3.B).
 - **Anti-Sinking Logic**: Ensure buoyancy tanks or flotation blocks are prioritized in defense triggers.
 
 ---
