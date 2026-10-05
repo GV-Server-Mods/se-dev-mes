@@ -279,7 +279,7 @@ def cmd_set(a):
 # FLARE:          any weapon firing anti-smart ammo (WC2 Ewar AntiSmart/AntiSmartv2, or WC1 AreaEffect AntiSmart).
 #                 Keep it off Mouse Control: MES can't recognise WC2 flares and would fire them as a plain fixed gun.
 CLASS_HELP = {
-    "FLARE": "FLARE          (keep on Auto; self-target with LockedSmartOnly, see third_party_integrations 1F)",
+    "FLARE": "FLARE          (keep on Auto; self-target smart projectiles, see third_party_integrations 1F)",
     "TURRET": "TURRET         (leave on Auto)",
     "FIXED-TRACKING": "FIXED-TRACKING (fires itself on Auto; Mouse Control lets MES fire it)",
     "FIXED": "FIXED          (never fires on Auto; needs Mouse Control for MES)",

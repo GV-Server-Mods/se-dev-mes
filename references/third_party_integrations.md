@@ -95,16 +95,37 @@ To bring NPC fixed-weapon accuracy on par with player grids, use these proven mo
      ```
 
 ### F. Flares (Anti-Smart Ammo) on NPCs
-Checked against MES `13bcb1d` and WeaponCore 2 `CoreParts/script/Structure.cs`.
+Checked against MES `13bcb1d` and WeaponCore workshop `3154371364` (`Data/Scripts/CoreSystems`).
 
-- **[HARD] MES flare logic only fires on a missile lock.** `CoreWeapon.cs:155-172` marks flare ammo `ReadyToFire` only when the weapon system has `[UseAntiSmartWeapons:true]` (default `false`) **and** `WeaponSystem.CheckForIncomingHomingProjectiles()` gets `true` from `APIs.WeaponCore.GetProjectilesLockedOn(RemoteControl)` (`WeaponSystem.cs:428`). Every other weapon goes through the normal alignment check.
+- **[HARD] MES flare logic only fires on a missile lock.** `CoreWeapon.cs:155-172` marks flare ammo `ReadyToFire` only when the weapon system has `[UseAntiSmartWeapons:true]` (default `false`) **and** `WeaponSystem.CheckForIncomingHomingProjectiles()` gets `true` from `APIs.WeaponCore.GetProjectilesLockedOn(RemoteControl)` (`WeaponSystem.cs:428`). Every other weapon goes through the normal readiness checks (§G).
 - **[HARD] MES can't detect WeaponCore 2 flare ammo.** `CoreWeapon.cs:295` sets `_flareAmmo` only from the WC1 field `ammoDef.AreaEffect.AreaEffect == AreaEffectType.AntiSmart`. WC2 ammo defines anti-smart as `Ewar { Enable = true, Type = AntiSmartv2 }`. MES never reads `Ewar` for this, and its `EwarDef.EwarType` mirror in `API/CoreSystemsApiDefs.cs` stops at `Tractor`, without `AntiSmartv2`. So a WC2 flare launcher is handled as an ordinary fixed gun: `[UseAntiSmartWeapons]` does nothing for it, and §C's shoot-mode rules apply.
-- **[SOFT] WC-native fix: let the flare launcher target locked missiles itself (definitions checked; awaiting in-game confirmation).** Give the NPC flare block its own weapon definition. No turret subparts or Phantom are needed:
-  - **AI:** fixed self-tracking, i.e. `TrackTargets = true`, `TurretAttached = false`, `TurretController = false`, azimuth/elevation parts `None` (the same AI shape as a fixed tracking missile launcher).
-  - **Targeting:** `Threats = { Projectiles }`, `IgnoreDumbProjectiles = true`, `LockedSmartOnly = true` ("only fire at smart projectiles locked on to parent grid"), and `MaxTargetDistance` near the flare field radius.
+- **[HARD] WeaponCore bug: `LockedSmartOnly` is inverted.** It's documented as "only fire at smart projectiles locked on to parent grid". But `AcquireProjectile` (`Ai/AiTargeting.cs:684`) **skips** a smart projectile when its target block is on the weapon's own construct (`cube = lp.Info.Target.TargetObject`, then `IsSameConstructAs(...)` → `continue`). With it on, point defense and flares ignore exactly the missiles locked on their own grid. Leave it `false` until WeaponCore fixes it.
+- **[SOFT] WC-native fix: let the flare launcher pick its own missiles (definitions code-checked; awaiting in-game confirmation).** Give the NPC flare block its own weapon definition. No turret subparts or Phantom are needed:
+  - **AI:** fixed self-tracking, i.e. `TrackTargets = true`, `TurretAttached = false`, `TurretController = false`, azimuth/elevation parts `None`. On Auto, WeaponCore fires a self-tracking weapon only when its target is within `AimingTolerance` (`WeaponTracking.cs:452`, `SessionUpdate.cs:821`).
+  - **Targeting:** `Threats = { Projectiles }`, `IgnoreDumbProjectiles = true` (smart projectiles only), `LockedSmartOnly = false` (see the bug above), and a short `MaxTargetDistance` (about the flare field radius) so it only answers missiles close to its own grid.
   - **HardPoint:** `AimingTolerance = 180`, so it fires whatever direction the missile comes from. Tune `ShotsInBurst` / `DelayAfterBurst` so one missile doesn't empty the magazine.
-  - **Prefab:** leave the block on **Auto (AI Controlled)** (`wc_shootmode.py audit` warns if a FLARE isn't). WeaponCore fires it on lock, and per §C it ignores MES fire commands, so MES alignment can't spam it.
+  - **Prefab:** leave the block on **Auto (AI Controlled)** (`wc_shootmode.py audit` warns if a FLARE isn't). WeaponCore fires it, and on Auto it ignores MES fire commands (`SessionUpdate.cs:576`), so MES can't spam it.
 - **[SOFT] Legacy-field workaround (untested).** WC2's `AmmoDef` still has the WC1 `AreaEffect` struct (`[ProtoMember(13)] AreaDamageDef AreaEffect`, with `AreaEffectType.AntiSmart`). Setting it on an NPC-only flare ammo next to the `Ewar` block should make MES set `_flareAmmo`. Whether WC2 itself reacts to the legacy field is unverified.
+
+### G. NPC Weapon Setup Matrix (who pulls the trigger)
+Code-checked against MES `13bcb1d` and WeaponCore workshop `3154371364`. Three facts decide every case: the weapon **class** (`wc_shootmode.py classify`), how MES reads the **ammo guidance**, and the **shoot mode** saved in the prefab.
+
+| Ammo guidance | MES (`CoreWeapon.cs`) | WeaponCore on a MES "On" command (Mouse Control) |
+|---|---|---|
+| `None` (dumb) | Normal gun: fires when lined up within `[WeaponMaxAngleFromTarget]`, line of sight clear, in range (`:177`, `BaseWeapon.cs:292`) | Fires; no target needed (`RequiresTarget` false, `AmmoConstants.cs:450`) |
+| `Smart` / `TravelTo` | **Homing:** fires once it has a target in range whose type is in the weapon's WC `Threats`. **No cone, no line-of-sight check** (`:85-150`, `:294`) | Fires only if the weapon holds a target (`RequiresTarget`), with **no aim check** (`SkipAimChecks` for Smart on fixed mounts, `AmmoConstants.cs:576`; shoot gate `SessionUpdate.cs:839-841`). Target acquisition uses the grid's AI focus first (`AiTargeting.cs:149`), and MES sets that focus to its target (`WeaponSystem.cs:620-640`) |
+| `Detect*` | Normal gun | These are **mine** guidances (`IsMine`, `AmmoConstants.cs:436`), not "fly straight, then home" |
+| WC1 `AreaEffect AntiSmart` / WC2 `Ewar AntiSmartv2` | Flare / not detected (§F) | See §F |
+
+| # | Situation | Shoot mode | MES weapon profile | Notes |
+|---|---|---|---|---|
+| A | Turrets (incl. gimbals) | Auto | `[UseTurrets:true]` | `[SetWeaponsToMaxRange:true]` or ranges stay clamped to 800 m (§A) |
+| B | Dumb fixed gun on an MES-flown craft | **Mouse Control** | `[UseStaticGuns:true]`, cone **8-12°** | MES does lead and aim (§C/§D). A 180° cone means "fire whenever in range" |
+| C | Fixed gun with `Smart` ammo (real homing, or a two-stage aim-assist round) on an MES-flown craft | **Mouse Control** | `[UseStaticGuns:true]`; cap range with `[MaxStaticWeaponRange]` | Neither MES nor WeaponCore checks the angle, so it fires off-angle whenever both have a target. The WC `Threats` list filters what MES fires at: a `Grids`-only list never fires at players on foot. Aim-assist pattern: a `Smart` base round with `SteeringLimit = 0` (no steering), plus a timed fragment (`PointAtTarget`, `PointType = Direct`, `DirectAimCone`, `ParentDies = true`). The fragment spawns aimed at the target with lead prediction, but only if the target is inside the cone (`Projectile.cs:3390-3440`); otherwise the base round flies on straight. Use a tracer-only base round so the two don't look like separate shots |
+| D | Fixed self-tracking gun | Auto **or** Mouse Control | either | Auto: WeaponCore fires within its own `AimingTolerance` and ignores MES. Mouse Control: MES decides, per the ammo table |
+| E | Fixed guns on a static grid (Wreck, base) | Auto | either | It can't turn to aim: FIXED stays silent, FIXED-TRACKING fires itself. Mouse Control with a wide cone fires blind |
+| F | Flares | Auto | `[UseAntiSmartWeapons]` not needed | §F |
+| G | Any MES-flown prefab | | | `wc_shootmode.py audit --mods <weapon defs>` warns on FIXED guns left on Auto and FLAREs taken off it; exclude static prefabs |
 
 ---
 
