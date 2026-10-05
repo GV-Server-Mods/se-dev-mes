@@ -68,7 +68,7 @@ se-dev-mes/
     ├── mes_tag_cache.json                  # Offline database of 1,847 tags across 41 profile types + trigger Type values
     ├── query_mes_tags.py                   # Tag inspector CLI (search local MES source or cache)
     ├── audit_unknown_tags.py               # Finds tags MES silently ignores and values its parsers reject (e.g. true on a Yes/No tag)
-    ├── wc_shootmode.py                     # List/set the WeaponCore shoot mode in prefabs; classify fixed guns vs turrets
+    ├── wc_shootmode.py                     # List/set/audit the WeaponCore shoot mode in prefabs; classify turrets, fixed guns and flares
     ├── PB_TurnTest.cs                      # Programmable Block script: flight-path turn vs nose turn
     ├── check_mes_sync.py                   # Automated staleness & version drift detector
     ├── Update-MesSkill.ps1                 # Maintainer-only: 1-step release updater (rebuilds cache, runs tests, syncs global)
