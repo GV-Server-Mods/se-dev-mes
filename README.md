@@ -71,7 +71,6 @@ se-dev-mes/
     ├── wc_shootmode.py                     # List/set/audit the WeaponCore shoot mode in prefabs; classify turrets, fixed guns and flares
     ├── PB_TurnTest.cs                      # Programmable Block script: flight-path turn vs nose turn
     ├── check_mes_sync.py                   # Automated staleness & version drift detector
-    ├── check_known_bugs.py                 # Confirms documented upstream bugs are still in the source
     ├── Update-MesSkill.ps1                 # Maintainer-only: 1-step release updater (rebuilds cache, runs tests, syncs global)
     ├── Format-MesSbc.ps1                   # Safe XML formatter protecting <Description> & comments
     ├── Add-MesProfileSnippet.ps1           # Safe profile snippet injector for SBC files

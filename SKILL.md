@@ -46,7 +46,6 @@ python scripts/check_mes_sync.py
 ```
 - Compares `scripts/mes_tag_cache.json` against `%AppData%\SpaceEngineers\Mods\Modular-Encounters-Systems`.
 - Detects new tags, removed tags, modified profiles, or source version drift.
-- `python scripts/check_known_bugs.py` confirms each documented upstream bug (`known_bugs.json`) is still in the installed MES/WeaponCore source. `CHANGED` means re-verify before relying on that section.
 
 ### C. One-Step Skill Update Workflow
 When MES is updated, run the automated updater:
