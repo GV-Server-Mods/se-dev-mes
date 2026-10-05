@@ -95,7 +95,7 @@ To bring NPC fixed-weapon accuracy on par with player grids, use these proven mo
      ```
 
 ### F. Flares (Anti-Smart Ammo) on NPCs
-Checked against MES `13bcb1d` and WeaponCore workshop `3154371364` (`Data/Scripts/CoreSystems`).
+Checked against MES `13bcb1d` and WeaponCore workshop `3154371364` (`Data/Scripts/CoreSystems`). Run `scripts/check_known_bugs.py` before relying on the two bug bullets below. It reports `PRESENT` while each bug is still in the installed source.
 
 - **[HARD] MES flare logic only fires on a missile lock.** `CoreWeapon.cs:155-172` marks flare ammo `ReadyToFire` only when the weapon system has `[UseAntiSmartWeapons:true]` (default `false`) **and** `WeaponSystem.CheckForIncomingHomingProjectiles()` gets `true` from `APIs.WeaponCore.GetProjectilesLockedOn(RemoteControl)` (`WeaponSystem.cs:428`). Every other weapon goes through the normal readiness checks (§G).
 - **[HARD] MES can't detect WeaponCore 2 flare ammo.** `CoreWeapon.cs:295` sets `_flareAmmo` only from the WC1 field `ammoDef.AreaEffect.AreaEffect == AreaEffectType.AntiSmart`. WC2 ammo defines anti-smart as `Ewar { Enable = true, Type = AntiSmartv2 }`. MES never reads `Ewar` for this, and its `EwarDef.EwarType` mirror in `API/CoreSystemsApiDefs.cs` stops at `Tractor`, without `AntiSmartv2`. So a WC2 flare launcher is handled as an ordinary fixed gun: `[UseAntiSmartWeapons]` does nothing for it, and §C's shoot-mode rules apply.

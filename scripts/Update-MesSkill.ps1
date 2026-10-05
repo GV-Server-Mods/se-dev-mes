@@ -121,6 +121,11 @@ if (Test-Path $globalSkillPath) {
 # Step 4: Health Summary
 Write-Host "`n[4/4] MES Skill Health Check:" -ForegroundColor Yellow
 & python "$PSScriptRoot/check_mes_sync.py"
+Write-Host "`nKnown upstream bugs (known_bugs.json):" -ForegroundColor Yellow
+& python "$PSScriptRoot/check_known_bugs.py"
+if ($LASTEXITCODE -eq 1) {
+    Write-Host "A documented bug's signature is gone: re-verify it and update the skill before relying on that section." -ForegroundColor Red
+}
 
 Write-Host ""
 Write-Host "=================================================================" -ForegroundColor Green
