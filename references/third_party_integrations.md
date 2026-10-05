@@ -94,6 +94,18 @@ To bring NPC fixed-weapon accuracy on par with player grids, use these proven mo
      </EntityComponent>
      ```
 
+### F. Flares (Anti-Smart Ammo) on NPCs
+Checked against MES `13bcb1d` and WeaponCore 2 `CoreParts/script/Structure.cs`.
+
+- **[HARD] MES flare logic only fires on a missile lock.** `CoreWeapon.cs:155-172` marks flare ammo `ReadyToFire` only when the weapon system has `[UseAntiSmartWeapons:true]` (default `false`) **and** `WeaponSystem.CheckForIncomingHomingProjectiles()` gets `true` from `APIs.WeaponCore.GetProjectilesLockedOn(RemoteControl)` (`WeaponSystem.cs:428`). Every other weapon goes through the normal alignment check.
+- **[HARD] MES can't detect WeaponCore 2 flare ammo.** `CoreWeapon.cs:295` sets `_flareAmmo` only from the WC1 field `ammoDef.AreaEffect.AreaEffect == AreaEffectType.AntiSmart`. WC2 ammo defines anti-smart as `Ewar { Enable = true, Type = AntiSmartv2 }`. MES never reads `Ewar` for this, and its `EwarDef.EwarType` mirror in `API/CoreSystemsApiDefs.cs` stops at `Tractor`, without `AntiSmartv2`. So a WC2 flare launcher is handled as an ordinary fixed gun: `[UseAntiSmartWeapons]` does nothing for it, and §C's shoot-mode rules apply.
+- **[SOFT] WC-native fix: let the flare launcher target locked missiles itself (definitions checked; awaiting in-game confirmation).** Give the NPC flare block its own weapon definition. No turret subparts or Phantom are needed:
+  - **AI:** fixed self-tracking, i.e. `TrackTargets = true`, `TurretAttached = false`, `TurretController = false`, azimuth/elevation parts `None` (the same AI shape as a fixed tracking missile launcher).
+  - **Targeting:** `Threats = { Projectiles }`, `IgnoreDumbProjectiles = true`, `LockedSmartOnly = true` ("only fire at smart projectiles locked on to parent grid"), and `MaxTargetDistance` near the flare field radius.
+  - **HardPoint:** `AimingTolerance = 180`, so it fires whatever direction the missile comes from. Tune `ShotsInBurst` / `DelayAfterBurst` so one missile doesn't empty the magazine.
+  - **Prefab:** leave the block on **Auto (AI Controlled)**. WeaponCore fires it on lock, and per §C it ignores MES fire commands, so MES alignment can't spam it.
+- **[SOFT] Legacy-field workaround (untested).** WC2's `AmmoDef` still has the WC1 `AreaEffect` struct (`[ProtoMember(13)] AreaDamageDef AreaEffect`, with `AreaEffectType.AntiSmart`). Setting it on an NPC-only flare ammo next to the `Ewar` block should make MES set `_flareAmmo`. Whether WC2 itself reacts to the legacy field is unverified.
+
 ---
 
 ## 2. Defense Shields Integration
