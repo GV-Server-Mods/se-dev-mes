@@ -20,7 +20,7 @@ Commands:
       spawning the cached copy otherwise).
   wc_shootmode.py classify --mods DIR SUBTYPE [SUBTYPE ...]
       Look up each weapon SubtypeId in the WeaponCore definition files (*.cs) under DIR and say whether it is a
-      TURRET (leave on Auto), a FIXED-TRACKING gun (fires itself on Auto, or by MES on Mouse Control) or a
+      TURRET (leave on Auto), a FIXED-TRACKING gun (on Auto fires itself only at projectiles with Smart ammo; MES fires it on Mouse Control) or a
       FIXED gun (never fires on Auto: MES-flown grids need Mouse Control).
       DIR is e.g. C:/Program Files (x86)/Steam/steamapps/workshop/content/244850
   wc_shootmode.py audit --mods DIR [--exclude GLOB ...] PATH [PATH ...]
@@ -273,15 +273,15 @@ def cmd_set(a):
 
 # ---- weapon definition classification ---------------------------------------------------------------------
 # TURRET:         TurretAttached = true. WeaponCore aims and fires it; leave on Auto.
-# FIXED-TRACKING: fixed, TrackTargets = true. Picks and fires at its own targets on Auto (MES commands are then
-#                 ignored); Mouse Control hands firing to MES instead. Either can be right.
+# FIXED-TRACKING: fixed, TrackTargets = true. On Auto it fires by itself only at projectiles, and only with Smart
+#                 or Drone ammo (WeaponCore AiShooting); never at grids or characters. MES-flown grids need Mouse Control.
 # FIXED:          fixed, TrackTargets = false. On Auto it never fires; MES-flown grids need Mouse Control.
 # FLARE:          any weapon firing anti-smart ammo (WC2 Ewar AntiSmart/AntiSmartv2, or WC1 AreaEffect AntiSmart).
 #                 Keep it off Mouse Control: MES can't recognise WC2 flares and would fire them as a plain fixed gun.
 CLASS_HELP = {
     "FLARE": "FLARE          (keep on Auto; self-target smart projectiles, see third_party_integrations 1F)",
     "TURRET": "TURRET         (leave on Auto)",
-    "FIXED-TRACKING": "FIXED-TRACKING (fires itself on Auto; Mouse Control lets MES fire it)",
+    "FIXED-TRACKING": "FIXED-TRACKING (on Auto only shoots projectiles, Smart ammo only; Mouse Control lets MES fire it)",
     "FIXED": "FIXED          (never fires on Auto; needs Mouse Control for MES)",
 }
 AI_PRESET_RE = re.compile(r"\bAiDef\s+(\w+)\s*(?:=>|=)\s*new\s+AiDef\s*\{(.*?)\}", re.S)
