@@ -130,6 +130,8 @@ Code-checked against MES `13bcb1d` and WeaponCore workshop `3154371364`. Three f
 | F | Flares | Auto | `[UseAntiSmartWeapons]` not needed | §F |
 | G | Any MES-flown prefab | | | `wc_shootmode.py audit --mods <weapon defs>` warns on FIXED guns left on Auto and FLAREs taken off it; exclude static prefabs |
 
+- **[HARD] Give every NPC copy of a weapon its own `PartName`.** MES finds a block's WeaponCore definition by `HardPoint.PartName` and takes the **first** match across all loaded definitions, for ammo restock (`InventoryHelper.cs:407-412`) and weapon setup (`WeaponSystem.cs:191-196`). If an `_NPC` definition shares its name with the player one, MES restocks the player's ammo list and reads the player's settings. On GVK this filled NPC flare launchers mostly with firework magazines they can't fire, so they ran dry after one load.
+
 ---
 
 ## 2. Defense Shields Integration
