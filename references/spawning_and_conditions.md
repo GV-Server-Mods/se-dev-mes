@@ -54,6 +54,13 @@ A spawn group definition combines vanilla Keen tags with MES description tags:
 - `[ManipulationProfiles:]` / `[ManipulationGroups:]`: Reference to `[MES Manipulation]` profiles (block replacement, weapon randomizer, dereliction via `[UseGridDereliction:true]` + `[DerelictionProfiles:]`, inventory, recolor).
 - `[ReplenishSystems:bool]` + `[ReplenishProfiles:]`: Spawn-group-level ammo/fuel top-up (§5 of `manipulation_and_dereliction.md`).
 - **Inline profiles**: `ImprovedSpawnGroup.InitTags()` also parses the spawn group's own Description as its first Spawn Conditions profile and first Manipulation profile, so condition/manipulation tags written directly in the spawn group are honored.
+- **[HARD] `<Enabled>false</Enabled>` removes a spawn group from MES entirely.** `SpawnGroupManager.cs:606` skips disabled definitions before parsing anything else. Redefining a vanilla or other-mod spawn group (same `TypeId`/`SubtypeId`) with `Enabled = false` in your own mod disables it everywhere, with no per-world config.
+
+### Base-game spawn groups MES picks up [HARD]
+MES loads every vanilla spawn group too, whatever the world's own encounter settings say:
+- **`IsPlanetaryEncounter`** groups (`SpawnGroups_PlanetaryEncounters.sbc`, `P1_SupplyPost` ... `P30_AbandonedFarmstead`) become **Planetary Installations** (`SpawnGroupManager.cs:767-770`). Their `<PlanetaryInstallationSettings><Planets>` becomes the planet whitelist (`:864-873`); groups without one (`P28_LogisticsPost`, `P29_WreckedHopper`) spawn on any planet. With `EnablePlanetaryEncounters = false` in the world they still mix into your installation/wreck pools.
+- **Ways to stop them:** the official add-on "Suppress Vanilla Planetary Installations" (Steam `3796756949`, detected in `AddonManager.cs:177`, applied by `ApplySuppression`, `SpawnGroupManager.cs:993-998`); redefining each group with `Enabled = false` (above); or listing them in `Config-General.xml` `NpcSpawnGroupBlacklist`. Sister add-ons exist for vanilla cargo ships (`888457124`) and space encounters (`888457381`).
+- Their prefabs stay loaded and can be used by your own spawn groups. `audit_mes_references.ps1` resolves them through `scripts/vanilla_prefabs.json`.
 
 ---
 

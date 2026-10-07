@@ -74,6 +74,12 @@
       definitions, MES's own shipped container types, and vanilla SE's stock container
       types (scripts/vanilla_container_types.json) - so a typo'd or non-existent loot
       table is still caught.
+    - In other files a <SubtypeId> is a definition only inside a definition's own <Id>
+      element. Elsewhere it is a reference (a spawn group's <Factions><SubtypeId>, a gas
+      or faction id in a block or session component) and is not registered.
+    - Spawn group <Prefab SubtypeId> references also resolve against vanilla SE's stock
+      prefabs (scripts/vanilla_prefabs.json), so a mod may point a spawn group at, or
+      redefine, a base-game prefab such as P26_HaulerWreck.
     - XML comments (<!-- ... -->) are blanked out before scanning, so a commented-out
       copy of a profile is not reported as a duplicate definition and its references
       are not validated.
@@ -130,6 +136,20 @@ if (Test-Path $vanillaContainerTypesPath) {
         foreach ($d in $vanillaCtData.definitions) { [void]$vanillaContainerTypes.Add($d) }
     } catch {
         Write-Host "[WARN] Could not parse vanilla_container_types.json - vanilla container types will not be recognized: $_" -ForegroundColor Yellow
+    }
+}
+
+# PrefabDefinition SubtypeIds shipped by vanilla Space Engineers itself (e.g. P26_HaulerWreck).
+# A spawn group <Prefab SubtypeId="..."> naming one of these is valid even though no mod file
+# defines it.
+$vanillaPrefabs = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+$vanillaPrefabsPath = Join-Path $PSScriptRoot "vanilla_prefabs.json"
+if (Test-Path $vanillaPrefabsPath) {
+    try {
+        $vanillaPrefabData = Get-Content -Raw $vanillaPrefabsPath | ConvertFrom-Json
+        foreach ($d in $vanillaPrefabData.definitions) { [void]$vanillaPrefabs.Add($d) }
+    } catch {
+        Write-Host "[WARN] Could not parse vanilla_prefabs.json - vanilla prefabs will not be recognized: $_" -ForegroundColor Yellow
     }
 }
 
@@ -334,15 +354,20 @@ foreach ($file in $sbcFiles) {
         }
     } else {
         # XML-level definitions: <SubtypeId> or <Prefab Subtype="...">
+        $inId = $false
         for ($i = 0; $i -lt $lines.Count; $i++) {
             $line = $lines[$i]
             $lineNum = $i + 1
+            if ($line -match '<Id>') { $inId = $true }
 
-            # Check <SubtypeId>Foo</SubtypeId>
-            if ($line -match '<SubtypeId>([^<]+)</SubtypeId>') {
+            # Check <SubtypeId>Foo</SubtypeId>. Only a SubtypeId inside a definition's own
+            # <Id> element defines something; elsewhere it is a reference (e.g. a spawn
+            # group's <Factions><SubtypeId>Unknown</SubtypeId></Factions>).
+            if ($inId -and $line -match '<SubtypeId>([^<]+)</SubtypeId>') {
                 $subId = $matches[1].Trim()
                 Register-Definition $subId $file $lineNum "SubtypeId"
             }
+            if ($line -match '</Id>') { $inId = $false }
 
             # Check <Id Type="..." Subtype="Foo" />
             if ($line -match '<Id\s+[^>]*Subtype="([^"]+)"') {
@@ -652,6 +677,9 @@ foreach ($ref in $references) {
 
     # Stock vanilla SE container type (ContainerType references only).
     if ($ref.RefType -eq "ContainerType" -and $vanillaContainerTypes.Contains($refName)) { continue }
+
+    # Stock vanilla SE prefab (spawn group <Prefab SubtypeId> references only).
+    if ($ref.RefType -eq "SpawnGroupPrefab" -and $vanillaPrefabs.Contains($refName)) { continue }
 
     if (-not $definitionsLower.ContainsKey($refLower)) {
         if ($ref.Severity -eq "Warn") {

@@ -29,6 +29,8 @@ Manipulation profiles modify NPC grids at the moment of spawning, before physics
 
 ### Key Manipulation Capabilities:
 - **Block Replacer**: `[UseBlockReplacer:true]` + `[ReplaceBlockOld:]`/`[ReplaceBlockNew:]` pairs (or `[ReplaceBlockReference:]`), or `[UseBlockReplacerProfile:true]` + `[BlockReplacerProfileNames:]` pointing at `[MES Block Replacement]` profiles. `[ConvertToHeavyArmor:true]` is a built-in replacement set.
+  - **[HARD]** A replacement is skipped unless both blocks have the same `Size`, unless `[RelaxReplacedBlocksSize:true]` (`BlockReplacement.cs:90`). Profiles run in the order listed, so once one profile has replaced a block, a later profile matching the old subtype never sees it.
+- **[HARD] RivalAI block:** with `[UseRivalAi:true]` + `[RivalAiReplaceRemoteControl:true]`, MES turns the grid's main (or first) Remote Control into a RivalAI control module (`BehaviorBuilder.cs:74-90`). Block replacement runs first (`PrefabManipulation.cs:374` before `:518`), so a replacer that turns a cockpit seat or AI block into `RivalAIRemoteControlLarge` also works. A grid with neither gets **no behavior** ("Following Behavior Could Not Be Applied"), silently.
 - **Weapon Randomizer**: `[RandomizeWeapons:true]` (§2).
 - **Dereliction**: `[UseGridDereliction:true]` + `[DerelictionProfiles:]` (§3). Without the gate, `PrefabManipulation.cs:672` skips dereliction entirely.
 - **Inventory Control**: `[ClearGridInventories:true]`, ContainerType assignment (§6). Ammo/fuel top-up is a spawn-group feature (§5).
