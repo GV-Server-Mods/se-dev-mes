@@ -97,6 +97,7 @@ flowchart TD
   - `[EscortSpeedMatchMaxDistance:<double>]` (default `150`): within this distance of its escort waypoint, if the parent is slower than the escort's `IdealMaxSpeed`, the escort's max speed is capped to the parent's current speed.
   - `[EscortSpeedMatchMinDistance:<double>]` (default `25`): **[HARD] no effect.** MES computes a lerped speed from it but never uses the result.
   - `[EscortUsesRelativeDampening:bool]` (default `false`): once within 250 m of the parent, the escort dampens relative to the parent grid. Useful for convoy escorts that drift at speed.
+    - **[HARD] Never undone.** `Escort.cs` sets `RelativeDampeningEntity` to the lead once within 250 m, and nothing in MES clears it, whether the parent becomes invalid or the grid switches to another subclass. Per the decompiled SE (1.210.014) it is cleared only by a player toggling dampeners, by the lead closing, or by a 100 m range check that runs only while a ship controller is in control; setting `DampenersOverride` (what `[ChangeInertiaDampeners]` does) does not clear it. **Fails as**: a unit that joins an escort and later returns to patrol keeps damping relative to its old lead, kilometres away. Upstream: MeridiusIX/Modular-Encounters-Systems#385. **[SOFT]** Turn it off on autopilot profiles for units that can leave escort duty; keep it for dedicated escorts that never leave.
 
 ---
 
@@ -204,6 +205,7 @@ Unless using a subclass specifically built for single-axis thrust (`FighterPlane
    - Reverse thrusters are commanded to 100% override. If the grid has **no reverse thrusters**, braking force is `0`.
 2. **Stopping Distance Blindspot**:
    - `ThrustSystem.CalculateStoppingDistance()` computes required stopping distance using `GetEffectiveThrustInDirection(baseBrakeDir)`.
+   - **[HARD] The forward-thrust path measured the wrong thrusters until MES 2.74.06 dev (commit `941e8c2`, jayph).** `CalculateDirectForwardThrust` (`ThrustSystem.cs:210`) passed `Direction.Forward`, i.e. the **main forward thrusters**, as the brakes, so a forward-only aircraft got a non-zero stopping distance and coasted. It now passes `Direction.Backward`, matching the hover path (`CalculateHoverThrust`, `:427`, which already used `Backward`) and the text below. Builds before that commit behave like the forward-thruster reading; see `aircraft_behaviors_and_tuning.md` section 1.
    - With no reverse thrusters, available braking force is `0`, acceleration is `<= 0`, and calculated stopping distance is `0`.
    - The autopilot never throttles down when approaching waypoints and blows past them at full speed.
 3. **The 180° Flip-and-Burn Slingshot Loop**:
@@ -395,3 +397,15 @@ Setting artificial horizon leveling tags on combat craft causes total loss of pi
 - **Cooldown re-rolls on every fire**: `InitRandomTimes()` only seeds the first `CooldownTime`; `ProcessTrigger` rolls a new one from `[MinCooldownMs:]`-`[MaxCooldownMs:]` each time the trigger fires (`TriggerSystem.cs`). A 45-60 min timer varies between 45 and 60 min every cycle.
 - **Timers survive save/load**: each trigger's `CooldownTime`, `LastTriggerTime` (game time), `TriggerCount` and `UseTrigger` are serialized into the Remote Control's `Storage` (`StoredSettings`) and restored on load. Progress toward a long timer carries across sessions, so a 3-hour timer still fires even if every play session is shorter than 3 hours.
 - The restored snapshot replaces the trigger list built from the `.sbc`, so trigger-field edits only reach grids spawned afterwards; Action/Condition/Spawner/Command/Chat profile contents are looked up by SubtypeId at runtime and do update.
+
+---
+
+## 9. Despawn Triggers (`[Type:Despawn]` and `[Type:DespawnMES]`) [HARD]
+
+`Type:Despawn` runs when the behavior itself decides to despawn. `Type:DespawnMES` runs for **every** removal MES performs, and is matched by a string, not by a flag.
+
+- **A `DespawnMES` trigger needs `[DespawnTypeFromSpawner:]`, or it effectively never fires.** `TriggerSystem.ProcessMESDespawnTriggers` runs the trigger only if the setting is `Any` or **equals the grid's despawn source exactly**; an empty setting matches only an empty source, and only `/MES.Debug.RemoveAllNpcs` leaves the source empty. Sources MES sets: `CleanUp-BlockCount`, `CleanUp-Distance`, `CleanUp-Timer` (`Cleaning.cs`), `Despawn-Behavior` (`DespawnSystem.cs`), `Despawn-Debug` (`LoggerTools.cs`), `Cargo Ship Reached End of Path / Distance` (`CargoShipWatcher.cs`), and a caller-supplied reason or `ForceRemove` (`Cleaning.cs`). **Fails as**: a `DespawnMES` trigger written without a type never fires in normal play. Upstream: MeridiusIX/Modular-Encounters-Systems#387. `audit_mes_tags.ps1` flags it.
+- **`CleanUp` and `PathEnd` never match.** The function computes `despawnMatch` for them and never reads it, so only `Any` or an exact source string such as `CleanUp-Distance` works.
+- **A behavior's own despawn reaches `DespawnMES` too.** `DespawnSystem.cs` runs the `Type:Despawn` triggers, then `DespawnGrid()` flags the grid with source `Despawn-Behavior`, and `Tasks/GridCleanup.cs` invokes the `DespawnMES` actions. **Technique**: one `[Type:DespawnMES]` + `[DespawnTypeFromSpawner:Any]` trigger covers every removal; a separate `Type:Despawn` trigger with the same actions runs them twice on a behavior despawn.
+- **`DespawnMES` actions run just before the grid closes.** `GridCleanup` invokes them and queues `cubeGrid.Close()` on the game thread straight after. **Fails as**: a command with `[CommandDelayTicks:]` above `0` is dropped, because the receive side rejects a sender that no longer exists (`TriggerSystem.cs`, sender check). Send commands from despawn actions with no delay.
+

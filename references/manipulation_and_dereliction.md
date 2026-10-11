@@ -146,6 +146,7 @@ Replenishment is a **spawn-group** feature: with `[ReplenishSystems:true]` in th
 
 - `[MaxItemId:]` / `[MaxItemAmount:]` are paired lists (index-matched; extra entries are dropped).
 - `[IgnoreGlobalReplenishProfiles:true]` on the spawn group skips server-wide profiles.
+- **[HARD] Gas tanks (MES 2.74.06 dev, commit `c6ced3e`)**: the `InfiniteTank` block logic refills an NPC-owned hydrogen/oxygen tank to 100% whenever it falls to 25% (checked every 100 ticks). Through 2.74.05 it ran only on cargo-ship grids. Now it runs on any linked grid with NpcData whose `ReplenishSystems` attribute is set, and switches itself off for grids without it. The attribute comes from `[ReplenishSystems:true]` on the spawn group and is also forced on by spawn-time weapon randomization (`PrefabManipulation.cs`). **Fails as**: an encounter with `[ReplenishSystems:false]` and no randomizer now runs its tanks dry, where a cargo ship on 2.74.05 never did.
 - Runtime top-up during combat is a different mechanism: `[UseAmmoReplenish:true]` + `[AmmoReplenishClipAmount:]` + `[MaxAmmoReplenishments:]` in `[RivalAI Weapons]`.
 
 ---

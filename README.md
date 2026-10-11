@@ -28,7 +28,7 @@ To ensure complete accuracy and eliminate the guesswork that often plagues Space
    - `check_mes_sync.py` compares the skill's offline tag cache against your local MES install, so you know right away if the skill's knowledge has drifted from the version you're actually running.
 3. **Token Optimization & Progressive Disclosure for AI Agents**:
    - Lean root `SKILL.md` keeps AI agent token usage minimal while providing high-density mental models.
-   - 9 dedicated reference documents in `references/` are loaded on-demand only when relevant.
+   - 11 dedicated reference documents in `references/` are loaded on-demand only when relevant.
 4. **Safe XML Tooling (Eliminating Deserializer Crashes)**:
    - Standard XML comments (`<!-- ... -->`) inside `<Description>` tags crash Keen's deserializer: `ReadElementString()` throws `System.Xml.XmlException`, causing the game to skip loading the mod entirely (`MOD_CRITICAL_ERROR`).
    - `Format-MesSbc.ps1` and `Add-MesProfileSnippet.ps1` protect `<Description>` tags and auto-convert comments to RivalAI's `[//Comment]` syntax.
@@ -50,7 +50,8 @@ se-dev-mes/
 ├── references/                             # Deep-dive reference library (on-demand loading)
 │   ├── profiles_and_tags.md                # 30+ profile types, registration phases, tag types
 │   ├── spawning_and_conditions.md          # Spawners, environment gates, threat scoring
-│   ├── behaviors_and_autopilot.md          # 11 behavior subclasses, Role vs. CombatType, autopilot
+│   ├── behaviors_and_autopilot.md          # 11 behavior subclasses, Role vs. CombatType, autopilot, DespawnMES
+│   ├── dialogue_and_chat.md                # Dialogue banks, shared chat profiles, chat chance/tokens/range, chatter triggers
 │   ├── aircraft_behaviors_and_tuning.md    # Attack runs, profile-swap triggers, fixed-gun gates, WC shoot mode, hover fighters
 │   ├── manipulation_and_dereliction.md     # Block replacement, weapon randomizer, dereliction
 │   ├── events_and_zones.md                 # MES Events vs Triggers, master gates, zero-stripping
@@ -65,7 +66,7 @@ se-dev-mes/
 │   ├── automated_economy_store.sbc         # Mike Dude GVK automated store inventory refresh loop
 │   └── merchant_safezone_station.sbc       # TOC safezone station ([CreateSafeZone:true]) + merchant
 └── scripts/                                # Automation, diagnostics, and scaffolding suite
-    ├── mes_tag_cache.json                  # Offline database of 1,847 tags across 41 profile types + trigger Type values
+    ├── mes_tag_cache.json                  # Offline database of 1,850 tags across 41 profile types + trigger Type values
     ├── query_mes_tags.py                   # Tag inspector CLI (search local MES source or cache)
     ├── audit_unknown_tags.py               # Finds tags MES silently ignores and values its parsers reject (e.g. true on a Yes/No tag)
     ├── wc_shootmode.py                     # List/set/audit the WeaponCore shoot mode in prefabs; classify turrets, fixed guns and flares
@@ -155,12 +156,13 @@ Detects runtime pitfalls:
 - RivalAI zone custom bool/counter actions: missing gates, misaligned lists, and `[KnownPlayerAreaTimer:]` <= 0 (no KPL created).
 - Omission of required boolean master gates (`[ChangeCounters:true]`, `[SpawnEncounter:true]`).
 - Tag list count mismatches (`SetCounters` vs `SetCountersAmount`).
+- `[Type:DespawnMES]` triggers that can never fire (no `[DespawnTypeFromSpawner:]`, or the dead `CleanUp`/`PathEnd` values).
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/audit_mes_tags.ps1 -Path ".\Content\Data"
 ```
 
 ### 7. Cross-Reference Validator (`audit_mes_references.ps1`)
-Validates that every referenced trigger, action, condition, spawner, spawn group, and prefab exists across the mod files, and that every `[ZoneName:]`/`[ZoneNames:]` matches a zone's `[PublicName:]`:
+Validates that every referenced trigger, action, condition, spawner, spawn group, and prefab exists across the mod files, that every `[ZoneName:]`/`[ZoneNames:]` matches a zone's `[PublicName:]`, and the dialogue-bank and despawn semantics (missing bank files, bank chat profiles with a shared cap or cooldown, banks shared across factions, delayed commands from despawn actions):
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/audit_mes_references.ps1 -Path ".\Content\Data" -WarnOrphans -SkipPrefabs
 ```

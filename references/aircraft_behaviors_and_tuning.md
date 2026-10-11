@@ -30,10 +30,10 @@ plane's velocity direction (`FighterPlane.cs:256`); both read their distances fr
    - The breakaway distance must leave room to pull out. Pull-out radius is about `speed / rotation rate`; a dive at angle `a` loses about `R * (1 - cos a)` plus gyro spin-up. **[SOFT]**
    - The gun firing window is roughly `MaxStaticWeaponRange - AttackRunBreakawayDistance` (section 3).
 
-**Speed during a run (open question, [SOFT]).** With `SlowDownOnWaypointApproach:true`, `CalculateStoppingDistance(velocity, _forwardDir, Direction.Forward)` (`ThrustSystem.cs:490-510`) sums the thrusters with
-`ActiveDirection == Forward` (`ThrusterProfile.GetEffectiveThrust`) - the same thrusters `SetZ(invert:false)` drives for forward thrust. On an aircraft with only forward propellers that gives a non-zero estimate, thrust is cut
-inside it and the plane **coasts** (it never brakes down to `IdealMinSpeed`, and in a dive gravity adds speed). Section 6A item 2 of `behaviors_and_autopilot.md` describes the no-reverse-thruster case as a stopping distance of 0.
-Flight tests on forward-propeller aircraft matched the coasting reading, but which case applies depends on how the thrusters are classified - check with `/MES.BehaviorDebug.Thrust.true`. Where you want thrust held through a run, set `SlowDownOnWaypointApproach:false`.
+**Speed during a run ([HARD] change in MES 2.74.06 dev).** With `SlowDownOnWaypointApproach:true`, `CalculateDirectForwardThrust` cuts forward thrust once `CalculateStoppingDistance(...)` reaches the waypoint distance (`ThrustSystem.cs:210`).
+- **Up to MES 2.74.05** it passed `Direction.Forward`, so the estimate summed the **forward** thrusters (`ThrusterProfile.GetEffectiveThrust`), the same ones driven for forward thrust. On an aircraft with only forward propellers that gave a non-zero estimate, thrust was cut inside it and the plane **coasted** (it never braked down to `IdealMinSpeed`, and in a dive gravity added speed). Flight tests on forward-propeller aircraft matched this.
+- **From commit `941e8c2` (2.74.06 dev, jayph)** it passes `Direction.Backward`: braking is measured with the reverse thrusters, as `behaviors_and_autopilot.md` section 6A item 2 always described. With no reverse thrusters `accel <= 0` and the estimate is `0`, so thrust is no longer cut by the slow-down; the plane keeps its throttle through a run. A gravity term is still added to the acceleration (`dot(gravity, travelDir)`), so in a dive it can be positive and the estimate non-zero **[SOFT]**; not re-flown since the change.
+- Check which case applies with `/MES.BehaviorDebug.Thrust.true` (the `Current Dist / Stop Dist` line). Where you want thrust held through a run on any build, set `SlowDownOnWaypointApproach:false`.
 
 ---
 

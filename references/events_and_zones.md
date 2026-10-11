@@ -44,8 +44,9 @@ MES Events and RivalAI Grid Triggers use **different tag names** for sub-profile
 | `[SetSandboxStrings:true]` *(2.74.00)* | `[SandboxStrings:name,value]` | Sets sandbox string variables (sandbox-var tokens resolve in name and value). **[HARD]** An entry with an empty name or value hits a `return` inside the loop (`EventActionExecution.cs:119`), which aborts **every later step of this action**, not just that entry. |
 | `[SetSandboxVector3Ds:true]` *(2.74.00)* | `[SandboxVector3Ds:name,{X:0 Y:0 Z:0}]` | Sets sandbox Vector3D variables. |
 | `[AddInstanceEventGroup:true]` | `[InstanceEventGroupId:]`, `[InstanceEventGroupReplaceKeys:]`, `[InstanceEventGroupReplaceValues:]` | Instantiates a `[MES Event TemplateGroup]` (§5). |
-| `[TryContractSuccess:true]` / `[TryContractFail:true]` | *(none)* | Finish/fail the MES mission contract whose id seeded this event instance. **[HARD]** A `[MES Mission]`'s `[EventConditionIds:]` (with `[UseAnyPassingEventCondition:]`) were never read before MES 2.74.04 (`Mission.cs` looped `PlayerConditionIds` instead), so only `[PersistantEventConditionIds:]` gated missions on older builds. |
-| `[AddGPSToPlayers:true]` | `[GPSNames:]`, `[GPSDescriptions:]`, `[GPSCoords:]`, `[UseGPSObjective:true]` | Creating HUD GPS waypoints for players. |
+| `[RemoveThisInstanceGroup:true]` | *(none)* | Marks every event of this instance (same `InstanceId` tag) for removal; runs last in the action. See §5E. |
+| `[TryContractSuccess:true]` / `[TryContractFail:true]` | *(none)* | Finish/fail the MES mission contract whose id seeded this event instance, then remove the instance's events like `[RemoveThisInstanceGroup:true]` (§5E-F). **[HARD]** A `[MES Mission]`'s `[EventConditionIds:]` (with `[UseAnyPassingEventCondition:]`) were never read before MES 2.74.04 (`Mission.cs` looped `PlayerConditionIds` instead), so only `[PersistantEventConditionIds:]` gated missions on older builds. |
+| `[AddGPSToPlayers:true]` | `[GPSNames:]`, `[GPSDescriptions:]`, `[GPSCoords:]`, `[GPSColors:]`, `[GPSColorVariables:]`, `[UseGPSObjective:true]` | Creating HUD GPS waypoints for players. **[HARD]** `[GPSDescriptions:]` and `[GPSColors:]` were parsed but never applied before MES 2.74.06 (every GPS got the default description and orange); they now apply per index. `[GPSColors:]` (0-255 per channel) wins; if it is empty or zero for that index, `[GPSColorVariables:name]` reads a sandbox Vector3D of that name (the `{}` are optional). **[HARD] Channel order is `{X:Red Y:Blue Z:Green}`**: both code paths assign `color.B = Y` and `color.G = Z`, so `{X:255 Y:0 Z:128}` is orange (R 255, G 128, B 0), not an RGB-ordered vector (tracking: se-dev-mes#8). Descriptions resolve tokens (`IdsReplacer`; with no NpcData in an Event Action only sandbox variables work). The RivalAI Action version also falls back to the grid's custom Vector3D variables for the color. |
 | `[RemoveGPSFromPlayers:true]` | `[RemoveGPSNames:]` | Deleting HUD GPS waypoints from players. |
 | *None (Self-gated)* | `[DebugChatMessage:<Text>]`, `[DebugHudMessage:<Text>]` | Diagnostic test messages for event development (never use in production). |
 
@@ -208,4 +209,51 @@ Templates let one set of event profiles be **stamped out as independent live eve
 ```
 
 ### D. Contract Blocks (RivalAI Action)
-- **[HARD]** `[ApplyContractProfiles:true]` + `[ContractBlocks:<block CustomName>]` + `[ContractBlockProfiles:<[MES Contract Block] SubtypeId>]` exist only on RivalAI Actions. Both are string lists paired **by index** (`ActionSystem.cs` loops to the shorter list), so several boards can be set in one action; each name matches every contract block on the grid with that exact `CustomName`. `[ClearContractContentsFirst:true]` clears the board first.
+- **[HARD]** `[ApplyContractProfiles:true]` + `[ContractBlocks:<block CustomName>]` + `[ContractBlockProfiles:<[MES Contract Block] SubtypeId>]` exist only on RivalAI Actions. `[ContractProfiles:]` is an alias of `[ContractBlockProfiles:]`.
+- **[HARD] Pairing trap**: `[ContractBlocks:]` and `[ContractBlockProfiles:]` are two separate lists **paired by index**, and `ActionSystem.cs` loops only to the **shorter** list. Two `[ContractBlocks:]` lines with one `[ContractBlockProfiles:]` line fill only the first board and nothing is logged. To fill two boards, write two of each in the same order, even when both boards use the same profile:
+  ```
+  [ApplyContractProfiles:true]
+  [ContractBlocks:Contracts North]
+  [ContractBlocks:Contracts South]
+  [ContractBlockProfiles:ModPrefix-ContractBoard-Escort]
+  [ContractBlockProfiles:ModPrefix-ContractBoard-Escort]
+  ```
+  Both tags drop blank entries at parse time, so an empty slot shifts every later pair; a pair whose profile id isn't registered is skipped (only logged under `/MES.BehaviorDebug.Action.true`: `Couldn't find Mission Profile With Name`).
+- **[HARD] Matching**: a name must equal the block's `CustomName` exactly (case-sensitive), and only blocks on the grid that runs the behavior count (`CurrentGrid.Contracts`; not linked subgrids). Each name matches every contract block with that name.
+- **[HARD] `[ClearContractContentsFirst:true]` runs per pair** (`ContractBlockProfile.ApplyProfileToBlock` → `InGameContractManager.ClearBlockContracts`) and removes the block's generated, not-yet-accepted contracts. Two pairs that target the same block name therefore clear each other's missions: the second pair wipes what the first just added. Put every mission for one board in one `[MES Contract Block]` profile's `[MissionIds:]` instead.
+
+### E. Relationship Model, Lifecycle & Limits [HARD]
+Verified: `Event.cs`, `TemplateEventGroup.cs`, `EventManager.cs`, `EventActionExecution.cs`, `Mission/*.cs`, `IdsReplacer.cs`.
+
+```text
+[MES Event]               static: ONE shared Event per profile, created at world load, id = its SubtypeId
+[MES Event Template]      stamped: ONE Event per instantiation, id = <template>@<InstanceId>
+[MES Event TemplateGroup] bundle: instantiates EVERY listed template in one call, all sharing one InstanceId
+   condition/action ids on a stamped event:
+     id is a [... Condition Template]/[... Action Template]  -> stamped per instance (<id>@<InstanceId>), text token-replaced
+     id is a plain [MES Event Condition]/[MES Event Action]  -> the shared profile, NOT replaced (no tokens resolve)
+```
+
+- **Same tags everywhere.** A template is parsed by the same `InitTags` as its non-template twin (`EventProfile`, `EventCondition`, `EventActionReferenceProfile`/`EventActionProfile`), after `string.Replace`. Event-only, template-only and shared tag sets are therefore identical; the only template-specific thing is that `{Key}` text is replaced first. `{Key}` stays literal in non-template profiles. `[MES Event TemplateGroup]` reads only `[TemplateEventIds:]`.
+- **Each instance joins the event-tag pool** with its `[Tags:]` plus its `InstanceId` as an extra tag (`Event.Profile`), which is how `RemoveThisInstanceGroup` finds its siblings.
+- **Who can start a group**: `[AddInstanceEventGroup:true]` on an `[MES Event Action]`; the same tag on a `[RivalAI Action]` (the values pass through `IdsReplacer` with the Remote Control position, the keys do not); a `[MES Mission]` when its contract is **accepted** (`Contract.TryToActivateCustomContract` → `Mission.Start`, not when the contract is generated); and the `InsertInstanceEventGroup` mod API. An unknown group id silently does nothing.
+- **Ids**: `AddEventsAsInsertible` uses `GameDateTime.Ticks` as `{InstanceId}` when no id is passed (event action, RivalAI action, API), one id per call. Two instantiations in the same game tick therefore get the same id: duplicate `<template>@<id>` events that share a tag and are removed together. A `[MES Mission]` passes the Keen contract id instead.
+- **Persistence**: instances live in the same `EventsList` and save as `MES-EventsList`, with `Insertable`, `ReplaceKeys`, `ReplaceValues`, `InstanceId`, `TemplateProfileSubtype` and `MarkedforRemoval` stored.
+  - On load `Event.Init()` rebuilds each instance from the **current** template text plus the saved keys/values: editing a template changes live instances at the next load (run count and cooldown are kept).
+  - Deleting a template leaves its instances in the save, invalid (`ErrorOnSetup`) and silently skipped every pass. The load-time cleanup ("Delete Old Events") skips every `Insertable` event, so nothing ever removes them.
+- **Nothing ends an instance by itself.** `[UniqueEvent:true]` only stops further runs; the event stays in the list and the save. Remove one with `[RemoveThisInstanceGroup:true]` or `[TryContractSuccess:true]`/`[TryContractFail:true]` on an `[MES Event Action]` (they run last in the action and mark every event tagged with this `InstanceId` as `MarkedforRemoval`; `EventManager.ProcessEvents` drops them on its next 30-tick pass).
+  - **Hazard**: those removal loops read `Event.Profile.Tags` with no null check, and `Profile` is `null` for an orphaned instance, so after a template is deleted they throw on reaching it and the action stops partway. Remove instances before deleting the template. *(Read from source, not reproduced in play; tracking: se-dev-mes#8.)*
+- **No instance cap.** Nothing limits how many exist. Every live instance is evaluated on each 30-tick `ProcessEvents` pass, and each stamped action registers `ProfileManager.EventActionReferenceProfiles["<action>@<id>"]`, which is never removed during the session. Long-lived servers should end finished instances.
+- **Replace keys** (`IdsReplacer.ReplaceText`): plain `string.Replace` in list order, then the automatic `{InstanceId}` last.
+  - A value that contains a later key's text is replaced again (cascade), so keep values free of `{...}` text. A user-supplied `{InstanceId}` key wins, because it runs first.
+  - Key and value counts must match. On a mismatch MES shows a "Big error" chat message, copies the text to the clipboard, and **still creates the instance with the unreplaced `{Key}` text**.
+  - `[InstanceEventGroupReplaceKeys:]`/`[InstanceEventGroupReplaceValues:]` are comma-split lists with **no escaping**: a comma inside a value splits it and trips the count mismatch. A `[MES Mission]` avoids this: its `[ReplaceKeys:]`/`[ReplaceValues:]` take one entry per tag line and keep commas (`[ReplacePairs:]` is a third form).
+
+### F. `[MES Mission]` vs a Plain `AddInstanceEventGroup` [HARD]
+A mission is an instance group plus a Keen custom contract (`MissionProfile.cs`, `Mission.cs`, `InGameContractManager.cs`):
+- **Id source**: the Keen contract id becomes `{InstanceId}` (and `{ContractId}`, `MissionType:Custom` only) instead of game-time ticks, so `[TryContractSuccess:true]`/`[TryContractFail:true]` can finish the right contract.
+- **Contract type**: `[ContractSubtypeId:]` *(2.74.06 dev, default `MESContract`)* names the `MyObjectBuilder_ContractTypeDefinition` that a `MissionType:Custom` contract uses; before, it was hard-coded. The definition must exist in the game or the contract cannot be created.
+- **Timing**: the contract is generated when `[ApplyContractProfiles:true]` stocks the board, and only if `[EventConditionIds:]`/`[PersistantEventConditionIds:]` pass then and the profile's `[ReplaceKeys:]`/`[ReplaceValues:]` counts match. The values go through `IdsReplacer` with the stocking grid's NpcData, so `{Faction}`, `{SpawnGroupName}` and custom strings resolve there. The event group is stamped only when a player **accepts**, after the event conditions are re-checked (`Contract no longer available` if they fail), then `[LeadPlayerConditionIds:]` and `[PlayerConditionIds:]` (a failed player check puts the contract back on the board).
+- **Hooks into Keen's contract events**: an instance event tagged `Failed@{InstanceId}` or `Abandoned@{InstanceId}` has its actions run (conditions, cooldown and enabled state are bypassed) when that contract fails or is abandoned. A finished contract pays `[ReputationReward:]` and sets the `[ActivateBooleanNameOnSucces:]` sandbox boolean; an abandoned one charges `[FailReputationPrice:]`.
+- **Cleanup is not automatic.** On finish, fail or abandon MES does **not** remove the mission's instance events. The template must end itself with `[RemoveThisInstanceGroup:true]` or `[TryContract*]`; otherwise the events live on in the save.
+- **`[Exclusive:true]`**: accepting one contract of the mission removes the mission's other generated contracts on every board, and the mission is not added to a board while one accepted contract is still active.

@@ -67,6 +67,7 @@ Every profile must be defined inside an `<EntityComponent xsi:type="MyObjectBuil
     - `Session`: Fires once per game session/load.
     - `ButtonPress`: Fires from a button panel on **this** grid (`[ButtonPanelName:]` supports variables since MES 2.74.00; buttons on other grids no longer fire it since MES 2.74.03).
     - `HealthPercentage`: **[HARD]** fires while grid integrity is **at or above** `[PercentageOfHealthRemaining:]` (`TriggerChecks.cs:386` uses `>=`), not when it drops below. For "below X%", use a `Damage` trigger with a Condition `[CheckHealthPercentage:true]` + `[MaxPercentageOfHealthRemaining:X]`.
+    - `Despawn` / `DespawnMES`: fire when this grid is removed. `Despawn` is the behavior's own despawn; `DespawnMES` covers every MES removal but only runs when `[DespawnTypeFromSpawner:]` is `Any` or an exact source string (`behaviors_and_autopilot.md` §9).
     - `PaymentSuccess` / `PaymentFailure`: Fire after a `[ChangePlayerCredits:true]` / `[ChangeNpcFactionCredits:true]` action.
     - Also: `AcquiredTarget`, `ChangedTarget`, `SwitchedTarget`, `LostTarget`, `HasTarget`, `NoTarget`, `NoWeapon`, `TurretTarget`, `TargetInSafezone`, `PlayerFar`, `PlayerKnownLocation`, `Position`, `WaypointNear`/`WaypointFar` (see crash note in `diagnostics_and_troubleshooting.md` §4.4), `InsideActiveZone`/`OutsideActiveZone` (and the non-Active variants), `HealthPercentage`, `ActiveWeaponsPercentage`/`ActiveGunsPercentage`/`ActiveTurretsPercentage`, `SensorActive`/`SensorIdle`, `JumpRequested`/`JumpCompleted`, `Weather`, `Retreat`, `Despawn`/`DespawnNear`/`DespawnFar`/`DespawnMES`.
     - `Manual` (convention): MES has no check for this value, so the trigger never fires on its own — only `[ManuallyActivateTrigger:true]` + `[ManuallyActivatedTriggerNames:]`/`[ManuallyActivatedTriggerTags:]` fires it (that path ignores `Type` entirely, §6). Any other unrecognized `Type` value behaves the same way, silently.
@@ -81,7 +82,7 @@ Every profile must be defined inside an `<EntityComponent xsi:type="MyObjectBuil
 - **Header**: `[RivalAI Action]` or `[MES AI Action]`
 - **Key Capabilities**:
   - **Spawning**: `[SpawnEncounter:true]` + `[Spawner:<SubtypeId>]`.
-  - **Chat/Audio**: `[UseChatBroadcast:true]` + `[ChatData:<SubtypeId>]`, `[PlayDialogueCue:true]` + `[DialogueCueId:<string>]`.
+  - **Chat/Audio**: `[UseChatBroadcast:true]` + `[ChatData:<SubtypeId>]`, `[PlayDialogueCue:true]` + `[DialogueCueId:<string>]` (dialogue banks, shared chat-profile state, chance rolls, tokens, range: `dialogue_and_chat.md`).
   - **Weapons**: `[SetWeaponsToMaxRange:true]` / `[SetWeaponsToMinRange:true]`. (Weapon randomization is a spawn-time `[MES Manipulation]` feature; no action re-rolls weapons.)
   - **Credits** *(fixed in MES 2.74.03)*: `[ChangePlayerCredits:true]` + `[ChangePlayerCreditsAmount:]` (or `[ChangePlayerCreditsAmountCounter:{CounterName}]`, 2.74.00), and `[ChangeNpcFactionCredits:true]` + `[ChangeNpcFactionCreditsAmount:]` (or the new `[ChangeNpcFactionCreditsAmountCounter:{CounterName}]`). A deduction now fails (→ `PaymentFailure`) only when it would take the balance below zero; before the fix, deductions always "succeeded", and the NPC-faction path read the *player* amount/counter tags.
   - **Reputation**: `[ChangeReputationWithPlayers:true]` + `[ReputationChangeRadius:]`/`[ReputationChangeFactions:]`/`[ReputationChangeAmount:]` (players in radius), `[ChangeAttackerReputation:true]` + `[ChangeAttackerReputationFaction:]`/`[ChangeAttackerReputationAmount:]` (damage owner). `[ReputationChangesForAllAttackPlayerFactionMembers:true]` extends the attacker change to every member of the attacker's faction, offline members included. **[HARD]** Before MES 2.74.05 the members were collected but never applied (`FactionHelper.ChangePlayerReputationWithFactions` looped the original list), so the flag did nothing; same for the `[MES Event Action]` `[ReputationChangesForAllRadiusPlayerFactionMembers:true]`. **[HARD]** RivalAI Actions never parse `[ReputationChangesForAllRadiusPlayerFactionMembers:]` (the field exists but `ActionReferenceProfile.cs` has no parser entry), so the radius change cannot reach faction members from a RivalAI Action; use an MES Event Action.
@@ -94,7 +95,8 @@ Every profile must be defined inside an `<EntityComponent xsi:type="MyObjectBuil
   - **Store Updates**: `[ApplyStoreProfiles:true]`, `[ClearStoreContentsFirst:true]`, `[StoreBlocks:...]`, `[StoreProfiles:...]`.
   - **Container Loot**: `[ApplyContainerTypeToInventoryBlock:true]` + `[ContainerTypeBlockNames:...]` + `[ContainerTypeSubtypeIds:...]`.
   - **SafeZone Generation**: `[CreateSafeZone:true]`, `[SafeZoneProfile:...]`, `[LinkSafeZoneToRemoteControl:true]`, `[SafeZonePositionGridCenter:true]`.
-  - **Despawn/Retreat**: `[Retreat:true]`, `[ForceDespawn:true]`.
+  - **Despawn/Retreat**: `[Retreat:true]`, `[ForceDespawn:true]`. Triggers that react to removal: `Type:Despawn`, `Type:DespawnMES` (needs `[DespawnTypeFromSpawner:]`; `behaviors_and_autopilot.md` §9).
+  - **HUD GPS**: `[AddGPSToPlayers:true]` + `[GPSNames:]`/`[GPSDescriptions:]`/`[GPSColors:]`/`[GPSColorVariables:]` (MES 2.74.06 dev; colour channel order and details in `events_and_zones.md` §2.A).
   - **Diagnostic Debugging**: `[DebugMessage:<Text>]` (Direct chat test message with token evaluation; do not use in production).
 
 ### D. Condition Profiles (RivalAI Grid-Bound)
@@ -162,7 +164,7 @@ Every profile must be defined inside an `<EntityComponent xsi:type="MyObjectBuil
 ### J. MES Event Template & Instance Event Group Profiles
 - **`[MES Event TemplateGroup]`** (`TemplateEventGroup`): lists `[MES Event Template]` ids with `[TemplateEventIds:<SubtypeId>]`, one per tag line. Instantiated by `[AddInstanceEventGroup:true]` + `[InstanceEventGroupId:]` (+ `[InstanceEventGroupReplaceKeys:]`/`[InstanceEventGroupReplaceValues:]`) on an Event or RivalAI Action, or by a `[MES Mission]`. **All** templates in the group become live event instances; there is no random pick and no `[TemplateGroupId:]`/`[Templates:]` tag.
 - **`[MES Event Template]`** / **`[MES Event Condition Template]`** / **`[MES Event Action Template]`**: full Event / Event Condition / Event Action bodies stored as text and token-replaced per instance (replace keys + `{InstanceId}`).
-- **[HARD] `[ContractBlocks:<CustomName>]`** (RivalAI Action): string list paired by index with `[ContractBlockProfiles:]`, gated by `[ApplyContractProfiles:true]`. Several boards per action are fine. Example:
+- **[HARD] `[ContractBlocks:<CustomName>]`** (RivalAI Action): string list paired by index with `[ContractBlockProfiles:]`, gated by `[ApplyContractProfiles:true]`. **Pairing trap**: the loop stops at the shorter list, so every extra board needs its own `[ContractBlockProfiles:]` line too (events_and_zones.md §5D). Example:
   ```
   [ApplyContractProfiles:true]
   [ClearContractContentsFirst:true]
