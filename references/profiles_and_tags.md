@@ -106,7 +106,7 @@ Every profile must be defined inside an `<EntityComponent xsi:type="MyObjectBuil
   - `[CheckTargetDistance:bool]`, `[MinTargetDistance:<double>]`, `[MaxTargetDistance:<double>]`. (RivalAI Conditions have no `CheckPlayerNear`; use a `PlayerNear` trigger or a `[MES Player Condition]` via `[CheckPlayerCondition:true]` + `[PlayerConditionIds:]`.)
   - `[CheckPlayerReputation:bool]`, `[MinPlayerReputation:<int>]`, `[MaxPlayerReputation:<int>]`.
   - `[CheckCustomCounters:bool]`, `[CustomCounters:<string>]`, `[CustomCountersTargets:<int>]`, `[CounterCompareTypes:<Enum>]`.
-  - `[CommandCheckFromParent:bool]`, `[CommandFromParent:bool]`.
+  - `[CommandCheckFromParent:bool]`, `[CommandFromParent:bool]`: the received command's sender Remote Control must (or must not) be the one that spawned this grid. **[HARD]** Compared by Remote Control `EntityId` with MES PR #386, not merged yet (`ParentId` is persisted there); before, it compared owner identities, so any grid with the same owner counted as the parent. Details: `behaviors_and_autopilot.md` §5.B.
 
 ### E. Autopilot Profiles
 - **Header**: `[RivalAI Autopilot]` or `[MES AI Autopilot]`

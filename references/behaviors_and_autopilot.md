@@ -176,8 +176,23 @@ RivalAI allows inter-grid communication using radio commands:
 
 ### B. Parent-Child Logistics (Enenra GFA Courier Pattern)
 - A static station summons a dynamic courier grid (`[SingleRecipient:true]`, `[CommandCheckFromParent:true]`).
+- **[HARD] What "parent" means (MES PR #386, `fix/command-parent-child`; **not merged yet**, merge into master before shipping this)**: `NpcData.ParentId` is the **Remote Control `EntityId`** of the grid whose `[RivalAI Action]` ran the `[Spawner:]` (`ActionSystem.cs`, `spawner.ParentId = RemoteControl.EntityId`), and it is now saved with the grid (`ProtoMember(49)`; it was a non-persistent field). Only grids spawned through a `[RivalAI Spawn]` profile get one; MES spawners and event spawns leave it `0`, so they are nobody's child.
+  - `[CommandFromParent:true]` (a `[RivalAI Condition]`) passes only when the command's sender Remote Control is exactly that parent. **Before this change `ParentId` held the spawner's *owner identity*, so a command from any grid with the same owner (typically the whole NPC faction) counted as "from the parent".** Existing profiles that relied on that must now get the command from the real parent.
 - Transmits landing coordinates via `[AddWaypointFromCommand:true]`.
 - Courier approaches, reduces altitude (`NewAutopilotMinAltitude:15`), lands, resupplies stock, and retreats.
+
+### B2. Receiver Filters on `[RivalAI Command]` (MES PR #386, not merged yet)
+All default `false`, are checked in `TriggerSystem.cs` before the relation checks, and a command that fails one is dropped with a `BehaviorDebug.Command` log line. They combine with `[MatchSenderReceiverOwners:]` (default `true`), so owners must still match unless you turn that off.
+
+| Tag | The receiver is processed only if... | Source of the link |
+| :--- | :--- | :--- |
+| `[MatchReceiverParent:true]` | it is the grid that spawned the sender | sender's `Npc.ParentId` == receiver Remote Control id |
+| `[MatchReceiverChild:true]` | it was spawned by the sender | receiver's `Npc.ParentId` == sender Remote Control id |
+| `[MatchReceiverEscort:true]` | it is currently an **active Escort** of the sender | receiver runs the `Escort` subclass and its `ParentEscort.ParentId` == sender Remote Control id |
+| `[MatchReceiverLeader:true]` | it is the grid the sender is currently escorting | sender is an active Escort whose leader id == receiver Remote Control id |
+
+- **[HARD] `Parent`/`Child` need the spawn link above** (`ParentId != 0`); a grid not spawned by a RivalAI spawn action never matches. `Escort`/`Leader` use the live escort assignment instead and stop matching when the grid leaves the `Escort` subclass.
+- The link ids are read when the command is sent (`SenderParentId`, `SenderEscortLeaderId`), so they reflect the sender's state at that moment.
 
 ### C. Command Delivery Semantics (`TriggerSystem.cs` / `CommandHelper.cs`) [HARD]
 - **Synchronous delivery**: with `[CommandDelayTicks:0]` (default) `CommandHelper.SendCommand` invokes every listener immediately, inside the sender's action. A receiver's reply is therefore delivered back to the sender *before the sender's action finishes*.
