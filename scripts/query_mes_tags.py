@@ -186,6 +186,9 @@ def parse_tags_from_file(file_path):
             tag_name = m_dict.group(1)
             parser_fn = m_dict.group(2)
             data_type = TYPE_MAP.get(parser_fn, parser_fn)
+            # TagStringListCheck(s, false, ref x) is the overload that keeps commas: one entry per tag line.
+            if parser_fn == 'TagStringListCheck' and re.search(r'TagStringListCheck\(\s*\w+\s*,\s*false\s*,', line):
+                data_type = 'List<string> (one per tag line, commas kept)'
             tags.append((tag_name, data_type, idx, parser_fn))
             continue
 

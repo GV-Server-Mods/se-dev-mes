@@ -27,6 +27,12 @@
         faction from another mod - INFO) vs. singleton/near-duplicate spellings (likely a
         typo - WARN), since there is no single enumerable source of truth for factions
         defined in arbitrary external/workshop mods.
+    15. [Type:DespawnMES] triggers that can never fire: no [DespawnTypeFromSpawner:] (an empty
+        type only matches an empty despawn source, which only /MES.Debug.RemoveAllNpcs leaves),
+        or the dead values CleanUp / PathEnd (TriggerSystem.ProcessMESDespawnTriggers computes a
+        match for them and never reads it; only Any or an exact source string works).
+        Cross-file despawn checks (delayed commands, duplicate actions) are in
+        audit_mes_references.ps1.
 .PARAMETER Path
     Path to search for .sbc files. Defaults to current directory.
 #>
@@ -243,6 +249,24 @@ foreach ($file in $files) {
         if ($block -match '\[(RivalAI|MES AI) Autopilot\]') {
             if ($block -match '\[FlyLevelWithGravity:true\]' -and $block -match '\[UseSurfaceHoverThrustMode:true\]') {
                 Write-Host "[ERROR] $($file.Name) - Autopilot declares both [FlyLevelWithGravity:true] and [UseSurfaceHoverThrustMode:true]! This causes severe physics oscillation." -ForegroundColor Red
+                $issuesFound++
+            }
+        }
+
+        # Check 15: [Type:DespawnMES] needs [DespawnTypeFromSpawner:] (TriggerSystem.cs
+        # ProcessMESDespawnTriggers: the trigger runs only for "Any" or an exact match with the
+        # grid's despawn source string; "CleanUp"/"PathEnd" set a flag that is never read).
+        if ($block -match '\[(RivalAI|MES AI) Trigger\]' -and $block -match '\[Type\s*:\s*DespawnMES\s*\]') {
+            $dtm = [regex]::Match($block, '\[DespawnTypeFromSpawner\s*:\s*([^\]]*)\]')
+            $dtValue = if ($dtm.Success) { $dtm.Groups[1].Value.Trim() } else { "" }
+            if ($dtValue.Length -eq 0) {
+                Write-Host "[WARN] $($file.Name) - [Type:DespawnMES] trigger has no [DespawnTypeFromSpawner:]. An empty type only matches an empty despawn source (set only by /MES.Debug.RemoveAllNpcs), so it never fires in normal play. Add [DespawnTypeFromSpawner:Any]." -ForegroundColor Yellow
+                $issuesFound++
+            } elseif ($dtValue -ceq 'CleanUp' -or $dtValue -ceq 'PathEnd') {
+                Write-Host "[WARN] $($file.Name) - [DespawnTypeFromSpawner:$dtValue] never matches: MES computes a match for it and never reads the result. Use Any, or the exact source string (for example CleanUp-Distance, CleanUp-Timer, CleanUp-BlockCount, Despawn-Behavior)." -ForegroundColor Yellow
+                $issuesFound++
+            } elseif ($dtValue -ieq 'Any' -and $dtValue -cne 'Any') {
+                Write-Host "[WARN] $($file.Name) - [DespawnTypeFromSpawner:$dtValue] is compared case-sensitively; only 'Any' matches every despawn." -ForegroundColor Yellow
                 $issuesFound++
             }
         }

@@ -29,6 +29,9 @@
          [LeadPlayerConditionIds], [PersistantEventConditionIds], [EventConditionIds]
        - Zone names (separate namespace): [ZoneName]/[ZoneNames] must match a [MES Zone]
          [PublicName] - MES never looks a zone up by its [Name]
+       - Dialogue banks: [DialogueBanks:X] must resolve to a DialogueBanks/X file, whose
+         <ChatProfileId> must be a [RivalAI Chat] profile that sets no per-profile cap/cooldown
+         (the profile instance is shared by every grid on the bank)
        - Loot/Manipulation profiles: [ContainerTypes], [ContainerTypeAssignSubtypeId],
          [AssignContainerTypesToAllCargo], [ContainerTypeSubtypeIds], [BlockReplacerProfileNames]
     3. Collect and cross-reference the separate string-Tag broadcast system, distinct from
@@ -41,6 +44,12 @@
        [ActivateEventTags:], [ToggleEventTags:], [ResetEventCooldownTags:],
        [IncreaseRunCountEventTags:] (match the Event-tag pool). A tag referenced that no
        profile anywhere declares is flagged - the broadcast would silently do nothing.
+    3b. Dialogue and despawn semantics (Pass 4): missing or malformed bank files, bank chat
+       profiles with a shared MaxChats/MinTime/MaxTime, [CustomChatAuthorName:] on bank
+       grids, behaviors with a bank used by spawn groups of more than one faction, cues that
+       a bank does not define (INFO), [Type:DespawnMES] actions that broadcast delayed
+       commands (the grid is gone before they are delivered) and a behavior that runs the
+       same actions from both [Type:Despawn] and [Type:DespawnMES] (INFO).
     4. Cross-reference definitions and references to flag:
        - Missing / Dangling references (referenced but never defined)
        - Case mismatches (e.g. 'GVK-Action-Foo' vs 'GVK-Action-foo')
@@ -240,6 +249,10 @@ $zoneReferences = [System.Collections.Generic.List[PSObject]]::new()
 # Owning SubtypeId -> profile header marker (e.g. "RivalAI Trigger"), used by the orphan
 # pass to report only profile types that MES never activates on its own.
 $profileHeaders = @{}
+# Owning SubtypeId -> full Description text, for the Pass 4 semantic checks.
+$profileBlocks = @{}
+# SpawnGroup SubtypeId -> @{ File; Block (its Description); Behaviours (<Behaviour> names) }.
+$spawnGroupInfo = @{}
 
 function Register-TagReference($names, $file, $refType, $pool, $tokenResolves) {
     if ($null -eq $names) { return }
@@ -392,6 +405,20 @@ foreach ($file in $sbcFiles) {
         }
     }
 
+    # SpawnGroup definitions: the Description (inline conditions/manipulation tags) and the
+    # <Behaviour> of every prefab, for the dialogue-bank checks in Pass 4.
+    foreach ($sgm in [regex]::Matches($content, '(?s)<SpawnGroup>(.*?)</SpawnGroup>')) {
+        $sgBody = $sgm.Groups[1].Value
+        $sgId = [regex]::Match($sgBody, '<SubtypeId>([^<]+)</SubtypeId>')
+        if (-not $sgId.Success) { continue }
+        $sgDesc = [regex]::Match($sgBody, '(?s)<Description>(.*?)</Description>')
+        $spawnGroupInfo[$sgId.Groups[1].Value.Trim()] = [PSCustomObject]@{
+            File = $file
+            Block = if ($sgDesc.Success) { $sgDesc.Groups[1].Value } else { "" }
+            Behaviours = @([regex]::Matches($sgBody, '<Behaviour>([^<]+)</Behaviour>') | ForEach-Object { $_.Groups[1].Value.Trim() })
+        }
+    }
+
     # Description profile block references. The optional prefix captures the owning
     # SubtypeId (the <Id> directly before <Description>) so the block's header can be
     # recorded for the orphan pass.
@@ -400,7 +427,10 @@ foreach ($file in $sbcFiles) {
         $block = $dm.Groups[2].Value
         if ($dm.Groups[1].Success) {
             $headerMatch = [regex]::Match($block, '\[([A-Za-z][A-Za-z ]*)\]')
-            if ($headerMatch.Success) { $profileHeaders[$dm.Groups[1].Value.Trim()] = $headerMatch.Groups[1].Value }
+            if ($headerMatch.Success) {
+                $profileHeaders[$dm.Groups[1].Value.Trim()] = $headerMatch.Groups[1].Value
+                if (-not $profileBlocks.ContainsKey($dm.Groups[1].Value.Trim())) { $profileBlocks[$dm.Groups[1].Value.Trim()] = $block }
+            }
         }
         $script:blockIsTextTemplate = $block -match '\[MES Event (Template|Condition Template|Action Template)\]'
 
@@ -759,6 +789,262 @@ if ($zonePublicNames.Count -gt 0 -or $zoneInternalNames.Count -gt 0) {
             Write-Host "[WARN] Unknown Zone ($($zref.Tag)): '$zn' in $($zref.File.Name) does not match the [PublicName:] of any [MES Zone] in the scanned files (fine only if the zone is defined in another mod)." -ForegroundColor Yellow
             $warnings++
         }
+    }
+}
+
+# Pass 4: dialogue banks and despawn-trigger semantics. These are silent in play: MES logs at
+# most one line at load, and the NPC just stays quiet / the trigger never runs. All of it is
+# resolved across files, so it lives here rather than in audit_mes_tags.ps1.
+#   Dialogue banks (ProfileManager.GetDialogueBank, DialogueBank.cs, BroadcastSystem.cs,
+#   ChatProfile.cs, CoreBehavior.cs): a bank is cached by name, builds ONE ChatProfile for all
+#   grids that use it (so MaxChats, MinTime/MaxTime and the first custom author name are shared
+#   server-wide), and is picked per behavior, never per {Faction}.
+#   Despawn (TriggerSystem.ProcessMESDespawnTriggers, GridCleanup.cs): see audit_mes_tags.ps1;
+#   the grid closes right after the DespawnMES actions run, so a delayed command is lost.
+function Get-ProfileTriggerIds([string]$behaviorId) {
+    $ids = [System.Collections.Generic.List[string]]::new()
+    $b = $profileBlocks[$behaviorId]
+    foreach ($t in (Parse-CsvTags $b 'Triggers')) { $ids.Add($t) }
+    foreach ($g in (Parse-CsvTags $b 'TriggerGroups')) {
+        if ($profileBlocks.ContainsKey($g)) { foreach ($t in (Parse-CsvTags $profileBlocks[$g] 'Triggers')) { $ids.Add($t) } }
+    }
+    return $ids.ToArray()
+}
+function Get-TriggerType([string]$triggerId) {
+    if (-not $profileBlocks.ContainsKey($triggerId)) { return "" }
+    $m = [regex]::Match($profileBlocks[$triggerId], '\[Type\s*:\s*([^\]]+)\]')
+    if ($m.Success) { return $m.Groups[1].Value.Trim() }
+    return ""
+}
+function Get-TriggerActionIds([string]$triggerId) {
+    if (-not $profileBlocks.ContainsKey($triggerId)) { return @() }
+    $b = $profileBlocks[$triggerId]
+    return @(@(Parse-CsvTags $b 'Actions') + @(Parse-CsvTags $b 'ElseActions'))
+}
+function Get-ConditionFactions([string]$block) {
+    # [FactionOwner:] of a spawn group's inline conditions, its [SpawnConditionsProfiles:], and
+    # those reached through a [MES Spawn Conditions Group] (one level, like ProfileManager).
+    $factions = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+    $blocks = [System.Collections.Generic.List[string]]::new()
+    $blocks.Add($block)
+    foreach ($cp in (Parse-CsvTags $block 'SpawnConditionsProfiles')) { if ($profileBlocks.ContainsKey($cp)) { $blocks.Add($profileBlocks[$cp]) } }
+    foreach ($cg in (Parse-CsvTags $block 'SpawnConditionGroups')) {
+        if (-not $profileBlocks.ContainsKey($cg)) { continue }
+        foreach ($tag in 'SpawnConditionsProfiles', 'SpawnConditionProfiles') {
+            foreach ($cp in (Parse-CsvTags $profileBlocks[$cg] $tag)) { if ($profileBlocks.ContainsKey($cp)) { $blocks.Add($profileBlocks[$cp]) } }
+        }
+    }
+    foreach ($b in $blocks) {
+        foreach ($f in (Parse-CsvTags $b 'FactionOwner')) { if ($f -notmatch '\{[^}]+\}') { [void]$factions.Add($f) } }
+    }
+    return $factions
+}
+function Get-ManipulationBlocks([string]$block) {
+    $blocks = [System.Collections.Generic.List[string]]::new()
+    $blocks.Add($block)
+    foreach ($mp in (Parse-CsvTags $block 'ManipulationProfiles')) { if ($profileBlocks.ContainsKey($mp)) { $blocks.Add($profileBlocks[$mp]) } }
+    foreach ($mg in (Parse-CsvTags $block 'ManipulationGroups')) {
+        if (-not $profileBlocks.ContainsKey($mg)) { continue }
+        foreach ($mp in (Parse-CsvTags $profileBlocks[$mg] 'ManipulationProfiles')) { if ($profileBlocks.ContainsKey($mp)) { $blocks.Add($profileBlocks[$mp]) } }
+    }
+    return $blocks
+}
+
+$behaviorHeaderNames = @('RivalAI Behavior', 'Rival AI Behavior', 'MES AI Behavior')
+$behaviorIds = @($profileHeaders.Keys | Where-Object { $behaviorHeaderNames -contains $profileHeaders[$_] } | Sort-Object)
+
+# --- 4a. Dialogue banks ---------------------------------------------------------------------
+$behaviorBanks = @{}
+foreach ($bid in $behaviorIds) {
+    $banks = @(Parse-CsvTags $profileBlocks[$bid] 'DialogueBanks')
+    if ($banks.Count -gt 0) { $behaviorBanks[$bid] = $banks }
+}
+if ($behaviorBanks.Count -gt 0) {
+    $bankDirs = [System.Collections.Generic.List[string]]::new()
+    $rootPath = (Resolve-Path $Path).Path
+    foreach ($d in (Get-ChildItem -Path $rootPath -Directory -Recurse -Filter DialogueBanks -ErrorAction SilentlyContinue)) { $bankDirs.Add($d.FullName) }
+    # The scan root may be a sub-folder of the mod (Content\Data\Profiles): also look in its ancestors.
+    $anc = $rootPath
+    for ($k = 0; $k -lt 3 -and $anc; $k++) {
+        foreach ($rel in 'DialogueBanks', 'Data\DialogueBanks') {
+            $cand = Join-Path $anc $rel
+            if ((Test-Path $cand -PathType Container) -and -not $bankDirs.Contains($cand)) { $bankDirs.Add($cand) }
+        }
+        $parentDir = Split-Path $anc -Parent
+        if (-not $parentDir -or $parentDir -eq $anc) { break }
+        $anc = $parentDir
+    }
+    $bankFiles = @{}   # relative path (lower-case) -> @{ Rel; Full }
+    foreach ($bd in $bankDirs) {
+        foreach ($bf in (Get-ChildItem -Path $bd -File -Recurse -ErrorAction SilentlyContinue)) {
+            $rel = $bf.FullName.Substring($bd.Length).TrimStart('\', '/').Replace('/', '\')
+            if (-not $bankFiles.ContainsKey($rel.ToLowerInvariant())) { $bankFiles[$rel.ToLowerInvariant()] = [PSCustomObject]@{ Rel = $rel; Full = $bf.FullName } }
+        }
+    }
+
+    $usedBy = [System.Collections.Generic.Dictionary[string, object]]::new([System.StringComparer]::Ordinal)   # bank name (case-sensitive) -> behaviors
+    foreach ($bid in $behaviorBanks.Keys) {
+        foreach ($bn in $behaviorBanks[$bid]) {
+            if (-not $usedBy.ContainsKey($bn)) { $usedBy[$bn] = [System.Collections.Generic.List[string]]::new() }
+            $usedBy[$bn].Add($bid)
+        }
+    }
+    Write-Host "Dialogue Banks Referenced: $($usedBy.Count) | DialogueBanks Files Found: $($bankFiles.Count)" -ForegroundColor Gray
+
+    $bankCues = [System.Collections.Generic.Dictionary[string, object]]::new([System.StringComparer]::Ordinal)   # bank name -> HashSet of cue ids (valid banks only)
+    foreach ($bn in ($usedBy.Keys | Sort-Object)) {
+        $who = (@($usedBy[$bn] | Sort-Object | Select-Object -First 3)) -join ', '
+        if ($usedBy[$bn].Count -gt 3) { $who += ", +$($usedBy[$bn].Count - 3) more" }
+        $norm = $bn.Replace('/', '\')
+        $hit = $bankFiles[$norm.ToLowerInvariant()]
+        if ($null -eq $hit) {
+            $hint = ""
+            $withExt = @($bankFiles.Keys | Where-Object { $_ -like ($norm.ToLowerInvariant() + '.*') })
+            if ($withExt.Count -gt 0) { $hint = " A file named '$($bankFiles[$withExt[0]].Rel)' exists: the tag value is the literal file name, extension included." }
+            elseif ($bankFiles.Count -eq 0) { $hint = " No DialogueBanks folder with files was found under or above the scanned path." }
+            Write-Host "[ERROR] Missing Dialogue Bank: [DialogueBanks:$bn] (used by $who) does not resolve to a file in a DialogueBanks folder. MES logs 'Could Not Add DialogueBank To Behavior' once at load and the behavior stays silent.$hint" -ForegroundColor Red
+            $errors++
+            continue
+        }
+        if ($hit.Rel -cne $norm) {
+            Write-Host "[WARN] Dialogue Bank Case Mismatch: [DialogueBanks:$bn] (used by $who) matches file '$($hit.Rel)' only case-insensitively; a case-sensitive host will not find it." -ForegroundColor Yellow
+            $warnings++
+        }
+        $xml = New-Object System.Xml.XmlDocument
+        try { $xml.Load($hit.Full) } catch {
+            Write-Host "[ERROR] Malformed Dialogue Bank: '$($hit.Rel)' is not valid XML ($($_.Exception.Message)); MES cannot deserialize it, so every behavior using it is silent." -ForegroundColor Red
+            $errors++
+            continue
+        }
+        $root = $xml.DocumentElement
+        if ($root.Name -ne 'DialogueBank') {
+            Write-Host "[ERROR] Malformed Dialogue Bank: '$($hit.Rel)' root element is <$($root.Name)>, MES deserializes <DialogueBank>." -ForegroundColor Red
+            $errors++
+            continue
+        }
+        $cues = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+        foreach ($cn in $root.SelectNodes('DialogueCue/DialogueCueId')) { [void]$cues.Add($cn.InnerText.Trim()) }
+        $bankCues[$bn] = $cues
+        foreach ($cn in $root.SelectNodes('DialogueCue/Entries/EventConditionId')) {
+            $condId = $cn.InnerText.Trim()
+            if ($condId.Length -gt 0 -and -not $definitionsLower.ContainsKey($condId.ToLowerInvariant()) -and -not $mesCoreDefinitions.Contains($condId)) {
+                Write-Host "[WARN] Dialogue Bank Condition: '$($hit.Rel)' has <EventConditionId>$condId</EventConditionId>, which is not a defined [MES Event Condition]; MES silently skips that <Entries> block." -ForegroundColor Yellow
+                $warnings++
+            }
+        }
+        $chatNode = $root.SelectSingleNode('ChatProfileId')
+        $chatId = if ($chatNode) { $chatNode.InnerText.Trim() } else { "" }
+        if ($chatId.Length -eq 0) {
+            Write-Host "[ERROR] Dialogue Bank Chat Profile: '$($hit.Rel)' has no <ChatProfileId>; every cue returns without a broadcast." -ForegroundColor Red
+            $errors++
+        } elseif ($mesCoreDefinitions.Contains($chatId)) {
+            # shipped by MES itself
+        } elseif (-not $definitions.ContainsKey($chatId)) {
+            Write-Host "[ERROR] Dialogue Bank Chat Profile: '$($hit.Rel)' names <ChatProfileId>$chatId</ChatProfileId>, which is not a defined chat profile ('Chat Profile Not Registered in Profile Manager'); every cue returns without a broadcast." -ForegroundColor Red
+            $errors++
+        } elseif ($profileHeaders[$chatId] -notmatch '^(RivalAI|MES AI) Chat$') {
+            Write-Host "[ERROR] Dialogue Bank Chat Profile: '$($hit.Rel)' names <ChatProfileId>$chatId</ChatProfileId>, but that is a [$($profileHeaders[$chatId])], not a [RivalAI Chat] profile." -ForegroundColor Red
+            $errors++
+        } else {
+            # One ChatProfile instance serves every grid on the bank: ProcessChat keeps
+            # ChatSentCount and the cooldown on it. [Chance:] is rolled per broadcast and is fine.
+            $cb = $profileBlocks[$chatId]
+            $maxChats = [regex]::Match($cb, '\[MaxChats\s*:\s*(-?\d+)\s*\]')
+            $minTime = [regex]::Match($cb, '\[MinTime\s*:\s*(-?\d+)\s*\]')
+            $maxTime = [regex]::Match($cb, '\[MaxTime\s*:\s*(-?\d+)\s*\]')
+            if ($maxChats.Success -and [int]$maxChats.Groups[1].Value -ge 0) {
+                Write-Host "[WARN] Shared Chat Profile: $chatId (bank '$($hit.Rel)') sets [MaxChats:$($maxChats.Groups[1].Value)]. The profile is one shared copy, so this is a server-wide lifetime cap on the voice: the first grids to speak use it up for every grid until restart. Leave MaxChats unset (-1)." -ForegroundColor Yellow
+                $warnings++
+            }
+            if (($minTime.Success -and [int]$minTime.Groups[1].Value -gt 0) -or ($maxTime.Success -and [int]$maxTime.Groups[1].Value -gt 1)) {
+                Write-Host "[WARN] Shared Chat Profile: $chatId (bank '$($hit.Rel)') sets [MinTime:]/[MaxTime:]. The cooldown is stored on the one shared copy, so one grid's chatter silences every other grid on the bank, and blocked lines are dropped, not queued. Only use a short window on purpose, as a squad throttle." -ForegroundColor Yellow
+                $warnings++
+            }
+        }
+    }
+
+    # [CustomChatAuthorName:] on a bank grid, and banks shared across factions.
+    $behaviorFactions = @{}
+    foreach ($sgId in ($spawnGroupInfo.Keys | Sort-Object)) {
+        $sg = $spawnGroupInfo[$sgId]
+        $bankBeh = @($sg.Behaviours | Where-Object { $behaviorBanks.ContainsKey($_) } | Sort-Object -Unique)
+        if ($bankBeh.Count -eq 0) { continue }
+        foreach ($mb in (Get-ManipulationBlocks $sg.Block)) {
+            if ($mb -match '\[CustomChatAuthorName\s*:') {
+                Write-Host "[WARN] Author Name On Dialogue Bank Grid: spawn group $sgId (behavior $($bankBeh -join ', ')) applies [CustomChatAuthorName:] through a manipulation profile. MES copies the first speaker's name into the bank's shared chat profile, so every grid on the bank then uses it." -ForegroundColor Yellow
+                $warnings++
+                break
+            }
+        }
+        $sgFactions = Get-ConditionFactions $sg.Block
+        foreach ($bb in $bankBeh) {
+            if (-not $behaviorFactions.ContainsKey($bb)) { $behaviorFactions[$bb] = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal) }
+            foreach ($f in $sgFactions) { [void]$behaviorFactions[$bb].Add($f) }
+        }
+    }
+    foreach ($bb in ($behaviorFactions.Keys | Sort-Object)) {
+        if ($behaviorFactions[$bb].Count -gt 1) {
+            Write-Host "[WARN] Dialogue Bank Across Factions: behavior $bb declares [DialogueBanks:] but its spawn groups use $($behaviorFactions[$bb].Count) factions ($((@($behaviorFactions[$bb]) | Sort-Object) -join ', ')). MES picks the bank per behavior, never per {Faction}, so all but one faction speak in the wrong voice. Make one behavior per faction." -ForegroundColor Yellow
+            $warnings++
+        }
+    }
+
+    # Cues played from a behavior that its bank does not define: INFO only, a bank may leave
+    # a cue out on purpose (a faction that can never be friendly has no friendly-fire cue).
+    foreach ($bid in ($behaviorBanks.Keys | Sort-Object)) {
+        $playedCues = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+        foreach ($tid in (Get-ProfileTriggerIds $bid)) {
+            foreach ($aid in (Get-TriggerActionIds $tid)) {
+                if (-not $profileBlocks.ContainsKey($aid)) { continue }
+                $ab = $profileBlocks[$aid]
+                if ($ab -match '\[PlayDialogueCue\s*:\s*true\s*\]') {
+                    foreach ($cue in (Parse-CsvTags $ab 'DialogueCueId')) { if ($cue -notmatch '\{[^}]+\}') { [void]$playedCues.Add($cue) } }
+                }
+            }
+        }
+        foreach ($bn in $behaviorBanks[$bid]) {
+            if (-not $bankCues.ContainsKey($bn)) { continue }
+            foreach ($cue in ($playedCues | Sort-Object)) {
+                if (-not $bankCues[$bn].Contains($cue)) {
+                    Write-Host "[INFO] Dialogue Cue Not In Bank: behavior $bid can play cue '$cue', but bank '$bn' defines no such cue (the line is skipped silently; fine if intentional)." -ForegroundColor DarkCyan
+                }
+            }
+        }
+    }
+}
+
+# --- 4b. Despawn triggers: delayed commands and duplicate actions ----------------------------
+$commandDelayed = @{}
+foreach ($cmdId in $profileHeaders.Keys) {
+    if ($profileHeaders[$cmdId] -match '^(RivalAI|MES AI) Command$') {
+        $delayMatch = [regex]::Match($profileBlocks[$cmdId], '\[CommandDelayTicks\s*:\s*(\d+)\s*\]')
+        if ($delayMatch.Success -and [int]$delayMatch.Groups[1].Value -gt 0) { $commandDelayed[$cmdId] = [int]$delayMatch.Groups[1].Value }
+    }
+}
+$reportedDelays = [System.Collections.Generic.HashSet[string]]::new()
+foreach ($tid in ($profileHeaders.Keys | Where-Object { $profileHeaders[$_] -match '^(RivalAI|MES AI) Trigger$' } | Sort-Object)) {
+    if ((Get-TriggerType $tid) -ne 'DespawnMES') { continue }
+    foreach ($aid in (Get-TriggerActionIds $tid)) {
+        if (-not $profileBlocks.ContainsKey($aid) -or $profileBlocks[$aid] -notmatch '\[BroadcastCommandProfiles\s*:\s*true\s*\]') { continue }
+        foreach ($cmd in (Parse-CsvTags $profileBlocks[$aid] 'CommandProfileIds')) {
+            if ($commandDelayed.ContainsKey($cmd) -and $reportedDelays.Add("$aid|$cmd")) {
+                Write-Host "[WARN] Delayed Command From Despawn Action: action $aid (run by [Type:DespawnMES] trigger $tid) broadcasts command $cmd with [CommandDelayTicks:$($commandDelayed[$cmd])]. The grid closes right after the despawn actions and MES drops a command whose sender is gone, so it is never delivered. Send it with no delay." -ForegroundColor Yellow
+                $warnings++
+            }
+        }
+    }
+}
+foreach ($bid in $behaviorIds) {
+    $despawnActions = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+    $mesActions = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+    foreach ($tid in (Get-ProfileTriggerIds $bid)) {
+        $tt = Get-TriggerType $tid
+        if ($tt -eq 'Despawn') { foreach ($a in (Get-TriggerActionIds $tid)) { [void]$despawnActions.Add($a) } }
+        elseif ($tt -eq 'DespawnMES') { foreach ($a in (Get-TriggerActionIds $tid)) { [void]$mesActions.Add($a) } }
+    }
+    $both = @($despawnActions | Where-Object { $mesActions.Contains($_) } | Sort-Object)
+    if ($both.Count -gt 0) {
+        Write-Host "[INFO] Duplicate Despawn Actions: behavior $bid runs $($both -join ', ') from both a [Type:Despawn] and a [Type:DespawnMES] trigger. A behavior's own despawn reaches both, so they run twice; one [Type:DespawnMES] + [DespawnTypeFromSpawner:Any] trigger covers both (fine if you want different timing)." -ForegroundColor DarkCyan
     }
 }
 
