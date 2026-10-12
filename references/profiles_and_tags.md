@@ -259,7 +259,8 @@ Modular Encounters Systems (MES) and RivalAI ship with default, built-in profile
 | `{<CustomCounterKey>}` | Value set by `[CustomCountersVariables:Key,Value]` (paired with `[SetCustomCountersVariables:true]`) | `npcData.CustomCountersVariables` | RivalAI Grid Triggers only |
 | `{<SandboxVarKey>}` | Value of session sandbox variable (`MyAPIUtilities.Static.Variables` — the SE engine's own store, not MES-specific; also visible to PB scripts and other mods) | `MyAPIGateway.Utilities.GetVariable` | **Both** RivalAI & MES Events |
 | `{PlayerName}` | Target/detected player's name | `BroadcastSystem.cs` / `EventAction` | RivalAI Chat & MES Event Chat |
-| `{GridName}` | Target/detected grid's name | `BroadcastSystem.cs` | RivalAI Chat only |
+| `{GridName}` | CustomName of the grid holding the NPC's own Remote Control (a subgrid's name if the RC sits on a subgrid), not the target's grid. Replaced in the chat text, `Author` and `GPSLabel` | `BroadcastSystem.cs` (`RemoteControl.SlimBlock.CubeGrid.CustomName`) | RivalAI Chat only |
+| `{AntennaName}` | HUD text of the NPC's highest-range broadcasting antenna; empty when `[IgnoreAntennaRequirement:true]` or `[SendToAllOnlinePlayers:true]` (no antenna scan). Replaced in the chat text, `Author` and `GPSLabel` | `BroadcastSystem.cs` (`HighestAntennaRangeName`) | RivalAI Chat only |
 | `{PlayerRelation}` | Relation to player (`Friendly`, `Neutral`, `Enemy`) | `BroadcastSystem.cs` | RivalAI Chat only |
 
 ### Critical Token Rules
