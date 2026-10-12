@@ -18,7 +18,7 @@ plane's velocity direction (`FighterPlane.cs:256`); both read their distances fr
 1. **Approach.** The autopilot flies to an **offset waypoint** around the target: `OffsetPlanetMinDistFromTarget` / `OffsetPlanetMaxDistFromTarget` away and
    `OffsetPlanetMinTargetAltitude` / `MaxTargetAltitude` above **the target's own position**, not the terrain (`OffsetSpace*` in space). Recalculated every `OffsetRecalculationTime` s (default 30).
    Terrain floor: if that point would sit less than `MinimumPlanetAltitude` above the surface, MES moves it to `max(offset altitude, the midpoint of MinimumPlanetAltitude and IdealPlanetAltitude)` above the surface (`MathTools.ValueBetween` returns the midpoint, not a random value)
-   (`AutoPilotSystem.cs:1597-1617`, GV-Server-Mods fork 5fd61d1; the offset matrix is the target entity's world matrix, `:1531`). So against ground targets the line-up height is set by those two altitudes, and against air targets by the offset.
+   (`AutoPilotSystem.cs:1597-1617`, MES 5fd61d1; the offset matrix is the target entity's world matrix, `:1531`). So against ground targets the line-up height is set by those two altitudes, and against air targets by the offset.
 2. **Run start.** The run begins when the plane is within `AttackRunDistancePlanet` of the **offset waypoint** (not of the target) **and** the target is farther than
    `AttackRunBreakawayDistance`. With `AttackRunOverrideWithDistanceAndTimer:true` it is also forced when the plane stays within `AttackRunOverrideDistance` of the offset waypoint for
    `AttackRunOverrideTimerTrigger` s (stops a plane circling the offset forever). `AttackRunDistancePlanet` should exceed the turn radius (`speed / rotation rate`) or the plane can orbit the offset without
@@ -31,6 +31,7 @@ plane's velocity direction (`FighterPlane.cs:256`); both read their distances fr
    - The plane has to stay inside the target's acquisition range: compare the offset distance (plus turn-around overshoot) with the targeting profile's `MaxDistance` / `NonBroadcastVisualRange` and any `TargetFar` trigger distance (section 2).
    - The breakaway distance must leave room to pull out. Pull-out radius is about `speed / rotation rate`; a dive at angle `a` loses about `R * (1 - cos a)` plus gyro spin-up. **[SOFT]**
    - The gun firing window is roughly `MaxStaticWeaponRange - AttackRunBreakawayDistance` (section 3).
+   - **Line up before the guns reach.** **[SOFT]** (GVK playtest) Put the offset distance at least 800 m beyond the fixed guns' max target distance, so the plane is lined up and on a straight approach before the target is in range, and widen the target profile's `MaxDistance` / `MaxExistingTargetDistance` and any `TargetNear`/`TargetFar` distances to cover the offset plus the turn-around (about 1 km), or the target is dropped between passes.
    - **Keep the target-relative offset altitude small, about -100 to 100, on every aircraft profile.** **[SOFT]** (GVK playtest) A line-up point well above the target makes NPC aircraft
      that target each other keep climbing over one another, and the dogfight cascades upward until it ends up in space. To keep planes higher over the ground, raise
      `MinimumPlanetAltitude` / `IdealPlanetAltitude` instead (the terrain floor above), which leaves air-to-air line-ups level.

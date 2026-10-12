@@ -178,7 +178,12 @@ When operating on worlds running the Water Mod:
 
 ---
 
-## 5. Torch Plugins & Server Compatibility
+## 5. Kill Bounty Payouts (Workshop Mod)
+MES has no per-NPC kill bounty. With the bounty mod (Steam Workshop [2812148664](https://steamcommunity.com/sharedfiles/filedetails/?id=2812148664)) loaded, `BountyOnKill=<credits>;` placed directly in a behavior profile sets what that NPC pays out when killed, so payouts can differ per behavior. **[SOFT]** (GVK practice; the mod reads the line, MES ignores it).
+
+---
+
+## 6. Torch Plugins & Server Compatibility
 
 On dedicated servers running Torch or Magnetar/Pulsar plugins:
 

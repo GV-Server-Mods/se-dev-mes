@@ -142,6 +142,11 @@ Checked against MES `b8f86a2` (upstream master); `Escort.cs` and `EscortSystem.c
 - **`[MaxDistance:]`**: Default 12000 m.
 - **`[MatchAllFilters:]` / `[MatchAnyFilters:]` / `[MatchNoneFilters:]`** (`TargetFilterEnum`):
   - `Relation`: Applies `[Relations:]` (`Enemy`, `Neutral`, `Friends`, `Faction`).
+  - **[HARD] NPC-vs-NPC relation ignores faction-to-faction reputation** (`EntityEvaluator.GetRelationBetweenIdentities`, checked at MES 37455cf).
+    - When the NPC's own owner is an NPC, MES reads the *target owner identity's* reputation with the NPC's faction: below -500 is Enemy, above 500 is Friends, anything else Neutral.
+    - Unless something set that per-identity value, it is the NPC faction's `<StartingReputation>`, or the game default when the faction has none. So a faction with `StartingReputation -1500` sees every other NPC as `Enemy`.
+    - Admin faction-to-faction reputation commands (`SetReputationBetweenFactions`) therefore don't change which NPC grids MES targets. Vanilla and WeaponCore turrets may still use them.
+    - To make two NPC factions ignore each other in MES, list each one in the other's `[MatchNoneFilters:Faction]` + `[FactionTargets:]`.
   - `Owner`: Applies `[Owners:]` (`Unowned`, `Player`, `NPC`).
   - `Powered`: Ignores unpowered floating wrecks.
   - `OutsideOfSafezone`: Prevents wasting ammunition against safezone shields.

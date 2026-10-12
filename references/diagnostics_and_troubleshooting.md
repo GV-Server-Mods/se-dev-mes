@@ -127,6 +127,10 @@ MES can dump internal diagnostic logs directly to your Windows clipboard for fas
 - `/MES.GPS.Encounters [true/false]`: Toggles GPS waypoints for all active MES encounters in the world.
 - `/MES.Debug.ShowZone.<PublicName|ZoneSubtypeId>`, `/MES.Debug.HideZone.<...>`, `/MES.Debug.ShowAllZones`, `/MES.Debug.HideAllZones` *(2.74.04)*: Draw zone spheres (including multi-sphere zones) in-world, with temporary GPS markers.
 - `/MES.Debug.CreateKPL.<Faction>.<Radius>.<Minutes>.<MaxEncounters>.<MinThreat>`: Creates a Known Player Location at your position. Minutes defaults to `30`; since 2.74.04 a value of `0` or less creates nothing (HUD: `KPL Not Created: Duration Must Be Greater Than 0`).
+  - `ShowAllZones` draws KPLs too (they are active zones), but the visualizer keys zones by `PublicName`, then `Name`, and KPLs have neither, so only **one** KPL is drawn at a time and `ShowZone` cannot target a KPL (`ZoneDebugVisualizer.GetZoneKey`). Still the quickest way to see whether a KPL exists and how far it reaches.
+- `/MES.Debug.DrawPaths`: toggles in-world lines from every AI-ready NPC to its waypoints (`AutoPilotSystem.DebugDrawingToWaypoints`): **green** current waypoint, **cyan** offset waypoint (attack-run line-up, escort slot), **magenta** planet-pathing waypoint, **red/orange** collision evasion. Drawn from the behavior loop, so it shows in singleplayer or on the hosting machine **[SOFT]: not expected to show for a client of a dedicated server**.
+- `/MES.Debug.ChangeBool.<Name>.<true|false>`: sets a sandbox boolean. `/MES.Debug.ChangeCounter.<Name>.<Amount>`: **adds** `<Amount>` to a sandbox counter (use a negative amount to subtract; it is not a set).
+- `/MES.Debug.ClearUniqueEncounters`: forgets which `UniqueEncounter` spawn groups have spawned. `/MES.Debug.ClearStaticEncounters`: invalidates every saved static-encounter record, so statics respawn.
 
 ### E. Interactive HUD Overlays (`/RivalAI.*`)
 - `/RivalAI.Debug.Toggle`: Toggles on-screen HUD diagnostics showing current behavior state, target coordinates, speed, and active triggers for the targeted grid.
@@ -137,6 +141,14 @@ MES can dump internal diagnostic logs directly to your Windows clipboard for fas
 ## 3. The Agent Troubleshooting Protocol (When Something Fails)
 
 When a modder or player reports that an encounter is not spawning, triggers aren't firing, or an NPC is behaving abnormally, the AI agent should guide the user through this systematic protocol:
+
+> [!TIP]
+> **Look before you log.** MES logs are long and slow to work through. Start with the visual tools and only turn on logging if they don't explain the problem:
+> - **Autopilot** (wrong path, overshoot, never lines up): `/MES.Debug.DrawPaths`, then `/MES.IGGB` on the grid for mode, subclass, autopilot profile and `Forward Thrust Mode`.
+> - **Zones and KPLs** (spawns blocked or allowed in the wrong place): `/MES.Debug.ShowAllZones`.
+> - **Spawning**: `/MES.GESAP` at the spot lists the eligible spawn groups.
+>
+> Give the user the exact commands for whatever they are testing, including the spawn command and where to stand.
 
 ```mermaid
 flowchart TD
@@ -348,3 +360,19 @@ When troubleshooting encounter loading or execution failures, search `SpaceEngin
 - Non-urgent distance or condition checks should never run on every frame. Use stepped cooldown intervals (`[MinCooldownMs:5000]`, `[MaxCooldownMs:5001]`) rather than 100ms loops.
 - Use `[MatchSenderReceiverOwners:true]` in command profiles to prevent grid-to-grid broadcasts from flooding all network entities.
 
+---
+
+## 6. Field Notes [SOFT]
+
+Observed on live servers, not yet checked against the MES code. Re-test after MES updates.
+
+- **Crashes from razing:**
+  - Don't raze blocks that can sit on subgrids.
+  - Don't `RazeBlocks` the RivalAI Remote Control: `UpdateShape()` can crash if the block has split from its parent grid.
+  - Don't run `GenerateExplosion` and a raze on the same block (for example the RivalAI Remote) at the same time.
+- **Static spawn groups:** some ignore their `[SpawnConditionsProfiles:]`; put those condition tags in the spawn group itself.
+- **Static encounter reset:** `[ResetThisStaticEncounter:true]` with `[ForceDespawn:true]` removes a static encounter and lets it respawn (not on the wiki).
+- **Particles:** can be played from actions much like sounds (not on the wiki).
+- **Climbing too steeply:** an `IdealPlanetAltitude` far above `MinimumPlanetAltitude` makes aircraft climb sharply and spoils their angle of attack.
+- **Aim:** RivalAI aims poorly with fixed weapons. Where accuracy matters, Keen's AI blocks do better than the RivalAI autopilot.
+- **Debris cleanup:** `[IgnoreCleanupRules:true]` on NPCs, with aggressive MES CleanUp settings, helps clear debris that has no active RivalAI block.

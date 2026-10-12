@@ -135,6 +135,9 @@ Zones define spatial volumes that enforce territory rules, modify spawn pools, a
    - **Timer must be > 0** *(2.74.04)*: `[KnownPlayerAreaTimer:]` defaults to `30`; a value of `0` or less now **creates no KPL** (logged under `/MES.SpawnDebug.Zone`: `KnownPlayerLocation Not Created At ...: Duration Must Be Greater Than 0`). Before 2.74.04, `-1` created a KPL with no timer. There is no longer a non-expiring KPL. Player presence inside the KPL resets its timer.
    - **KPLs now survive a server restart** *(2.74.04)*. Before, the startup zone validation deleted every KPL (they have no zone profile), so all KPLs vanished on each load.
    - Overlapping KPLs of the same faction merge into one. Since 2.74.04 the merged KPL keeps both zones' bools (OR) and counters (summed); before, the old values were lost.
+   - **Faction lock**: while a player is inside a KPL, only spawn groups of the KPL's faction pass `SpawnConditions.ZoneValidation` there (logged as "not among Allowed Zone Factions"), RivalAI custom spawns (`[SpawnEncounter:true]` Defense waves, helper spawns) included. Overlapping KPLs of different factions allow all of their factions (`ZoneManager.GetAllowedSpawns`). A KPL is always owned by the creating grid's faction; no tag names another faction.
+   - **See them**: `/MES.Debug.ShowAllZones` draws a KPL (only one at a time; `diagnostics_and_troubleshooting.md` §2.D).
+8. **[HARD] Zones can only be required, never excluded.** `SpawnConditions.ZoneValidation` passes a spawn only when its position is inside an allowed zone; no spawn condition rejects a position for being inside a zone. A zone whitelist also checks where the **player** stands, while planetary installations and drones land kilometres away, so a spawn requested from outside can land inside the zone. To keep encounters out of an area, give their behaviors an `[Type:InsideActiveZone]` trigger for that zone that despawns them.
 
 ---
 
