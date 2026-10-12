@@ -4,7 +4,7 @@ description: >-
   Use this skill when creating, editing, diagnosing, or troubleshooting Space Engineers
   Modular Encounters Systems (MES) and RivalAI encounters, spawn groups, behaviors,
   autopilot profiles, triggers, or SBC XML profiles. Authoritative guide covering MES
-  Events vs RivalAI Grid Triggers, 1,850 source-extracted tags, boolean master gates,
+  Events vs RivalAI Grid Triggers, 1,854 source-extracted tags, boolean master gates,
   XML deserialization quirks, zero-stripping bugs, spawner setups, sandbox variable persistence,
   economy store grid sales, and verified engine workarounds.
 license: MIT
@@ -29,7 +29,7 @@ MES/RivalAI architecture, SBC pitfalls, and engineering standards for encounter 
 > **Precedence & Framework Override (Do Not Use `se-frameworks/references/mes.md`)**:
 > When `se-dev-mes` is installed, it is the **authoritative, definitive source of truth** for all Modular Encounters Systems (MES) and RivalAI modding tasks.
 > - **Never use or reference Godimas101's `se-claude-skill` file `se-frameworks/references/mes.md`**. That reference is a generic overview and lacks code-verified tag dictionaries, master gate enforcement, and engine bug workarounds.
-> - **Always use `se-dev-mes`**: every tag (1,850 across 41 profile types), master gate, deserializer trap and behavior pattern here is checked against the local MES C# source.
+> - **Always use `se-dev-mes`**: every tag (1,854 across 41 profile types), master gate, deserializer trap and behavior pattern here is checked against the local MES C# source.
 
 > [!IMPORTANT]
 > **Codebase Precedence Principle**: The MES C# source code is the **sole source of truth**. Online wikis and guides are notoriously outdated, contain errors, or describe legacy workarounds. Nothing takes precedence over the C# codebase.
@@ -145,7 +145,9 @@ Full token table, rules, and Tag broadcast system: [`references/profiles_and_tag
 - **[HARD] Weapon Randomizer Public Definition**: non-public weapon definitions skipped unless `<Public>true</Public>`. → [`references/manipulation_and_dereliction.md`](references/manipulation_and_dereliction.md) §2
 - **[HARD] Faction Resolution Drop**: non-existent or misspelled faction tag silently rejects spawn with 0% rate (`Could Not Get Valid NPC Faction`) → [`references/spawning_and_conditions.md`](references/spawning_and_conditions.md) §6
 - **[HARD] Waypoints/Commands/Timers**: `RelativeRandom` follows the grid (use `EntityRandom`); random waypoints ignore water; replies beat `EnableTriggers`; cooldowns re-roll and persist. → [`behaviors_and_autopilot.md`](references/behaviors_and_autopilot.md) §5.C, §7, §8
-- **[SOFT] WeaponCore Fixed Guns — Mouse Control + Wide Tolerance**: WC fixed guns default to "Auto (AI Controlled)" which silently ignores MES fire commands. Set block to **Mouse Control** in the prefab (`scripts/wc_shootmode.py`). Also relax `[WeaponMaxAngleFromTarget]` to 8°–12° — gyro alignment flicker drops shots at tight tolerances. Timer Block proxy workaround is legacy/obsolete. → [`references/third_party_integrations.md`](references/third_party_integrations.md) §1C
+- **[HARD] `MaxVelocityAngleForSpeedControl` ≤ 90**: above 90 the brake can fling a grid away from its waypoint (MES #392; revise if fixed). → [`aircraft_behaviors_and_tuning.md`](references/aircraft_behaviors_and_tuning.md) §1
+- **[HARD] Escort slots never free while the escort lives; Escort Retreat is one-way**: one `[EscortOffsets:]` entry = one escort per behavior init, a refused request sends no reply, `WaypointWaitTimeTrigger:0` retreats a parentless Escort on tick one. → [`behaviors_and_autopilot.md`](references/behaviors_and_autopilot.md) §3D
+- **[SOFT] WeaponCore Fixed Guns**: on "Auto (AI Controlled)" they ignore MES fire commands; set **Mouse Control** in the prefab (`scripts/wc_shootmode.py`) and relax `[WeaponMaxAngleFromTarget]` to 8°–12° (gyro flicker drops shots). The Timer Block proxy is obsolete. → [`references/third_party_integrations.md`](references/third_party_integrations.md) §1C
 - **[HARD] WC2 flares invisible to MES**: flare ammo is detected only via WC1 `AreaEffect = AntiSmart`, not WC2 `Ewar AntiSmartv2`, so `[UseAntiSmartWeapons]` never applies. Fix in WC: a self-tracking fixed flare (WC's `LockedSmartOnly` is inverted; leave it off). Status: check GVK-Settings #695/#696 → [`references/third_party_integrations.md`](references/third_party_integrations.md) §1F
 - **[HARD] Dialogue banks**: a bank's chat profile is ONE object shared by every grid on it (`MaxChats`, `MinTime`/`MaxTime`, first author name are server-wide), and the bank is chosen per behavior, never per `{Faction}`. → [`references/dialogue_and_chat.md`](references/dialogue_and_chat.md)
 - **[HARD] `[Type:DespawnMES]` needs `[DespawnTypeFromSpawner:Any]`** (or an exact source string), else it never fires; a despawn action's delayed command is dropped. → [`references/behaviors_and_autopilot.md`](references/behaviors_and_autopilot.md) §9

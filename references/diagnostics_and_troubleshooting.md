@@ -275,7 +275,8 @@ When troubleshooting encounter loading or execution failures, search `SpaceEngin
   3. Once past the waypoint, `RotationSystem.cs` rotates the craft 180° to face the waypoint behind it.
   4. Moving backwards relative to its heading at max speed, `velocityToTargetAngle` exceeds `MaxVelocityAngleForSpeedControl`, triggering 100% forward thrust override into deep space.
   5. On rovers, reverse velocity exceeding `MaxSpeed` locks reverse thrust at 100% permanently because `velocity.Length()` is an unsigned scalar.
-- **Fix**:
+  6. With `MaxVelocityAngleForSpeedControl` above 90, the same unsigned check catches aircraft too: a grid facing its waypoint while moving away from it faster than `MaxSpeed` shows `Brake To Desired Speed` in `/MES.IGGB` and accelerates away indefinitely (MeridiusIX/Modular-Encounters-Systems#392).
+- **Fix** (for item 6: keep `MaxVelocityAngleForSpeedControl` at 90 or less, see [aircraft_behaviors_and_tuning.md](aircraft_behaviors_and_tuning.md) section 1; revisit if #392 is fixed):
   1. Add at least one working thruster in all six cardinal directions.
   2. For atmospheric aircraft with forward-only thrust, switch behavior subclass to `FighterPlane` (which uses velocity-aligned climbing breakaway without braking).
   3. For thrust-driven rovers, see [behaviors_and_autopilot.md §6.C](file:///c:/Users/blayl/source/repos/se-dev-mes/references/behaviors_and_autopilot.md#c-thrust-driven-rovers--ground-vehicles-best-practices--pitfalls-hard--soft) for the complete rover setup (`[UseSurfaceHoverThrustMode:true]`, `[FlyLevelWithGravity:false]`, and matching `[IdealPlanetAltitude]` to Remote Control height).

@@ -16,7 +16,9 @@ plane's velocity direction (`FighterPlane.cs:256`); both read their distances fr
 `[StrikeBegin...]` / `[FighterPlaneBegin...]` tags do nothing in practice. `Fighter` is the reverse: `[FighterEngageDistancePlanet:]` wins when set above 0 (`Fighter.cs:20`).
 
 1. **Approach.** The autopilot flies to an **offset waypoint** around the target: `OffsetPlanetMinDistFromTarget` / `OffsetPlanetMaxDistFromTarget` away and
-   `OffsetPlanetMinTargetAltitude` / `MaxTargetAltitude` above the terrain at that point (`OffsetSpace*` in space). Recalculated every `OffsetRecalculationTime` s (default 30).
+   `OffsetPlanetMinTargetAltitude` / `MaxTargetAltitude` above **the target's own position**, not the terrain (`OffsetSpace*` in space). Recalculated every `OffsetRecalculationTime` s (default 30).
+   Terrain floor: if that point would sit less than `MinimumPlanetAltitude` above the surface, MES moves it to `max(offset altitude, the midpoint of MinimumPlanetAltitude and IdealPlanetAltitude)` above the surface (`MathTools.ValueBetween` returns the midpoint, not a random value)
+   (`AutoPilotSystem.cs:1597-1617`, GV-Server-Mods fork 5fd61d1; the offset matrix is the target entity's world matrix, `:1531`). So against ground targets the line-up height is set by those two altitudes, and against air targets by the offset.
 2. **Run start.** The run begins when the plane is within `AttackRunDistancePlanet` of the **offset waypoint** (not of the target) **and** the target is farther than
    `AttackRunBreakawayDistance`. With `AttackRunOverrideWithDistanceAndTimer:true` it is also forced when the plane stays within `AttackRunOverrideDistance` of the offset waypoint for
    `AttackRunOverrideTimerTrigger` s (stops a plane circling the offset forever). `AttackRunDistancePlanet` should exceed the turn radius (`speed / rotation rate`) or the plane can orbit the offset without
@@ -29,11 +31,23 @@ plane's velocity direction (`FighterPlane.cs:256`); both read their distances fr
    - The plane has to stay inside the target's acquisition range: compare the offset distance (plus turn-around overshoot) with the targeting profile's `MaxDistance` / `NonBroadcastVisualRange` and any `TargetFar` trigger distance (section 2).
    - The breakaway distance must leave room to pull out. Pull-out radius is about `speed / rotation rate`; a dive at angle `a` loses about `R * (1 - cos a)` plus gyro spin-up. **[SOFT]**
    - The gun firing window is roughly `MaxStaticWeaponRange - AttackRunBreakawayDistance` (section 3).
+   - **Keep the target-relative offset altitude small, about -100 to 100, on every aircraft profile.** **[SOFT]** (GVK playtest) A line-up point well above the target makes NPC aircraft
+     that target each other keep climbing over one another, and the dogfight cascades upward until it ends up in space. To keep planes higher over the ground, raise
+     `MinimumPlanetAltitude` / `IdealPlanetAltitude` instead (the terrain floor above), which leaves air-to-air line-ups level.
+   - The offset has to be reachable before it expires: `OffsetRecalculationTime` must exceed the flight time to the offset (`offset distance / speed`, plus the turn after a breakaway), or the plane chases a new offset every cycle and never starts a run. **[SOFT]**
 
 **Speed during a run ([HARD] change in MES 2.74.06 dev).** With `SlowDownOnWaypointApproach:true`, `CalculateDirectForwardThrust` cuts forward thrust once `CalculateStoppingDistance(...)` reaches the waypoint distance (`ThrustSystem.cs:210`).
 - **Up to MES 2.74.05** it passed `Direction.Forward`, so the estimate summed the **forward** thrusters (`ThrusterProfile.GetEffectiveThrust`), the same ones driven for forward thrust. On an aircraft with only forward propellers that gave a non-zero estimate, thrust was cut inside it and the plane **coasted** (it never braked down to `IdealMinSpeed`, and in a dive gravity added speed). Flight tests on forward-propeller aircraft matched this.
 - **From commit `941e8c2` (2.74.06 dev, jayph)** it passes `Direction.Backward`: braking is measured with the reverse thrusters, as `behaviors_and_autopilot.md` section 6A item 2 always described. With no reverse thrusters `accel <= 0` and the estimate is `0`, so thrust is no longer cut by the slow-down; the plane keeps its throttle through a run. A gravity term is still added to the acceleration (`dot(gravity, travelDir)`), so in a dive it can be positive and the estimate non-zero **[SOFT]**; not re-flown since the change.
-- Check which case applies with `/MES.BehaviorDebug.Thrust.true` (the `Current Dist / Stop Dist` line). Where you want thrust held through a run on any build, set `SlowDownOnWaypointApproach:false`.
+- Check which case applies with `/MES.IGGB` (AutoPilot section, `Forward Thrust Mode`, which shows the `Current Dist / Stop Dist` line). `/MES.BehaviorDebug.Thrust` logs only thruster removal: the thrust-mode log lines are commented out in `ThrustSystem.cs`. Where you want thrust held through a run on any build, set `SlowDownOnWaypointApproach:false`.
+
+**`MaxVelocityAngleForSpeedControl`: keep it between 5 and 90 ([HARD], `ThrustSystem.cs:232-256`).** In `CalculateDirectForwardThrust` it decides whether speed control runs at all:
+- **Velocity more than this many degrees off the waypoint direction:** full forward thrust, ignoring `IdealMaxSpeed`, any speed override and braking.
+- **Within it:** speed control. Above `MaxSpeed + MaxSpeedTolerance` that means `Brake To Desired Speed`, which fires the **reverse** thrusters and never checks the direction of travel (it compares `velocity.Length()`, an unsigned speed).
+- **Too low (the default 5°)** and a moving waypoint (an escort slot, an offset recalculated mid-flight) is almost never within the angle, so the grid flies at full thrust past it, turns, and overshoots again. MES's escort speed matching (`Escort.cs` sets `MaxSpeedOverride`) and `MaxSpeedTolerance` do nothing in that state.
+- **Above 90** and the brake also runs while the grid is moving **away** from its waypoint. A grid facing its waypoint but moving away faster than `MaxSpeed` then "brakes" by thrusting away, gains speed, and never recovers (field-observed with the angle above 90: an escort 8 km from its slot at 150 m/s, velocity angle 179.6, IGGB showing `Brake To Desired Speed`). With 90 or less, a grid moving away falls through to full forward thrust, which faces the waypoint and stops it.
+- **Use 90** for aircraft and escorts on moving waypoints: speed control while closing, a full-thrust stop once moving away. **[SOFT]**: 90 is reasoned from the code, not yet flight-tested. Never set 1000 or any other value above 90, even to "disable" the full-thrust kick.
+- **Reported upstream:** MeridiusIX/Modular-Encounters-Systems#392 proposes using the forward component of the velocity (`forwardVelocityAmt`), as `CalculateHoverThrust` already does; the hover path is not affected. **Revise this rule if #392 is fixed:** with a direction-aware brake, values above 90 become safe and the cap can go.
 
 ---
 
@@ -105,5 +119,5 @@ The usual reason "MES aims at the target but the WeaponCore guns never fire".
 
 - **Guns silent while the plane lines up**: `/MES.BehaviorDebug.Weapon.true`. Each gun logs `NoAmmo`, `StaticWeaponNotAligned` (the flying is the problem, see 3A) or `ReadyToFire` + "Start Fire" (MES is firing; if nothing comes out, check 3B).
 - **Yaws at the target but never pitches**: `/MES.IGGB` and look for `LevelWithGravity`; see section 2 above and 6D.
-- **Speed is wrong**: `/MES.BehaviorDebug.Thrust.true` shows the thrust branch ("Brake To Desired Speed", "Drifting At Desired Speed", "Thrust Angle Not Matched").
+- **Speed is wrong**: `/MES.IGGB` (AutoPilot section, `Forward Thrust Mode`) shows the thrust branch ("Brake To Desired Speed", "Drifting At Desired Speed", "Thrust Angle Not Matched").
 - **A spawn never produces the aircraft**: `/MES.SpawnDebug.SpawnGroup.true` prints why each group was rejected (for example "Could Not Get Valid NPC Faction" when the group's `FactionOverride` does not exist in the world). Without it the log only says "Eligible SpawnGroup Count 0".

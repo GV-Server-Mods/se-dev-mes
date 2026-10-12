@@ -56,15 +56,15 @@
     ]
   },
   "metadata": {
-    "generated_at": "2026-10-11T21:50:45.235767+00:00",
+    "generated_at": "2026-10-12T16:55:56.697319+00:00",
     "mes_path": "C:\\Users\\blayl\\AppData\\Roaming\\SpaceEngineers\\Mods\\Modular-Encounters-Systems\\Data\\Scripts\\ModularEncountersSystems",
-    "source_hash": "84cde5f9f1fa1413",
+    "source_hash": "db3726932d83d511",
     "git_commit": {
-      "sha": "b8f86a2d96e08d7cb3b95b332a8a4caed4dff8c2",
-      "date": "2026-10-10",
-      "subject": "Update PlayerManager.cs"
+      "sha": "5fd61d1cd4f834ba4d8fd2ad5d74563d5237d033",
+      "date": "2026-10-11",
+      "subject": "Document MatchReceiverParent/Child/Escort/Leader in the wiki"
     },
-    "total_tags": 1850,
+    "total_tags": 1854,
     "total_profiles": 41
   },
   "tags": [
@@ -11792,7 +11792,7 @@
       "tag": "Triggers",
       "type": "string",
       "file": "TriggerSystem.cs",
-      "line": 1599,
+      "line": 1647,
       "parser": "TagStringCheck"
     },
     {
@@ -11800,7 +11800,7 @@
       "tag": "TriggerGroups",
       "type": "string",
       "file": "TriggerSystem.cs",
-      "line": 1640,
+      "line": 1688,
       "parser": "TagStringCheck"
     },
     {
@@ -11808,7 +11808,7 @@
       "tag": "DialogueBanks",
       "type": "string",
       "file": "TriggerSystem.cs",
-      "line": 1683,
+      "line": 1731,
       "parser": "TagStringCheck"
     },
     {
@@ -12024,7 +12024,7 @@
       "tag": "CommandCode",
       "type": "string",
       "file": "CommandProfile.cs",
-      "line": 94,
+      "line": 102,
       "parser": "TagStringCheck"
     },
     {
@@ -12032,7 +12032,7 @@
       "tag": "CommandDelayTicks",
       "type": "int",
       "file": "CommandProfile.cs",
-      "line": 101,
+      "line": 109,
       "parser": "TagIntCheck"
     },
     {
@@ -12040,7 +12040,7 @@
       "tag": "SingleRecipient",
       "type": "bool (true/false)",
       "file": "CommandProfile.cs",
-      "line": 108,
+      "line": 116,
       "parser": "TagBoolCheck"
     },
     {
@@ -12048,7 +12048,7 @@
       "tag": "ReturnToSender",
       "type": "bool (true/false)",
       "file": "CommandProfile.cs",
-      "line": 115,
+      "line": 123,
       "parser": "TagBoolCheck"
     },
     {
@@ -12056,7 +12056,7 @@
       "tag": "IgnoreAntennaRequirement",
       "type": "bool (true/false)",
       "file": "CommandProfile.cs",
-      "line": 122,
+      "line": 130,
       "parser": "TagBoolCheck"
     },
     {
@@ -12064,7 +12064,7 @@
       "tag": "IgnoreReceiverAntennaRequirement",
       "type": "bool (true/false)",
       "file": "CommandProfile.cs",
-      "line": 129,
+      "line": 137,
       "parser": "TagBoolCheck"
     },
     {
@@ -12072,7 +12072,7 @@
       "tag": "Radius",
       "type": "double",
       "file": "CommandProfile.cs",
-      "line": 136,
+      "line": 144,
       "parser": "TagDoubleCheck"
     },
     {
@@ -12080,7 +12080,7 @@
       "tag": "MaxRadius",
       "type": "double",
       "file": "CommandProfile.cs",
-      "line": 143,
+      "line": 151,
       "parser": "TagDoubleCheck"
     },
     {
@@ -12088,7 +12088,7 @@
       "tag": "SendTargetEntityId",
       "type": "bool (true/false)",
       "file": "CommandProfile.cs",
-      "line": 150,
+      "line": 158,
       "parser": "TagBoolCheck"
     },
     {
@@ -12096,7 +12096,7 @@
       "tag": "SendSelfAsTargetEntityId",
       "type": "bool (true/false)",
       "file": "CommandProfile.cs",
-      "line": 157,
+      "line": 165,
       "parser": "TagBoolCheck"
     },
     {
@@ -12104,7 +12104,7 @@
       "tag": "SendDamagerEntityId",
       "type": "bool (true/false)",
       "file": "CommandProfile.cs",
-      "line": 164,
+      "line": 172,
       "parser": "TagBoolCheck"
     },
     {
@@ -12112,7 +12112,7 @@
       "tag": "SendWaypoint",
       "type": "bool (true/false)",
       "file": "CommandProfile.cs",
-      "line": 171,
+      "line": 179,
       "parser": "TagBoolCheck"
     },
     {
@@ -12120,7 +12120,7 @@
       "tag": "SendGridValue",
       "type": "bool (true/false)",
       "file": "CommandProfile.cs",
-      "line": 178,
+      "line": 186,
       "parser": "TagBoolCheck"
     },
     {
@@ -12128,7 +12128,7 @@
       "tag": "SendScoreValue",
       "type": "bool (true/false)",
       "file": "CommandProfile.cs",
-      "line": 185,
+      "line": 193,
       "parser": "TagBoolCheck"
     },
     {
@@ -12136,7 +12136,7 @@
       "tag": "RequestEscortSlot",
       "type": "bool (true/false)",
       "file": "CommandProfile.cs",
-      "line": 195,
+      "line": 203,
       "parser": "TagBoolCheck"
     },
     {
@@ -12144,7 +12144,7 @@
       "tag": "TransmissionType",
       "type": "TagCommandTransmissionTypeEnumCheck",
       "file": "CommandProfile.cs",
-      "line": 202,
+      "line": 210,
       "parser": "TagCommandTransmissionTypeEnumCheck"
     },
     {
@@ -12152,7 +12152,39 @@
       "tag": "MatchSenderReceiverOwners",
       "type": "bool (true/false)",
       "file": "CommandProfile.cs",
-      "line": 209,
+      "line": 217,
+      "parser": "TagBoolCheck"
+    },
+    {
+      "profile": "RivalAI Command",
+      "tag": "MatchReceiverParent",
+      "type": "bool (true/false)",
+      "file": "CommandProfile.cs",
+      "line": 224,
+      "parser": "TagBoolCheck"
+    },
+    {
+      "profile": "RivalAI Command",
+      "tag": "MatchReceiverChild",
+      "type": "bool (true/false)",
+      "file": "CommandProfile.cs",
+      "line": 231,
+      "parser": "TagBoolCheck"
+    },
+    {
+      "profile": "RivalAI Command",
+      "tag": "MatchReceiverEscort",
+      "type": "bool (true/false)",
+      "file": "CommandProfile.cs",
+      "line": 238,
+      "parser": "TagBoolCheck"
+    },
+    {
+      "profile": "RivalAI Command",
+      "tag": "MatchReceiverLeader",
+      "type": "bool (true/false)",
+      "file": "CommandProfile.cs",
+      "line": 245,
       "parser": "TagBoolCheck"
     },
     {
@@ -12160,7 +12192,7 @@
       "tag": "CheckRelationSenderReceiver",
       "type": "bool (true/false)",
       "file": "CommandProfile.cs",
-      "line": 218,
+      "line": 254,
       "parser": "TagBoolCheck"
     },
     {
@@ -12168,7 +12200,7 @@
       "tag": "Relation",
       "type": "TagTargetRelationEnumCheck",
       "file": "CommandProfile.cs",
-      "line": 226,
+      "line": 262,
       "parser": "TagTargetRelationEnumCheck"
     },
     {
@@ -12176,7 +12208,7 @@
       "tag": "Waypoint",
       "type": "string",
       "file": "CommandProfile.cs",
-      "line": 236,
+      "line": 272,
       "parser": "TagStringCheck"
     },
     {
@@ -12184,7 +12216,7 @@
       "tag": "CustomCountersVariables",
       "type": "TagStringIntDictCheck",
       "file": "CommandProfile.cs",
-      "line": 244,
+      "line": 280,
       "parser": "TagStringIntDictCheck"
     },
     {
@@ -12192,7 +12224,7 @@
       "tag": "CustomCountersVariablesReferences",
       "type": "TagStringStringDictCheck",
       "file": "CommandProfile.cs",
-      "line": 251,
+      "line": 287,
       "parser": "TagStringStringDictCheck"
     },
     {
@@ -12200,7 +12232,7 @@
       "tag": "CustomStrings",
       "type": "TagStringStringDictCheck",
       "file": "CommandProfile.cs",
-      "line": 258,
+      "line": 294,
       "parser": "TagStringStringDictCheck"
     },
     {
@@ -12208,7 +12240,7 @@
       "tag": "CustomStringsReferences",
       "type": "TagStringStringDictCheck",
       "file": "CommandProfile.cs",
-      "line": 265,
+      "line": 301,
       "parser": "TagStringStringDictCheck"
     },
     {
