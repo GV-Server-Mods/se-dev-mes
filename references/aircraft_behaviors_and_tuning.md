@@ -58,9 +58,9 @@ A common layout: a `Patrol` grid swaps to a combat subclass when a target appear
 
 | Trigger `[Type:]` | Fires when | Notes |
 | :--- | :--- | :--- |
-| `TargetNear` | a target exists and is closer than `[TargetDistance:]`; **also fires with no target if `AllowTargetFarWithoutTarget` is true** (`TriggerChecks.cs:44`) | "Start combat". |
-| `TargetFar` | a target exists and is **farther** than `[TargetDistance:]` (`TriggerChecks.cs:52`) | **Needs a live target**; it can never fire once the target is dead or lost. |
-| `LostTarget` | the targeting system flagged the target lost (`TriggerChecks.cs:135`) | Pair with `TargetFar` so a plane returns to patrol in both cases. |
+| `TargetNear` | a target exists and is closer than `[TargetDistance:]`; **also fires with no target if `AllowTargetFarWithoutTarget` is true** (`TriggerChecks.cs:47`) | "Start combat". Never put `AllowTargetFarWithoutTarget` on it (see below). |
+| `TargetFar` | a target exists and is **farther** than `[TargetDistance:]` (`TriggerChecks.cs:54`) | **Needs a live target**; it can never fire once the target is dead or lost. `[AllowTargetFarWithoutTarget:true]` does nothing here (bug below). |
+| `LostTarget` | the targeting system flagged the target lost (`TriggerChecks.cs:135`) | **Unreliable for "back to patrol"**: one-shot flag, see below. |
 | `BehaviorTriggerA` / `B` | raised by the subclass: Patrol arrive / leave waypoint; Fighter engage / disengage; Strike & FighterPlane breakaway (A) / run start (B) | Use to swap autopilot profiles between phases. |
 
 - **`[AutopilotProfile:]` takes a slot, not a profile name.** In an action it is an `AutoPilotDataMode` enum: `Primary`, `Secondary`, `Tertiary` (`ActionReferenceProfile.cs:264`, `AutoPilotSystem.cs:25`).
@@ -68,6 +68,9 @@ A common layout: a `Patrol` grid swaps to a combat subclass when a target appear
 - **Every profile swap re-activates the autopilot from the new profile's tags** (`ActionSystem.cs:1790` -> `SetAutoPilotDataMode`, `AutoPilotSystem.cs:2370-2376`), copying `FlyLevelWithGravity` **and** `LevelWithGravityWhenIdle` into the state.
   This is a second way the pitch lockout in section 6D of `behaviors_and_autopilot.md` gets switched on, in addition to the engage activation that passes no `CheckEnum` arguments (`FighterPlane.cs:192`): with `LevelWithGravityWhenIdle:true` the mode is on after every swap.
   Keep both tags `false` in every profile of a wing-lift aircraft.
+- **[HARD] `[AllowTargetFarWithoutTarget:]` is read by the wrong check** (MES 37455cf, since 2.1.22). The wiki says it lets `TargetFar` fire with no target, but only `CheckTargetNear` reads it (`TriggerChecks.cs:47`); `CheckTargetFar` (`:54`) always requires `HasTarget()`. **Fails as**: the plane stays in its combat subclass forever after its target despawns; FighterPlane sits motionless in `WaitingForTarget`. Tracked in GV-Server-Mods/GVK-Settings#706.
+- **[HARD] `LostTarget` is a one-shot flag shared by every `LostTarget` trigger on the grid.** `CheckLostTarget` returns `Targeting.TargetLost` and clears it (`TriggerChecks.cs:135-139`), and the trigger pass clears it again at its end (`TriggerSystem.cs:513`). Triggers are checked in the order the behavior lists them (`[Triggers:]` and `[TriggerGroups:]` in tag order), so the first `LostTarget` trigger that is off cooldown takes the flag and any later one never sees it. A trigger on cooldown skips its check and leaves the flag. **Fails as**: a "lost contact" chatter trigger in an earlier trigger group swallows the loss, and the patrol-return trigger never fires (intermittent: only while the chatter is off cooldown).
+- **Reliable "back to patrol"**: a `[Type:Timer]` trigger (a few seconds' cooldown) with a condition `[NoTarget:true]` that activates the switch-to-patrol trigger. It is a state check, so it can't miss an edge. While the grid is already patrolling, a disabled switch-to-patrol `Manual` trigger makes it a no-op (`ProcessManualTrigger` skips triggers with `UseTrigger:false`). Keep `TargetFar` for "target still alive but out of range".
 - **Hysteresis**: make the "back to patrol" distance clearly larger than the "start combat" distance so a plane at the boundary does not flip.
 - `[EnableTriggerNames:]` does **not** reset a trigger's cooldown or count; only `[ResetTriggerCooldownNames:]` / `ToggledProfileResetsCooldown` do (`TriggerSystem.cs`). A `StartsReady:true` trigger skips its first cooldown (`TriggerProfile.cs:397`).
 
