@@ -56,13 +56,13 @@
     ]
   },
   "metadata": {
-    "generated_at": "2026-10-12T16:55:56.697319+00:00",
+    "generated_at": "2026-10-13T02:51:47.220028+00:00",
     "mes_path": "C:\\Users\\blayl\\AppData\\Roaming\\SpaceEngineers\\Mods\\Modular-Encounters-Systems\\Data\\Scripts\\ModularEncountersSystems",
     "source_hash": "db3726932d83d511",
     "git_commit": {
-      "sha": "5fd61d1cd4f834ba4d8fd2ad5d74563d5237d033",
-      "date": "2026-10-11",
-      "subject": "Document MatchReceiverParent/Child/Escort/Leader in the wiki"
+      "sha": "37455cf9681f5a8f14cbe96bed77e1babc766ae8",
+      "date": "2026-10-12",
+      "subject": "Merge pull request #386 from GV-Server-Mods/fix/command-parent-child"
     },
     "total_tags": 1854,
     "total_profiles": 41

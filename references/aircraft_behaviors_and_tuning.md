@@ -17,6 +17,7 @@ plane's velocity direction (`FighterPlane.cs:256`); both read their distances fr
 
 1. **Approach.** The autopilot flies to an **offset waypoint** around the target: `OffsetPlanetMinDistFromTarget` / `OffsetPlanetMaxDistFromTarget` away and
    `OffsetPlanetMinTargetAltitude` / `MaxTargetAltitude` above **the target's own position**, not the terrain (`OffsetSpace*` in space). Recalculated every `OffsetRecalculationTime` s (default 30).
+   Which side of the target the offset lands on is random unless `OffsetMaxAngleFromTarget` limits it; that tag has caveats (`behaviors_and_autopilot.md` section 3E).
    Terrain floor: if that point would sit less than `MinimumPlanetAltitude` above the surface, MES moves it to `max(offset altitude, the midpoint of MinimumPlanetAltitude and IdealPlanetAltitude)` above the surface (`MathTools.ValueBetween` returns the midpoint, not a random value)
    (`AutoPilotSystem.cs:1597-1617`, MES 5fd61d1; the offset matrix is the target entity's world matrix, `:1531`). So against ground targets the line-up height is set by those two altitudes, and against air targets by the offset.
 2. **Run start.** The run begins when the plane is within `AttackRunDistancePlanet` of the **offset waypoint** (not of the target) **and** the target is farther than
@@ -49,6 +50,26 @@ plane's velocity direction (`FighterPlane.cs:256`); both read their distances fr
 - **Above 90** and the brake also runs while the grid is moving **away** from its waypoint. A grid facing its waypoint but moving away faster than `MaxSpeed` then "brakes" by thrusting away, gains speed, and never recovers (field-observed with the angle above 90: an escort 8 km from its slot at 150 m/s, velocity angle 179.6, IGGB showing `Brake To Desired Speed`). With 90 or less, a grid moving away falls through to full forward thrust, which faces the waypoint and stops it.
 - **Use 90** for aircraft and escorts on moving waypoints: speed control while closing, a full-thrust stop once moving away. **[SOFT]**: 90 is reasoned from the code, not yet flight-tested. Never set 1000 or any other value above 90, even to "disable" the full-thrust kick.
 - **Reported upstream:** MeridiusIX/Modular-Encounters-Systems#392 proposes using the forward component of the velocity (`forwardVelocityAmt`), as `CalculateHoverThrust` already does; the hover path is not affected. **Revise this rule if #392 is fixed:** with a direction-aware brake, values above 90 become safe and the cap can go.
+
+### Autopilot tags that do little or nothing for aircraft **[HARD]**
+Checked against MES `37455cf` (upstream master).
+
+| Tag | What the code does |
+| :--- | :--- |
+| `UseRotationBoostUp`, `RotationBoostUpAmount` | Parsed (`AutoPilotProfile.cs:690-699`) but never read. No effect. |
+| `DesiredAngleToTarget` | No parser; always 0. |
+| `MinAngleForLeveledDescent`, `MaxAngleForLeveledAscent` | Only in `CalculateHoverThrust` (`ThrustSystem.cs:355-372`); planes on direct forward thrust never use them. |
+| `TryToLevelWithTarget` | Only for a static target below ground within 1200 m (`AutoPilotSystem.cs:1115`). |
+| `BehaviorActionA` / `B` | Read by `Strike`/`FighterPlane`, but no action tag sets them from SBC. |
+| `UseCollisionLeadPrediction` | Aims at a collision course (no projectile travel time) and is checked before `UseProjectileLeadPrediction`, so it replaces gun leading (`AutoPilotSystem.cs:1277`). For rams, not guns. |
+| `ReverseOffsetDistAltAboveHeight` + `ReverseOffsetHeight` | When the target is more than `ReverseOffsetHeight` above the surface, the offset distance and altitude ranges swap (`AutoPilotSystem.cs:1495-1511`): the line-up point goes offset-distance **above** the target. That is the upward cascade in item 5 above; avoid it for air-to-air. |
+
+Tags that do work and are easy to miss:
+- **`[Unused:]` (default true) breaks off an attack run** when a velocity collision is predicted within `CollisionTimeTrigger` (5 s, set in `SetDefaultTags`) (`FighterPlane.cs:252, 329`; `Strike.cs` the same). At 130 m/s that is about 650 m, so a run near terrain or close to the target can end before `AttackRunBreakawayDistance`.
+- **`UseForcedRotationDampening` + `ForcedRotationDampeningAmount` (default off, 0.15):** after each gyro update MES cuts the grid's existing spin by the amount, directly through `Physics.SetSpeeds` (`RotationSystem.cs:47-80`). Less overshoot and wobble, slower turns. **[SOFT]** not flight-tested.
+- **`RotationSlowdownAngle` (default 70):** above this error the gyro runs at full rate; below it the rate is the error in radians (`RotationSystem.cs:118`). It changes big turns only; small-angle wobble is already in the proportional range.
+- **`MaxPlanetPathCheckDistance` (default 1000 m):** how far ahead planetary pathing scans terrain (`AutoPilotSystem.cs:2068`). At 130 m/s that is under 8 s of warning. The approach always uses planetary pathing; the run only with `AttackRunUseSafePlanetPathing:true`.
+- **In gravity, a predicted terrain hit does not trigger collision evasion.** Voxel evasion runs only out of gravity; in gravity the only voxel case is the "fall" evade while moving within 15° of straight up (`AutoPilotSystem.cs:1037-1058`). Planetary pathing is what keeps planes off the ground.
 
 ---
 

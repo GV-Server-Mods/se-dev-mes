@@ -70,6 +70,23 @@ flowchart TD
   [DisableTriggerTags:InCombat]
   ```
 
+### Action Step Order & Switch Pairs [HARD]
+Checked against MES `37455cf` (upstream master).
+- **One action runs its steps in a fixed order, not in the order of its tags** (`ActionSystem.cs`): booleans and counters (85-149), `BroadcastCommandProfiles` (509), `AssignEscortFromCommand` (881), `ChangeTargetProfile` (1094), `OverwriteAutopilotProfile` (1777), `ChangeAutopilotProfile` (1786), `StopAllThrust` (1866), `SetCustomStrings` (1953), `ChangeBehaviorSubclass` (2025), `ResetCooldownTimeOfTriggers` (2985), `EnableTriggers` (2994), `DisableTriggers` (3004), `ManuallyActivateTrigger` (3014).
+  - A trigger the action activates manually already sees the booleans and subclass that action set, so its conditions can test them.
+  - Enable runs before Disable: an action that names the same trigger in both leaves it disabled.
+- **Manual activation runs at once, with every check** (`TriggerSystem.cs:1095-1112`, `TriggerProfile.cs:383-420`): `UseTrigger`, `MaxActions`, the cooldown and the conditions all apply. A manual trigger on cooldown, or whose condition fails, does nothing and is not retried.
+- **`ToggleWithTriggerProfile` flips only when the trigger actually runs** (`TriggerSystem.cs:1149-1152`). Two switch triggers that toggle each other ("to combat" enabled while patrolling, "to patrol" enabled in combat) stay in step only through their own runs.
+  - **Fails as:** any other action that changes the subclass (a fly-away failsafe, an escort system, a KPL timeout) leaves the pair out of step. The unit is back in Patrol but "to combat" stays disabled, so `TargetNear` can't start combat again until something runs "to patrol".
+  - **Fix:** route every state change through the pair. Give the switch triggers a `[Tags:]` and fire them with `[ManuallyActivatedTriggerTags:]`; the disabled one is skipped, so the tag reaches whichever switch is live. A trigger can carry several `[Tags:]` lines (`TriggerProfile.Tags` is a list).
+
+### Swapping an Autopilot into a Slot [HARD]
+`[OverwriteAutopilotProfile:true]` + `[OverwriteAutopilotMode:<Primary|Secondary|Tertiary>]` + `[OverwriteAutopilotId:<autopilot SubtypeId>]` replaces the profile held in a slot at runtime (`AutoPilotSystem.cs:2379`, `AssignAutoPilotDataMode`).
+- It only stores the profile; it doesn't switch to it. It runs before `ChangeAutopilotProfile` in the same action, so one action can load a slot and switch to it.
+- An unknown ID is ignored silently (`:2383`).
+- Use it when a grid needs more than three autopilots, e.g. a jump or landing profile that borrows a slot and puts the slot's usual profile back afterwards.
+- Not checked: whether a swapped slot survives a save and reload.
+
 ---
 
 ## 3. Autopilot Deep Dive (`[RivalAI Autopilot]`)
@@ -107,6 +124,16 @@ Checked against MES `b8f86a2` (upstream master); `Escort.cs` and `EscortSystem.c
 - **Escort Retreat is one-way.** In `WaitingForTarget` with no valid parent, `Escort.cs` goes to `BehaviorMode.Retreat` once `AutoPilot.Data.WaypointWaitTimeTrigger` seconds have passed (default 5), and nothing in `Escort.cs` leaves Retreat; the grid despawns when the nearest player is beyond `RetreatDespawnDistance`. A profile with `WaypointWaitTimeTrigger:0` retreats on the first tick without a parent. Only `ChangeBehaviorSubclass` (which resets `Mode` to `Init`) gets a unit out. Fixes: keep the wait above the request/reply round trip (about 2 s with the usual 60-tick command delays) and add a timer that returns to Patrol sooner; or keep the unit in Patrol until the slot is confirmed.
 - **A subclass change keeps the slot.** `ParentEscort` lives in `StoredSettings`, which `ChangeBehaviorSubclass` does not reset, and `SetDefaultTags()` (which swaps in `RAI-Generic-Autopilot-Escort`) runs only for the first subclass a behavior is given, not when it converts to Escort later. So a unit assigned a slot while still in Patrol can convert to Escort with its parent already valid.
 - **`BehaviorTriggerA`/`B` on Escort**: A is raised when a valid parent is found (entering `ApproachWaypoint`), B when a valid parent stops being valid during approach. B is not raised for a unit that never had a parent.
+
+### E. Offset Direction: `OffsetMaxAngleFromTarget` [HARD]
+Checked against MES `37455cf` (upstream master). Applies to every subclass that flies to an offset around its target (`OffsetWaypoint` mode): Horsefly, HorseFighter, Strike, FighterPlane.
+- **What it's for:** keeping the offset on the grid's own side of the target. With the default `180` the offset direction is level and random, so a grid often crosses right over or in front of its target to reach an offset on the far side, and can run into it on the way. Below `180` the direction is drawn from a cone around the line from the target to the grid, at most this many degrees off it (`AutoPilotSystem.cs:1534-1563`, added in `bb746bf`). The source comment: 180 can fly past the target, 90 comes close, 10 keeps its distance. **[SOFT]** (GVK playtest) `90` stops most of the crossing and ramming.
+- **Caveats** (what the code does; how visible they are in flight depends on the grid's turn rate and was not measured):
+  - **Redrawn on every autopilot cycle.** `CalculateCurrentWaypoint()` calls `OffsetWaypointGenerator()` on every cycle in `OffsetWaypoint` mode (`AutoPilotSystem.cs:578`, `:1206`), about 3-4 times a second (`BehaviorManager.cs` runs a cycle every 15 idle ticks plus its processing ticks). The level default pick runs only when a new offset is requested (`:1450-1526`); the cone pick sits outside that check, so each cycle draws a new random direction while the distance and altitude stay. The grid steers toward a point that keeps jumping around the target. The near-side effect still holds because every draw is on the grid's side: a 90° cone averages out to the target-to-grid line at half the offset distance.
+  - **Not level.** The cone is 3D (`VectorHelper.cs:102`) and the offset distance is applied along it (`AutoPilotSystem.cs:1597`). At `90` a draw can point steeply up or down: a 30° tilt on a 1,500 m offset puts the point 750 m above the target, and a downward tilt goes underground and is pushed up to the terrain floor. Aircraft chase the point up and down; ground units can't follow it at all.
+  - **Replaces FighterPlane's after-breakaway offset.** At breakaway FighterPlane asks for an offset straight ahead along its velocity, but that call only sets flags and returns (`:1437-1446`); the per-cycle call that builds the offset passes `keepInDirectionOfVelocity:false`, so the cone check at `:1534` runs and the next line-up point lands on the plane's side of the target instead of ahead of it.
+- **Choosing a value:** use `90` or lower when crossing or ramming the target is the bigger problem, `180` for a steady flight to one point. A smaller angle narrows both the side-to-side jump and the tilt.
+- **Upstream:** not yet reported (GVK-Settings#708 tracks it). Proposed fix: draw the cone only when a new offset is requested, and flatten it on planets as the default pick does. **Revise this rule if it is fixed.**
 
 ---
 
