@@ -105,8 +105,8 @@ A common layout: a `Patrol` grid swaps to a combat subclass when a target appear
 `[RivalAI Weapons]` (`WeaponSystemReference.cs`). A fixed gun fires only when **all** hold (`BaseWeapon.cs`, `StaticDistanceAndAngleCheck`):
 
 - the target (or waypoint) is within `MaxStaticWeaponRange`,
-- the angle between the gun's forward axis and the target is `<= WeaponMaxAngleFromTarget` degrees,
-- the point the gun's line reaches at target range is within `WeaponMaxBaseDistanceTarget` meters of the target (100 m at 1000 m range is about 5.7 deg, so at long range this is the tighter gate),
+- the angle between the gun's forward axis and the target is `<= WeaponMaxAngleFromTarget` degrees (**default 6**),
+- the point the gun's line reaches at target range is within `WeaponMaxBaseDistanceTarget` meters of the target (**default 20 m**, `WeaponSystemReference.cs:55-56`; 20 m at 1000 m range is about 1.1 deg, so with the default this is the tighter gate at almost any range; raise it together with the angle),
 - no terrain or friendly grid is in the way.
 
 `UseAmmoReplenish` (default true) gives an empty NPC gun `AmmoReplenishClipAmount` (default 15) magazines, up to `MaxAmmoReplenishments` times (**default 10**; `WeaponSystemReference.cs:61-63`, `CoreWeapon.cs:243`).

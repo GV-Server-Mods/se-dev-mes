@@ -47,8 +47,8 @@ Every profile must be defined inside an `<EntityComponent xsi:type="MyObjectBuil
   - `[AutopilotData:<SubtypeId>]`: Reference to `[RivalAI Autopilot]`.
   - `[TargetData:<SubtypeId>]`: Reference to `[RivalAI Target]`.
   - `[WeaponSystem:<SubtypeId>]` (alias `[WeaponsSystem:]`): Reference to `[RivalAI Weapons]`.
-  - `[Triggers:<SubtypeId>]`: Direct trigger references (can specify multiple).
-  - `[TriggerGroups:<SubtypeId>]`: Modular trigger group references (can specify multiple).
+  - `[Triggers:<SubtypeId>]`: Direct trigger references. **[HARD] One SubtypeId per tag**: repeat the tag for each trigger (`[Triggers:A]` `[Triggers:B]`). `[Triggers:A,B]` is read as a single name `A,B` (`TagParse.TagStringCheck`, no comma split), so neither loads (`BehaviorSetup` log: `Could Not Add Trigger Profile To Behavior`). Same inside a `[RivalAI TriggerGroup]`.
+  - `[TriggerGroups:<SubtypeId>]`: Trigger group references, also one per tag.
   - `[RemoteControlCode:<string>]`: Custom identifier tag for grid targeting and commands.
   - `[UseRetreatTimer:bool]`, `[UseNoTargetTimer:bool]`, `[UsePlayerDistanceTimer:bool]`: Despawn timer gates (`DespawnSystem.cs`; `UsePlayerDistanceTimer` defaults to `true` — 150 s beyond 25 km from any player despawns the grid).
 
@@ -60,7 +60,7 @@ Every profile must be defined inside an `<EntityComponent xsi:type="MyObjectBuil
     - `Timer`: Periodic time check via `MinCooldownMs` and `MaxCooldownMs`.
     - `PlayerNear`: Fires when a player enters `TargetDistance`.
     - `TargetNear` / `TargetFar`: Fires based on distance to target grid.
-    - `Damage`: Fires when grid takes physical or grinder damage.
+    - `Damage`: Fires when the grid takes damage of a listed type. **[HARD] Needs `[DamageTypes:Any]`** (or specific type names): the list starts empty and the check is `DamageTypes.Contains(type) || DamageTypes.Contains("Any")` (`TriggerSystem.cs:572`), so without it the trigger never fires. `[ExcludedDamageTypes:]` filters types out.
     - `Compromised`: Fires when grid power, cockpit, or key blocks are destroyed.
     - `CommandReceived`: Fires on receiving a broadcast code (`CommandReceiveCode`).
     - `BehaviorTriggerA`–`G`: Triggered internally by AI behaviors (e.g. waypoint arrival, strike breakaway).
@@ -257,13 +257,13 @@ Modular Encounters Systems (MES) and RivalAI ship with default, built-in profile
 | `{CustomVariablesName}` | `npcData.CustomVariablesName`, copied from the SpawnGroup's own `CustomVariablesName` field at spawn | `ImprovedSpawnGroup.CustomVariablesName` | **[HARD] Dead in the current build**: no tag parser anywhere sets `ImprovedSpawnGroup.CustomVariablesName` (verified — no `TagParse.*Check(tag, ref CustomVariablesName)` exists in `ImprovedSpawnGroup.cs`). It is permanently `""`, so this token always resolves to an empty string. Do not rely on it. |
 | `{<CustomStringKey>}` | Value set by `[CustomStrings:Key,Value]` (paired with `[SetCustomStrings:true]`) | `npcData.CustomStrings` | RivalAI Grid Triggers only |
 | `{<CustomCounterKey>}` | Value set by `[CustomCountersVariables:Key,Value]` (paired with `[SetCustomCountersVariables:true]`) | `npcData.CustomCountersVariables` | RivalAI Grid Triggers only |
-| `{<SandboxVarKey>}` | Value of session sandbox variable (`MyAPIUtilities.Static.Variables` — the SE engine's own store, not MES-specific; also visible to PB scripts and other mods) | `MyAPIGateway.Utilities.GetVariable` | **Both** RivalAI & MES Events |
-| `{PlayerName}` | Target/detected player's name | `BroadcastSystem.cs` / `EventAction` | RivalAI Chat & MES Event Chat |
+| `{<SandboxVarKey>}` | Value of session sandbox variable (`MyAPIUtilities.Static.Variables` — the SE engine's own store, not MES-specific; also visible to PB scripts and other mods) | `MyAPIGateway.Utilities.GetVariable` | RivalAI; in MES Events only where the event code calls `IdsReplacer` (sandbox-variable set keys/values, GPS descriptions, zone names, `[DebugChatMessage:]`). **Not** in event `[ChatData:]` chat (`EventBroadcastSystem.cs` never calls it) |
+| `{PlayerName}` | Target/detected player's name | `BroadcastSystem.cs` / `EventBroadcastSystem.cs` | RivalAI Chat & MES Event Chat (the only placeholder event chat replaces, besides `{GPS}`) |
 | `{GridName}` | Target/detected grid's name | `BroadcastSystem.cs` | RivalAI Chat only |
 | `{PlayerRelation}` | Relation to player (`Friendly`, `Neutral`, `Enemy`) | `BroadcastSystem.cs` | RivalAI Chat only |
 
 ### Critical Token Rules
-1. **[HARD] MES Events Pass `npcData = null`**: `{Faction}`, `{SpawnGroupName}`, `{SpawnGroupNameTruncated}`, `{EventInstance}`, `{CustomVariablesName}`, `{Position}`, `{<CustomStringKey>}`, and `{<CustomCounterKey>}` **never resolve in MES Events**; only `{<SandboxVarKey>}` and `{PlayerName}` (in chat) function there. **One narrow exception**: `{Faction}` inside a `[SpawnData:]` value on an `[MES Event Action]` *does* resolve — via a separate, bespoke `{Faction}`-only `string.Replace()` in `EventActionExecution.cs` fed from the positionally-matched `[SpawnFactionTags:]` list, not `IdsReplacer`. This is the only token that resolves anywhere inside MES Events outside of Chat/sandbox vars.
+1. **[HARD] MES Events Pass `npcData = null`**: `{Faction}`, `{SpawnGroupName}`, `{SpawnGroupNameTruncated}`, `{EventInstance}`, `{CustomVariablesName}`, `{Position}`, `{<CustomStringKey>}`, and `{<CustomCounterKey>}` **never resolve in MES Events**. Event chat (`[ChatData:]`, `EventBroadcastSystem.cs`) replaces only `{PlayerName}` and `{GPS}`, so a chat profile that shows `{Faction}` from a RivalAI action prints it literally from an event; use one chat profile per faction, `[UseChatOverrideMessage:true]` + `[ChatOverrideMessage:]` per faction, or send the chat from a RivalAI trigger. `{<SandboxVarKey>}` resolves only in the event fields that call `IdsReplacer` (see the table). **One narrow exception**: an `[MES Event Action]` with `[SpawnEncounter:true]` replaces `{Faction}` in the **`[SpawnGroups:]` list of the `[RivalAI Spawn]` profile that `[SpawnData:]` names** (not in the `[SpawnData:]` value itself), with the index-matched `[SpawnFactionTags:]` entry, via a bespoke `string.Replace()` in `EventActionExecution.cs`; `[SpawnReplaceKeys:]`/`[SpawnReplaceValues:]` are applied to the same list.
 2. **[HARD] Profile SubtypeIds Resolve Statically**: Putting tokens in profile-name references (e.g. `[Actions:MyAction-{Faction}]`, and likewise `[Triggers:]`, `[Conditions:]`, `[TriggerGroups:]`, `[ManipulationProfiles:]`, `[LootProfiles:]`, `[ContainerTypes:]`) **fails to find the profile, in every context**. There is no substitution mechanism for these tags at all. Token replacement only runs on dynamic runtime parameters (Command codes, Zone names, GPS names, Chat text, LCD text, Sandbox variables) and on the specific fields listed in §6 below.
 3. **[HARD] No Rival Faction Token**: `{Faction}` always resolves to the NPC's *own* faction. There is no `{RivalFaction}` token.
 4. **[HARD] Tokens in Pre-Spawn Faction Tags Never Resolve**: `[FactionOwner:]`, `[FactionOverride:]`, and `[SpawnFactionTags:]` evaluate before any grid exists (`NpcData == null`). `IdsReplacer` does not run; tokens cause a literal string lookup in session factions that fails, permanently breaking spawning.

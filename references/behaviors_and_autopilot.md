@@ -48,7 +48,7 @@ flowchart TD
 
 ### State Switching Implementation:
 - **Transitioning to Combat**:
-  Trigger on `[Type:Damage]` or `[Type:TargetNear]`:
+  Trigger on `[Type:Damage]` (with `[DamageTypes:Any]`, or it never fires) or `[Type:TargetNear]`:
   ```xml
   [RivalAI Action]
   [ChangeBehaviorSubclass:true]
@@ -459,5 +459,5 @@ Setting artificial horizon leveling tags on combat craft causes total loss of pi
 - **A `DespawnMES` trigger needs `[DespawnTypeFromSpawner:]`, or it effectively never fires.** `TriggerSystem.ProcessMESDespawnTriggers` runs the trigger only if the setting is `Any` or **equals the grid's despawn source exactly**; an empty setting matches only an empty source, and only `/MES.Debug.RemoveAllNpcs` leaves the source empty. Sources MES sets: `CleanUp-BlockCount`, `CleanUp-Distance`, `CleanUp-Timer` (`Cleaning.cs`), `Despawn-Behavior` (`DespawnSystem.cs`), `Despawn-Debug` (`LoggerTools.cs`), `Cargo Ship Reached End of Path / Distance` (`CargoShipWatcher.cs`), and a caller-supplied reason or `ForceRemove` (`Cleaning.cs`). **Fails as**: a `DespawnMES` trigger written without a type never fires in normal play. Upstream: MeridiusIX/Modular-Encounters-Systems#387. `audit_mes_tags.ps1` flags it.
 - **`CleanUp` and `PathEnd` never match.** The function computes `despawnMatch` for them and never reads it, so only `Any` or an exact source string such as `CleanUp-Distance` works.
 - **A behavior's own despawn reaches `DespawnMES` too.** `DespawnSystem.cs` runs the `Type:Despawn` triggers, then `DespawnGrid()` flags the grid with source `Despawn-Behavior`, and `Tasks/GridCleanup.cs` invokes the `DespawnMES` actions. **Technique**: one `[Type:DespawnMES]` + `[DespawnTypeFromSpawner:Any]` trigger covers every removal; a separate `Type:Despawn` trigger with the same actions runs them twice on a behavior despawn.
-- **`DespawnMES` actions run just before the grid closes.** `GridCleanup` invokes them and queues `cubeGrid.Close()` on the game thread straight after. **Fails as**: a command with `[CommandDelayTicks:]` above `0` is dropped, because the receive side rejects a sender that no longer exists (`TriggerSystem.cs`, sender check). Send commands from despawn actions with no delay.
+- **`DespawnMES` actions run just before the grid closes.** `GridCleanup` invokes them and queues `cubeGrid.Close()` on the game thread straight after. **Fails as**: a command with `[CommandDelayTicks:]` above `0` is dropped, because by the time it is delivered the sender's Remote Control is closed. The null check in `TriggerSystem.cs` does not catch it (the closed entity's position component is not null); the command fails the range check instead, since the closed sender no longer reports its real position **[SOFT: mechanism from a test run's trace; the drop itself is HARD]**. Send commands from despawn actions with no delay.
 

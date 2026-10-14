@@ -4,14 +4,14 @@ Comprehensive reference covering Space Engineers economy stores, prefab grid sal
 
 ---
 
-## 1. The 3-Part Grid Sales Registration Chain
+## 1. Selling a Prefab Grid from an MES Store
 
-In Space Engineers, selling modded prefab ships or rovers at NPC economy store blocks requires a strict 3-part registration across an MES store-items XML file, vanilla SBC and an MES profile:
+An MES-stocked store needs two parts: an MES store-items XML file and a `[MES Store]` profile applied to the block. `FactionTypes_Economy.sbc` / `GridsForSale` is **not** part of this chain (Part 3).
 
 ```mermaid
 flowchart TD
-    A["1. MES Store Items file<br/><code>Data\StoreItems\ModPrefix-StoreItems.xml</code><br/><code>&lt;ItemType&gt;Prefab&lt;/ItemType&gt;</code>"] --> B["2. FactionTypes_Economy.sbc Registration<br/><code>&lt;FactionType&gt;</code> Subtype 'Builder'<br/><code>&lt;GridsForSale&gt;&lt;PrefabSubtypeId&gt;...&lt;/GridsForSale&gt;</code>"]
-    B --> C["3. MES Store Profile<br/><code>[MES Store]</code><br/><code>[FileSource:ModPrefix-StoreItems.xml]</code><br/><code>[RequiredOffers:StoreItemId]</code>"]
+    A["1. MES Store Items file<br/><code>Data\StoreItems\ModPrefix-StoreItems.xml</code><br/><code>&lt;ItemType&gt;Prefab&lt;/ItemType&gt;</code>"] --> C["2. MES Store Profile<br/><code>[MES Store]</code><br/><code>[FileSource:ModPrefix-StoreItems.xml]</code><br/><code>[RequiredOffers:StoreItemId]</code>"]
+    C --> D["Applied to the store block<br/>(behavior action <code>[ApplyStoreProfiles:true]</code>, §2)"]
 ```
 
 ### Part 1: MES Store Items File (`Data\StoreItems\*.xml`)
@@ -29,8 +29,6 @@ flowchart TD
         <CustomPrice>15000000</CustomPrice>
         <MinPriceMultiplier>100</MinPriceMultiplier>
         <MaxPriceMultiplier>100</MaxPriceMultiplier>
-        <MinAmount>1</MinAmount>
-        <MaxAmount>1</MaxAmount>
       </Offer>
     </StoreItem>
   </StoreItems>
@@ -39,28 +37,11 @@ flowchart TD
 
 - `ItemType` values (`StoreProfileItemTypes`): `Ore`, `Ingot`, `Component`, `Ammo`, `Tool`, `Consumable`, `RandomCraftable`, `RandomItem`, `Oxygen`, `Hydrogen`, `Prefab`, `Seed`, `Item`, `Datapad`, `OxygenContainer`, `GasContainer`, `Gas`.
 - `StoreItemId` is the name the `[MES Store]` profile uses in `[Offers:]` / `[RequiredOffers:]` / `[Orders:]` / `[RequiredOrders:]`.
+- **[HARD] A prefab is always listed as quantity 1.** `StoreProfile.CreateStoreItem` calls `block.CreateStoreItem(ItemSubtypeId, 1, price, PCU)` for `Prefab`; `MinAmount`/`MaxAmount` are ignored. Each refresh re-lists it.
+- **[HARD] Price**: `CustomPrice` if set (> -1), otherwise MES's minimum-value table or `EconomyHelper.CalculatePrefabCost`, then the price multipliers. Set `CustomPrice` for a fixed price.
+- `<PCU>` on the item is what the game checks against the buyer's PCU limit (`MyStoreBlock.BuyPrefabInternal`); the world block limits are checked against the real prefab as well.
 
-### Part 2: `FactionTypes_Economy.sbc` Registration
-> [!CAUTION]
-> **[HARD] The Builder Subtype Requirement**: In Keen's engine, grid sales **strictly only function** if the prefab is registered under a `<FactionType>` with subtype `Builder` in `<GridsForSale>`. Listing prefabs under other faction types (e.g. Miner, Trader) results in store blocks never offering the grid for sale.
-
-```xml
-<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <FactionTypes>
-    <FactionType>
-      <Id>
-        <TypeId>FactionTypeDefinition</TypeId>
-        <SubtypeId>Builder</SubtypeId>
-      </Id>
-      <GridsForSale>
-        <PrefabSubtypeId>ModPrefix-Prefab-HeavyCruiser</PrefabSubtypeId>
-      </GridsForSale>
-    </FactionType>
-  </FactionTypes>
-</Definitions>
-```
-
-### Part 3: MES Store Profile (`[MES Store]`)
+### Part 2: MES Store Profile (`[MES Store]`)
 ```xml
 <EntityComponent xsi:type="MyObjectBuilder_InventoryComponentDefinition">
   <Id>
@@ -82,6 +63,16 @@ flowchart TD
 - `[Min/MaxOfferItems:]`, `[Min/MaxOrderItems:]`: How many items the refresh rolls.
 - `[AddedItemsCombineQuantity:]`, `[AddedItemsAveragePrice:]`, `[EqualizeOffersAndOrders:]`.
 - There is no `[StoreItems:]` or `[ItemsRequireInventory:]` tag; MES ignores both.
+
+### Part 3: `GridsForSale` Is Not Needed for MES Stores [HARD]
+- `<GridsForSale>` in `FactionTypes_Economy.sbc` is read only by Keen's own station store generator (`MyGenericFactionTypeStrategy.GenerateGridOffers`). MES never reads it, and the purchase path (`MyStoreBlock.BuyPrefabInternal`) never checks it. An MES store sells any prefab in its store-items file.
+- Add a prefab there only if you want **Keen-generated** economy stations of that faction type to roll it too, at Keen's calculated price. The list element is `<PrefabName>` (`MyObjectBuilder_FactionTypeDefinition`, `[XmlArrayItem("PrefabName")]`); any other element name is silently ignored.
+
+```xml
+<GridsForSale>
+  <PrefabName>ModPrefix-Prefab-HeavyCruiser</PrefabName>
+</GridsForSale>
+```
 
 ---
 
@@ -113,9 +104,12 @@ In long-running multiplayer worlds, economy station store inventories become dep
 
 ## 3. Physical Clearance & Icon Requirements
 
-### A. 124m Physical Clearance
-- **[HARD]**: When a player purchases a grid from a store block, Keen's engine scans a **124m radius sphere** from the store block's spawn location.
-- If physical voxel terrain, station structures, or player safezones obstruct this 124m radius, the purchase will fail with `Area Obstructed`.
+### A. Where a Bought Grid Spawns [HARD]
+`MyStoreBlock.BuyPrefabInternal` searches for free space near the store block, sized to the prefab's bounding sphere:
+- **In natural gravity** (a store not on a Keen station counts as an Outpost there): `MyRespawnComponentBase.FindPositionAbovePlanet` with an optimal distance of 60 m from the store and up to 30 tries, deploying at 1.05 × the prefab's radius above the ground.
+- **In space**: `MyEntities.FindFreePlace` around the store, up to 20 tries.
+- No free spot: the purchase fails with `FreePositionNotFound`. Before that, it fails on PCU (`NotEnoughPCU`) or world block limits.
+- **[SOFT]** Leave open, flat ground around a planetary store, larger than the biggest grid it sells; a store boxed in by station structure or steep terrain fails intermittently.
 
 ### B. Icons & Tooltip Images
 - **[SOFT] PNG vs DDS**: DDS textures for prefab store previews frequently fail to load or become corrupted in the client cache. Always use **256x256 PNG** files for `<Icon>` and `<TooltipImage>`.

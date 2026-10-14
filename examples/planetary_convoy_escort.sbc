@@ -211,6 +211,7 @@
       <Description>
         [RivalAI Trigger]
         [Type:Damage]
+        [DamageTypes:Any]
         [UseTrigger:true]
         [Actions:GVK-Action-EscortCombat]
       </Description>

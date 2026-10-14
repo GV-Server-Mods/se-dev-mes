@@ -1,0 +1,188 @@
+{
+  "skill_name": "se-dev-mes",
+  "evals": [
+    {
+      "id": 1,
+      "name": "event-counter-zero-spawn",
+      "prompt": "For GVK I want a global MES event: when the sandbox counter GVK_RaidWave drops to 0, spawn the spawngroup GVK-Raider-Wave1 at X:12000 Y:-4000 Z:3500 for faction SPRT and reset GVK_RaidWave back to 3. Write the event, condition and action profiles as SBC I can drop into Data/.",
+      "expected_output": "Valid MES Event, Event Condition and Event Action EntityComponents with master gates and a zero-safe counter check.",
+      "files": [],
+      "assertions": [
+        "The event action sets [SpawnEncounter:true] alongside its spawn child tags",
+        "The event action sets [ChangeCounters:true] alongside the counter reset",
+        "The event action names the spawn profile with [SpawnData:], not [Spawner:]",
+        "The condition sets [CheckCustomCounters:true]",
+        "No counter-target value in the condition ([CustomCountersTargets:] or [CustomSandboxCountersTargets:]) is a literal 0 (zero-stripping bug avoided)",
+        "No XML comments (<!-- -->) appear inside any <Description>"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "waypointnear-crash-diagnosis",
+      "prompt": "server keeps throwing System.ArgumentOutOfRangeException ... CargoShipWaypoints in the log whenever my GVK patrol drone spawns. its trigger is [Type:WaypointNear] [TargetDistance:300] to swap autopilot when it reaches the patrol point. what's wrong and how do i fix it",
+      "expected_output": "Identifies the unchecked waypoint index in WaypointNear/WaypointFar and gives a working replacement.",
+      "files": [],
+      "assertions": [
+        "Identifies [Type:WaypointNear] reading CargoShipWaypoints[0] without a count check, on a grid whose list is empty, as the cause",
+        "Recommends a replacement that measures arrival at the patrol point ([Type:BehaviorTriggerA] for Patrol, or [Type:Position] + [GlobalPosition:]), not [Type:TargetNear]/[Type:TargetFar]",
+        "Says the exception affects all MES NPC AI on the server, not just this drone",
+        "Gives the corrected trigger as RivalAI trigger tags"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "wc-fixed-guns-never-fire",
+      "prompt": "My NPC fighter plane has two WeaponCore fixed gatlings and they never fire at players, the turrets on the same grid work fine. [UseStaticGuns:true] is set in the weapons profile. Prefab is Data/Prefabs/GVK-Raptor.sbc. Why?",
+      "expected_output": "Explains WC shoot mode Auto ignores MES fire commands; set Mouse Control in the prefab via wc_shootmode.py; widen the aim cone.",
+      "files": [],
+      "assertions": [
+        "Names the WeaponCore shoot mode 'Auto (AI Controlled)' as ignoring MES fire commands",
+        "Says to save the fixed guns on Mouse Control in the prefab",
+        "Points to scripts/wc_shootmode.py to list or set the mode",
+        "Suggests relaxing [WeaponMaxAngleFromTarget] to roughly 8-12 degrees",
+        "Mentions [WeaponMaxBaseDistanceTarget:] (default 20 m) as a second aim gate that must also be widened"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "carrier-recall-own-children",
+      "prompt": "Two GVK carriers of the same faction can be near each other. Each one spawns 3 fighters with a RivalAI spawn profile from an action. When a carrier drops below 30% health it should recall only its own fighters, not the other carrier's. Write the command profile and the fighter's receiving trigger.",
+      "expected_output": "A [RivalAI Command] using [MatchReceiverChild:true] plus a CommandReceived trigger on the fighters, with the MES build caveat.",
+      "files": [],
+      "assertions": [
+        "The command profile uses [MatchReceiverChild:true]",
+        "The fighter trigger is [Type:CommandReceived] with a [CommandReceiveCode:] matching the command's [CommandCode:]",
+        "Mentions that MatchReceiverChild needs an MES build that includes PR #386 / commit 531802f, or that CommandFromParent only matched by owner before 0900b20",
+        "Does not use filter tags that do not exist in MES (e.g. OnlySendToChildren, OnlyFromParent)"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "spawngroup-never-spawns",
+      "prompt": "My new GVK spawngroup never spawns, no errors in the log. Description starts with [MES Spawn Group] then [SpaceCargoShip:true] [FactionOwner:SPRTT] [MinSpawnFromWorldCenter:0]. Frequency is 5. What's wrong?",
+      "expected_output": "Finds both the wrong header and the misspelled faction tag, and gives the spawn debug commands.",
+      "files": [],
+      "assertions": [
+        "Says the header must be exactly [Modular Encounters SpawnGroup], otherwise MES ignores the group",
+        "Flags SPRTT as a faction tag that does not exist (MES rejects the spawn: Could Not Get Valid NPC Faction)",
+        "Recommends spawn debug logging such as /MES.SpawnDebug.SpawnGroup.true and copying the log with /MES.Info.GetLogging.SpawnDebug.<Type> or /MES.IGLSD.<Type>"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "store-grid-for-sale",
+      "prompt": "I want the GVK trade station's store block to sell a prefab called GVK-Hauler-Mk2 to players for 2.5M credits. Give me every file and profile I need.",
+      "expected_output": "An MES store item for the prefab, priced at 2.5M, offered through the station's store profile.",
+      "files": [],
+      "assertions": [
+        "Includes an MES store items entry with <ItemType>Prefab</ItemType> and GVK-Hauler-Mk2 as the item subtype",
+        "Sets the offer price to 2,500,000",
+        "Connects the item to the station's store through a [MES Store] profile's [Offers:] or [RequiredOffers:] list (or the store profile the block already uses)",
+        "Does not claim that FactionTypes_Economy GridsForSale / a Builder faction type is required for an MES store to sell the grid"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "zone-trigger-after-deactivate",
+      "prompt": "I made a zone with [Name:GVK_Rift] [PublicName:Kharak Rift]. NPCs use a trigger [Type:InsideZone] [ZoneName:GVK_Rift] to go aggressive. After my event turns the zone off, they still go aggressive inside it. Sometimes the trigger never fires at all. Why?",
+      "expected_output": "Two bugs: InsideZone ignores the active state, and zones are matched by PublicName.",
+      "files": [],
+      "assertions": [
+        "Says [Type:InsideZone] stays true for deactivated zones and recommends [Type:InsideActiveZone]",
+        "Says zones are looked up by [PublicName:], so the trigger must reference Kharak Rift, not GVK_Rift",
+        "Explains that with [ZoneName:GVK_Rift] the trigger as written can never match, reconciling the 'never fires' symptom"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "per-faction-chatter-one-bank",
+      "prompt": "I have one behavior used by both SPRT and GVK-Raiders spawngroups. I want each faction to speak different radio chatter. Can I do [DialogueBanks:GVK-Bank-{Faction}] so it picks the bank per faction? Also chatter sometimes stops for every grid after a while.",
+      "expected_output": "Bank names are literal and per behavior; the bank's chat profile is shared server-wide.",
+      "files": [],
+      "assertions": [
+        "Says {Faction} does not resolve in [DialogueBanks:]; the bank name is literal",
+        "Recommends one behavior copy per faction, each naming its own bank",
+        "Explains the bank's chat profile is one shared object, so MaxChats and MinTime/MaxTime apply across every grid on that bank (why chatter stops for everyone)"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "derelict-wreck-manipulation",
+      "prompt": "Make me a manipulation profile for GVK wreck spawns: blocks should end up at 40-70% integrity, some removed, and the weapons should be randomized from my custom NPC gatling and rocket defs. Write the SBC.",
+      "expected_output": "Dereliction with separate percentages, the weapon randomizer, and the Public requirement.",
+      "files": [],
+      "assertions": [
+        "Uses [UseGridDereliction:true] with [DerelictionProfiles:] pointing to a dereliction profile",
+        "The dereliction profile sets [UseSeparatePercentages:true] so the integrity percentages are used",
+        "Uses [RandomizeWeapons:true]",
+        "Addresses the <Public>true</Public> requirement for the custom weapon definitions (warns, or confirms the user's defs are public)",
+        "Covers the 'some blocks removed' requirement with an actual MES mechanism (e.g. block removal/replacement or dereliction removal tags)"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "faction-token-in-event-chat",
+      "prompt": "My MES event broadcasts a chat profile with the message 'Attention {Faction} pilots, raid inbound' but in game it shows the literal text {Faction}. Same chat profile works fine from a RivalAI action. Why?",
+      "expected_output": "MES Events pass npcData = null, so NPC tokens do not resolve; offers a working alternative.",
+      "files": [],
+      "assertions": [
+        "Says MES Events have no NPC context (npcData = null) so {Faction} and similar NPC tokens never resolve there",
+        "States that event chat replaces only {PlayerName} (and {GPS}), so a sandbox-variable token will not work in event chat either",
+        "Offers a working alternative: a per-faction chat profile / per-faction [ChatOverrideMessage:], or sending the chat from a RivalAI trigger/action"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "review-broken-sbc",
+      "prompt": "Review the attached SBC before I put it on the GVK server. Tell me everything that will break.",
+      "expected_output": "Finds the duplicate SubtypeId, the XML comment inside Description, and the event-action spawn mistakes.",
+      "files": [
+        "evals/files/GVK-Raid-Profiles.sbc"
+      ],
+      "assertions": [
+        "Flags the <Id> with two <SubtypeId> elements",
+        "Flags the XML comment inside <Description> as aborting the whole mod load and suggests [//...] instead",
+        "Flags [Spawner:] in the MES Event Action and says to use [SpawnData:]",
+        "Flags the missing [SpawnEncounter:true] master gate on the event action",
+        "Runs or recommends scripts/audit_sbc.ps1 (or the run-mes-audit.ps1 shim)",
+        "Provides a corrected event action using [SpawnEncounter:true] with [SpawnData:]"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "despawnmes-never-fires",
+      "prompt": "When a GVK fighter gets cleaned up by MES I want it to tell its carrier so the carrier can launch a replacement. I added a trigger [Type:DespawnMES] with an action that broadcasts a command with [CommandDelayTicks:60]. Nothing ever happens. Fix it.",
+      "expected_output": "DespawnMES needs DespawnTypeFromSpawner, and a delayed command is dropped because the grid closes.",
+      "files": [],
+      "assertions": [
+        "Says the trigger needs [DespawnTypeFromSpawner:Any] (or an exact source string) to fire",
+        "Says the delayed command is dropped because the grid closes right after DespawnMES actions; use [CommandDelayTicks:0]"
+      ]
+    },
+    {
+      "id": 13,
+      "name": "escort-overshoots-slot",
+      "prompt": "My GVK escort fighters keep overshooting their escort slot at full throttle, turning around and overshooting again forever. Escort speed matching doesn't seem to do anything. Autopilot profile is mostly defaults. What should I change?",
+      "expected_output": "MaxVelocityAngleForSpeedControl default 5 is too low; use 90, never above 90.",
+      "files": [],
+      "assertions": [
+        "Identifies [MaxVelocityAngleForSpeedControl:] (default 5) as the cause of full-thrust overshoot on moving waypoints",
+        "Recommends 90 for escorts and aircraft",
+        "Warns against values above 90 because the brake can then push the grid away from its waypoint"
+      ]
+    },
+    {
+      "id": 14,
+      "name": "triggers-dont-fire-where-to-start",
+      "prompt": "none of my RivalAI triggers on the new GVK patrol drone seem to fire. where do i even start debugging this on a dedicated server",
+      "expected_output": "The logging protocol: enable behavior debug, copy the buffer, inspect grid behavior.",
+      "files": [],
+      "assertions": [
+        "Tells the user to enable /MES.BehaviorDebug.Trigger.true (and Condition/Action)",
+        "Tells the user to copy the log with /MES.Info.GetLogging.BehaviorDebug.<Type> or /MES.IGLBD.<Type> (e.g. .Trigger)",
+        "Mentions /MES.Info.GetGridBehavior or /MES.IGGB to see the grid's AI state",
+        "Checks common silent causes such as [UseTrigger:true] missing or the trigger not listed in the behavior's [Triggers:]"
+      ]
+    }
+  ]
+}

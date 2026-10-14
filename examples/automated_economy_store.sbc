@@ -3,7 +3,7 @@
   <!--
     Mike Dude's GVK Pattern: Automated Economy Store Refresh
     Refreshes store block inventories on a timer, clearing old stock and re-applying store profiles.
-    Includes the required Builder subtype declaration snippet for FactionTypes_Economy.sbc.
+    FactionTypes_Economy.sbc GridsForSale is not needed: MES stores sell whatever the store-items file lists.
   -->
 
   <!--
@@ -20,8 +20,6 @@
             <CustomPrice>7500000</CustomPrice>
             <MinPriceMultiplier>100</MinPriceMultiplier>
             <MaxPriceMultiplier>100</MaxPriceMultiplier>
-            <MinAmount>1</MinAmount>
-            <MaxAmount>1</MaxAmount>
           </Offer>
         </StoreItem>
       </StoreItems>
@@ -95,17 +93,11 @@
   </EntityComponents>
 
   <!--
-    CRITICAL ENGINE REQUIREMENT:
-    Ensure the following is placed in your FactionTypes_Economy.sbc:
-    
-    <FactionType>
-      <Id>
-        <TypeId>FactionTypeDefinition</TypeId>
-        <SubtypeId>Builder</SubtypeId>
-      </Id>
-      <GridsForSale>
-        <PrefabSubtypeId>GVK-Prefab-RoverHeavy</PrefabSubtypeId>
-      </GridsForSale>
-    </FactionType>
+    Optional, only if Keen-generated economy stations should also roll this grid
+    (FactionTypes_Economy.sbc; the element is PrefabName, not PrefabSubtypeId):
+
+    <GridsForSale>
+      <PrefabName>GVK-Prefab-RoverHeavy</PrefabName>
+    </GridsForSale>
   -->
 </Definitions>

@@ -6,7 +6,7 @@ Why: MES fires WeaponCore fixed guns with ToggleWeaponFire. WeaponCore ignores t
 in its default mode "Auto (AI Controlled)" (AiShoot), so MES aims at the target and the guns never fire.
 The mode is saved per block in the prefab as protobuf inside the block's ModStorageComponent
 (key 75bbb4f5-4fb9-4230-beef-bb79c9811501); it is field 28 of the weapon "Overrides" message
-(0 = AiShoot is the default and is omitted). See references/aircraft_behaviors_and_tuning.md, section 5B.
+(0 = AiShoot is the default and is omitted). See references/aircraft_behaviors_and_tuning.md, section 3B.
 
 Modes (WeaponCore ShootManager.ShootModes): ai=0, mouse=1, toggle=2, fire=3.
 Only `mouse` has been confirmed to make MES-driven fixed guns fire in game.

@@ -24,10 +24,10 @@ allowed-tools: Read, run_command
 ## 1. Source of Truth & Reference Library
 
 > [!IMPORTANT]
-> **The MES C# source is the sole source of truth.** Online wikis and guides are often outdated or wrong. This skill (1,854 tags across 41 profile types, every gate, trap and pattern checked against that source) overrides generic MES overviews: never use Godimas101's `se-frameworks/references/mes.md`.
+> **The MES C# source is the sole source of truth.** Online wikis and guides are often outdated or wrong. This skill (1,854 tags across 41 profile types, checked against that source) overrides generic MES overviews: never use Godimas101's `se-frameworks/references/mes.md`.
 
 ### A. Companion Skills
-C# ModAPI, decompiled engine code, Torch and PB scripts: [CometWorks skills](https://github.com/CometWorks/skills) (`se-dev-game-code`, `se-dev-server-code`, `se-dev-mod`, `se-dev-torch`); IDE tooling: [MDK2](https://github.com/malware-dev/MDK-SE); `.mwm` models and TextSurfaceScripts: [Godimas101's se-claude-skill](https://github.com/Godimas101/se-claude-skill) (`se-assets`, `se-tss`; not its `mes.md`).
+C# ModAPI, decompiled engine code, Torch and PB scripts: [CometWorks skills](https://github.com/CometWorks/skills) (`se-dev-game-code`, `se-dev-server-code`, `se-dev-mod`, `se-dev-torch`); `.mwm` models and TextSurfaceScripts: [Godimas101's se-claude-skill](https://github.com/Godimas101/se-claude-skill) (`se-assets`, `se-tss`; not its `mes.md`).
 
 ### B. Reference Library (Progressive Disclosure)
 Detail lives in `references/`; open the file for the topic at hand. Keep this file a lean router: harnesses cap SKILL.md at **5,000 tokens** and silently truncate past it (`Update-MesSkill.ps1` checks).
@@ -41,7 +41,7 @@ Detail lives in `references/`; open the file for the topic at hand. Keep this fi
 | [aircraft_behaviors_and_tuning.md](references/aircraft_behaviors_and_tuning.md) | Attack-run tuning, profile-swap triggers, fixed-gun gates, WeaponCore shoot mode (why MES fixed guns never fire), hover fighters, tuning method. |
 | [manipulation_and_dereliction.md](references/manipulation_and_dereliction.md) | Block replacements, weapon randomizer (`<Public>true</Public>`), dereliction, AiEnabled bots, and ContainerTypes loot tables. |
 | [events_and_zones.md](references/events_and_zones.md) | MES Events vs RivalAI Triggers, boolean master gates, zero-stripping bug, dynamic zones, Event Templates & TemplateGroups (lifecycle, limits, Missions), contract-block pairing. |
-| [economy_and_stores.md](references/economy_and_stores.md) | 3-part store grid sales chain (`Builder` subtype rule), 124m clearance, dual icon/tooltip declarations, automated store refresh. |
+| [economy_and_stores.md](references/economy_and_stores.md) | Store grid sales (MES store items + `[MES Store]`), purchase spawn placement, icons, automated store refresh. |
 | [third_party_integrations.md](references/third_party_integrations.md) | WeaponCore (800m clamp, range desync, lead prediction, NPC handicaps, flares, weapon setup matrix), Defense Shields, AiEnabled, Water Mod. |
 | [diagnostics_and_troubleshooting.md](references/diagnostics_and_troubleshooting.md) | In-game admin commands, log error signatures, sim-speed optimization, anti-clang mitigations. |
 | [sbc_xml_editing_guide.md](references/sbc_xml_editing_guide.md) | IDE setup (`*.sbc -> xml`), `<Description>` protection, encoding rules, safe formatting. |
@@ -59,7 +59,7 @@ Annotated `.sbc` implementations based on real workshop mods:
 ## 2. MES Architecture & Core Mental Models
 
 - **Events vs. Triggers**: MES Events run globally via `EventManager` (server-authoritative, no physical grid needed); RivalAI Triggers run per-grid via Remote Control blocks. **They use different tag names** — see the Tag-Name Matrix in [`events_and_zones.md`](references/events_and_zones.md) §1.A (`[Spawner:]` vs `[SpawnData:]`, singular vs plural zone lists; both use `[ChatData:]`).
-- **Action Debugging**: Use `[DebugMessage:...]` (RivalAI) / `[DebugChatMessage:]` / `[DebugHudMessage:]` (MES Events) during development only; ship real `[RivalAI Chat]` profiles. → [`diagnostics_and_troubleshooting.md`](references/diagnostics_and_troubleshooting.md) §1.
+- **Action Debugging**: `[DebugMessage:]` (RivalAI), `[DebugChatMessage:]`/`[DebugHudMessage:]` (Events) are for development only; ship real `[RivalAI Chat]` profiles. → [`diagnostics_and_troubleshooting.md`](references/diagnostics_and_troubleshooting.md) §1.
 - **ContainerTypes & Loot**: bulk vs. selective assignment (paired list counts **must match 1:1** or MES silently drops all assignments), `[MES Loot]` profiles, runtime loot swapping. → [`manipulation_and_dereliction.md`](references/manipulation_and_dereliction.md) §6.
 
 ---
@@ -77,13 +77,12 @@ Full XML examples, formatting rules, and snippet tooling (`Format-MesSbc.ps1`, `
 
 ---
 
-## 4. Boolean Master-Gate Convention (MES Events)
+## 4. Boolean Master Gates (Events and RivalAI Actions)
 
 > [!CAUTION]
-> **The Golden Rule (MES Events only)**: Child parameters (e.g. `[SetCounters:...]`, `[TrueBooleans:...]`, `[SpawnCoords:...]`) without their parent boolean gate (e.g. `[ChangeCounters:true]`, `[SpawnEncounter:true]`) cause **silent execution failure** — no error logged, block skipped.
-> **RivalAI has NO master gates.** RivalAI action tags are self-gating; do not add MES-style gates to `[MES AI Action]` profiles.
+> **[HARD]** Both `[MES Event Action]` and `[RivalAI Action]` run a block of child parameters only when its boolean gate is `true`: `[ChangeCounters:true]` + `[SetCounters:]`, `[SpawnEncounter:true]` + `[SpawnData:]`/`[Spawner:]`, `[UseChatBroadcast:true]` + `[ChatData:]`, `[ChangeAutopilotProfile:true]` + `[AutopilotProfile:]`. A child without its gate is silently skipped. Triggers, conditions and spawns need `[UseTrigger:true]`/`[UseConditions:true]`/`[UseSpawn:true]`.
 
-Full action & condition gate tables: [`events_and_zones.md`](references/events_and_zones.md) §2.
+Event gate tables: [`events_and_zones.md`](references/events_and_zones.md) §2; RivalAI action tags: [`profiles_and_tags.md`](references/profiles_and_tags.md) §2C.
 
 ---
 
@@ -95,9 +94,9 @@ Full action & condition gate tables: [`events_and_zones.md`](references/events_a
 
 ## 6. Token Matrix & Scope (`IdsReplacer.cs`)
 
-**[HARD]** `{Faction}`, `{SpawnGroupName}`, `{Position}`, custom string/counter tokens resolve **only in RivalAI Grid Triggers** (MES Events pass `npcData = null`), except `{Faction}` inside `[SpawnData:]` on `[MES Event Action]` (bespoke replace fed by `[SpawnFactionTags:]`). `{<SandboxVarKey>}` works in both; `{PlayerName}` in chat. Tokens in profile SubtypeIds (`[Actions:]`, `[Triggers:]`, etc.) **never resolve**.
+**[HARD]** `{Faction}`, `{SpawnGroupName}`, `{Position}`, custom string/counter tokens resolve **only in RivalAI Grid Triggers** (MES Events pass `npcData = null`). Event chat replaces only `{PlayerName}`/`{GPS}`; one exception: an Event `[SpawnEncounter:true]` replaces `{Faction}` in the `[SpawnGroups:]` of the spawner `[SpawnData:]` names, from `[SpawnFactionTags:]`. Tokens in profile SubtypeIds (`[Actions:]`, `[Triggers:]`, etc.) **never resolve**.
 
-**[HARD]** A separate string-**Tag** broadcast system (`[Tags:Value]` + `[ManuallyActivatedTriggerTags:]`/`[EnableTriggerTags:]`/`[ToggleEventTags:]`/etc.) lets one Action act on every Trigger/Event declaring a matching tag. Two non-cross-matching pools (Trigger vs. Event); some consumers don't token-resolve depending on the declaring profile type; reaches only Triggers already attached to that grid's Behavior.
+**[HARD]** A separate string-**Tag** broadcast system (`[Tags:Value]` + `[ManuallyActivatedTriggerTags:]`/`[EnableTriggerTags:]`/`[ToggleEventTags:]`/etc.) lets one Action act on every Trigger/Event declaring a matching tag. Trigger and Event tags are separate pools, and it reaches only Triggers on that grid's Behavior.
 
 Full token table, rules, and Tag broadcast system: [`profiles_and_tags.md`](references/profiles_and_tags.md) §5-6.
 
@@ -106,8 +105,8 @@ Full token table, rules, and Tag broadcast system: [`profiles_and_tags.md`](refe
 ## 7. Verified Engine Pitfalls & Workarounds
 
 - **[HARD] Turret 800m Default Clamp**: ranges clamp to 800m on spawn; use `[SetWeaponsToMaxRange:true]`. → [`third_party_integrations.md`](references/third_party_integrations.md)
-- **[HARD] Economy Store Grid Sales**: store prefabs must be under a `<FactionType>` with subtype `Builder` in `<GridsForSale>`; 124m clearance radius. → [`economy_and_stores.md`](references/economy_and_stores.md)
-- **[HARD] `[Type:WaypointNear]`/`[Type:WaypointFar]` Crash**: indexes waypoints without count check → use `[Type:TargetNear]`/`[Type:TargetFar]`. → [`diagnostics_and_troubleshooting.md`](references/diagnostics_and_troubleshooting.md) §4.4
+- **[HARD] Store grid sales**: an MES store sells prefabs from its store-items file (always quantity 1); `GridsForSale`/`Builder` is only for Keen-generated stations. → [`economy_and_stores.md`](references/economy_and_stores.md)
+- **[HARD] `[Type:WaypointNear]`/`[Type:WaypointFar]` stall all NPC AI** off a CargoShip (unchecked waypoint index); use `[Type:BehaviorTriggerA]` or `[Type:Position]`. → [`diagnostics_and_troubleshooting.md`](references/diagnostics_and_troubleshooting.md) §4.4
 - **[HARD] `[Type:InsideZone]` vs `[Type:InsideActiveZone]`**: `InsideZone` is `true` even for deactivated zones — use the Active variant. → [`events_and_zones.md`](references/events_and_zones.md) §4
 - **[HARD] Zones match by `[PublicName:]`**, never `[Name:]`; change types are `Set/Add/Subtract/Multiply/Divide`. Zone bool/counter actions and KPLs: MES 2.74.04+. → [`events_and_zones.md`](references/events_and_zones.md) §4
 - **[HARD] Dereliction Percentage Gating**: percentages ignored without `[UseSeparatePercentages:true]`. → [`manipulation_and_dereliction.md`](references/manipulation_and_dereliction.md) §3
@@ -121,7 +120,7 @@ Full token table, rules, and Tag broadcast system: [`profiles_and_tags.md`](refe
 - **[HARD] Dialogue banks**: a bank's chat profile is ONE object shared by every grid on it (`MaxChats`, `MinTime`/`MaxTime`, first author name are server-wide), and the bank is chosen per behavior, never per `{Faction}`. → [`dialogue_and_chat.md`](references/dialogue_and_chat.md)
 - **[HARD] `[Type:DespawnMES]` needs `[DespawnTypeFromSpawner:Any]`** (or an exact source string), else it never fires; a despawn action's delayed command is dropped. → [`behaviors_and_autopilot.md`](references/behaviors_and_autopilot.md) §9
 - **[HARD] `[ContractBlocks:]`/`[ContractBlockProfiles:]` pair by index** (stops at the shorter list); template event instances are never removed automatically. → [`events_and_zones.md`](references/events_and_zones.md) §5D-F
-- **[HARD] Silent-ignore traps**: spawn groups need the `[Modular Encounters SpawnGroup]` header; `[RivalAI Target]` does nothing without `[UseCustomTargeting:true]`; dereliction needs `[UseGridDereliction:true]` + a `[Blocks:]` list; `[Type:HealthPercentage]` fires at or *above* the threshold. → [`spawning_and_conditions.md`](references/spawning_and_conditions.md) §2, [`behaviors_and_autopilot.md`](references/behaviors_and_autopilot.md) §4
+- **[HARD] Silent-ignore traps**: spawn groups need the `[Modular Encounters SpawnGroup]` header; `[RivalAI Target]` does nothing without `[UseCustomTargeting:true]`; dereliction needs `[UseGridDereliction:true]` + a `[Blocks:]` list; `[Type:HealthPercentage]` fires at or *above* the threshold; `[Type:Damage]` needs `[DamageTypes:Any]`; `[Triggers:A,B]` is one name (one tag per profile). → [`spawning_and_conditions.md`](references/spawning_and_conditions.md) §2, [`behaviors_and_autopilot.md`](references/behaviors_and_autopilot.md) §4
 - **[SOFT] Anti-Clang Aircraft Force-Despawn**: force-despawn disabled aircraft to avoid falling-airframe Havok loops. → [`diagnostics_and_troubleshooting.md`](references/diagnostics_and_troubleshooting.md) §5
 
 ---
@@ -149,4 +148,4 @@ Run from the skill root: Python as `uv run scripts/<name>.py` (`pyproject.toml` 
 | `New-MesProfile.ps1` | Scaffolding (`-Pattern -ModPrefix -Name -Faction`): `DefendedWreck`, `ConvoyLeaderEscort`, `DynamicZoneLadder`, `StoreGrid`, `DynamicStateNpc`, `PlanetaryInstallation`, `CombatDrone`, `ReinforcementNetwork`, `BossEncounter` |
 
 ### B. In-Game Diagnostics & Agent Troubleshooting Protocol
-When an encounter fails to spawn, triggers don't fire, or AI malfunctions, have the user enable logging (`/MES.SpawnDebug.SpawnGroup.true` + `/MES.SpawnDebug.Spawning.true`; `/MES.BehaviorDebug.Trigger.true` + `.Condition.true` + `.Action.true`), copy the buffer (`/MES.Info.GetLogging.SpawnDebug` or `/MES.IGLSD`; `/MES.Info.GetLogging.BehaviorDebug` or `/MES.IGLBD`), and for a grid's AI state `/MES.Info.GetGridBehavior` (`/MES.IGGB`). For intermittent issues append `.GameLog.true` and read `%AppData%\SpaceEngineers\SpaceEngineers*.log` directly. Full command list: [`diagnostics_and_troubleshooting.md`](references/diagnostics_and_troubleshooting.md) §2-3.
+When an encounter fails to spawn, triggers don't fire, or AI malfunctions, have the user enable logging (`/MES.SpawnDebug.SpawnGroup.true` + `/MES.SpawnDebug.Spawning.true`; `/MES.BehaviorDebug.Trigger.true` + `.Condition.true` + `.Action.true`), copy each buffer with its type (`/MES.IGLSD.SpawnGroup`; `/MES.IGLBD.Trigger`, `.Condition`, `.Action`; the bare command fails), and for a grid's AI state `/MES.Info.GetGridBehavior` (`/MES.IGGB`). For intermittent issues append `.GameLog.true` and read `%AppData%\SpaceEngineers\SpaceEngineers*.log` directly. Full command list: [`diagnostics_and_troubleshooting.md`](references/diagnostics_and_troubleshooting.md) §2-3.
