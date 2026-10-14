@@ -109,7 +109,7 @@ Every profile must be defined inside an `<EntityComponent xsi:type="MyObjectBuil
   - `[CheckTargetDistance:bool]`, `[MinTargetDistance:<double>]`, `[MaxTargetDistance:<double>]`. (RivalAI Conditions have no `CheckPlayerNear`; use a `PlayerNear` trigger or a `[MES Player Condition]` via `[CheckPlayerCondition:true]` + `[PlayerConditionIds:]`.)
   - `[CheckPlayerReputation:bool]`, `[MinPlayerReputation:<int>]`, `[MaxPlayerReputation:<int>]`.
   - `[CheckCustomCounters:bool]`, `[CustomCounters:<string>]`, `[CustomCountersTargets:<int>]`, `[CounterCompareTypes:<Enum>]`.
-  - `[CommandCheckFromParent:bool]`, `[CommandFromParent:bool]`.
+  - `[CommandCheckFromParent:bool]`, `[CommandFromParent:bool]`. Matches by parent Remote Control entity only since MES `0900b20` (2026-10-12); before, it matched any sender with the same owner. See `behaviors_and_autopilot.md` §5B/B2 (`[MatchReceiverParent/Child/Escort/Leader:]` command filters).
 
 ### E. Autopilot Profiles
 - **Header**: `[RivalAI Autopilot]` or `[MES AI Autopilot]`
