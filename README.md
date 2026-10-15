@@ -55,7 +55,7 @@ se-dev-mes/
 │   ├── aircraft_behaviors_and_tuning.md    # Attack runs, profile-swap triggers, fixed-gun gates, WC shoot mode, hover fighters
 │   ├── manipulation_and_dereliction.md     # Block replacement, weapon randomizer, dereliction
 │   ├── events_and_zones.md                 # MES Events vs Triggers, master gates, zero-stripping
-│   ├── economy_and_stores.md               # 3-part store grid sales, 124m clearance, store refresh
+│   ├── economy_and_stores.md               # store grid sales, purchase spawn placement, store refresh
 │   ├── third_party_integrations.md         # WeaponCore (800m clamp), Shields, AiEnabled, Water Mod
 │   ├── diagnostics_and_troubleshooting.md  # Admin commands, error signatures, sim-speed, anti-clang
 │   └── sbc_xml_editing_guide.md            # IDE setup (*.sbc -> xml), <Description> rules, formatting
@@ -66,7 +66,7 @@ se-dev-mes/
 │   ├── automated_economy_store.sbc         # Mike Dude GVK automated store inventory refresh loop
 │   └── merchant_safezone_station.sbc       # TOC safezone station ([CreateSafeZone:true]) + merchant
 └── scripts/                                # Automation, diagnostics, and scaffolding suite
-    ├── mes_tag_cache.json                  # Offline database of 1,850 tags across 41 profile types + trigger Type values
+    ├── mes_tag_cache.json                  # Offline database of 1,854 tags across 41 profile types + trigger Type values
     ├── query_mes_tags.py                   # Tag inspector CLI (search local MES source or cache)
     ├── audit_unknown_tags.py               # Finds tags MES silently ignores and values its parsers reject (e.g. true on a Yes/No tag)
     ├── wc_shootmode.py                     # List/set/audit the WeaponCore shoot mode in prefabs; classify turrets, fixed guns and flares
@@ -215,9 +215,9 @@ powershell -ExecutionPolicy Bypass -File scripts/New-MesProfile.ps1 -Pattern Bos
 - **Zero-Stripping Bug**: `TagParse.cs` strips `0` values from integer lists unless called with `preserveZero: true`. Using `[CustomCountersTargets:0]` produces an empty list and breaks conditions.
 - **Turret 800m Clamp**: On spawn, MES clamps all automated weapon ranges to 800m unless an action executes `[SetWeaponsToMaxRange:true]`.
 - **Zone names**: `[ZoneName:]` / `[ZoneNames:]` match a zone's `[PublicName:]`, never its `[Name:]`; zone change types are `Set/Add/Subtract/Multiply/Divide` (`Increase`/`Decrease` silently fail).
-- **`WaypointNear` / `WaypointFar`**: Unchecked index on `CargoShipWaypoints[0]` crashes the trigger loop if waypoints are empty.
+- **`WaypointNear` / `WaypointFar`**: Unchecked index on `CargoShipWaypoints[0]`; on a grid with no CargoShip waypoints the exception stops every MES NPC's AI on the server while that grid exists.
 - **`InsideZone` vs `InsideActiveZone`**: `[Type:InsideZone]` evaluates `true` even when the target zone is deactivated.
-- **Economy Store Grids**: Purchased grids only spawn if registered under a `<FactionType>` with subtype `Builder` in `FactionTypes_Economy.sbc`.
+- **Economy Store Grids**: MES stores sell prefabs from an MES store-items file (`<ItemType>Prefab</ItemType>`, always quantity 1); `FactionTypes_Economy.sbc` `GridsForSale` is only read by Keen-generated stations.
 
 ---
 

@@ -48,13 +48,15 @@ MES includes an automated weapon replacement pipeline that dynamically upgrades 
 - `[WeaponRandomizerWhitelist:...]` / `[WeaponRandomizerBlacklist:...]`: Which weapons may be installed as replacements.
 - `[RandomWeaponChance:<int>]`, `[RandomWeaponSizeVariance:<int>]`, `[NonRandomWeaponNames:]` / `[NonRandomWeaponIds:]`.
 
-### The `<Public>true</Public>` Requirement:
+### The `<Public>true</Public>` Requirement & Block Restrictions:
 > [!CAUTION]
 > **[HARD] Public Definition Gate**: In `WeaponRandomizer.cs` (lines 182–194), MES iterates block definitions in the game database and checks `if (!definition.Public)`.
-> If a block definition has `<Public>false</Public>` in its SBC definition (very common for hidden `_NPC` weapon variants), MES **skips it** unless:
+> If a block definition has `<Public>false</Public>` in its SBC definition (common when modders try to hide `_NPC` weapon variants from players natively), MES **skips it** unless:
 > 1. A `[MES Weapon Mod Rules]` profile specifies `[AllowIfNonPublic:true]`.
 > 2. Or the SubtypeId is in `DefaultPublicBlocks`.
 > Custom NPC weapons must have `<Public>true</Public>` in their SBC definition or an explicit weapon mod rule.
+>
+> **Block Restrictions Mod Interaction**: If you use the Block Restrictions mod to restrict `_NPC` weapons to NPCs only, author the weapon blocks with `<Public>true</Public>` in SBC as normal. Block Restrictions dynamically hides them from player G-menus/toolbars on the client and strips them from player grids server-side, leaving `definition.Public` true so MES `WeaponRandomizer` can discover and randomize them without needing weapon mod rule overrides.
 
 ---
 

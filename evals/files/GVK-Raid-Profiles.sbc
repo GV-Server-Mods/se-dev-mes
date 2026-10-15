@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <EntityComponents>
+
+    <EntityComponent xsi:type="MyObjectBuilder_InventoryComponentDefinition">
+      <Id>
+        <TypeId>Inventory</TypeId>
+        <SubtypeId>GVK-Raid-Trigger-PlayerNear</SubtypeId>
+        <SubtypeId>GVK-Raid-Trigger-PlayerNear-Copy</SubtypeId>
+      </Id>
+      <Description>
+        [RivalAI Trigger]
+        [UseTrigger:true]
+        [Type:PlayerNear]
+        [TargetDistance:2500]
+        [MinCooldownMs:30000]
+        [MaxCooldownMs:30000]
+        [Actions:GVK-Raid-Action-Alert]
+      </Description>
+    </EntityComponent>
+
+    <EntityComponent xsi:type="MyObjectBuilder_InventoryComponentDefinition">
+      <Id>
+        <TypeId>Inventory</TypeId>
+        <SubtypeId>GVK-Raid-Action-Alert</SubtypeId>
+      </Id>
+      <Description>
+        [RivalAI Action]
+        <!-- warn the player, then call for backup -->
+        [UseChatBroadcast:true]
+        [ChatData:GVK-Raid-Chat-Alert]
+        [BroadcastCommandProfiles:true]
+        [CommandProfileIds:GVK-Raid-Command-Backup]
+      </Description>
+    </EntityComponent>
+
+    <EntityComponent xsi:type="MyObjectBuilder_InventoryComponentDefinition">
+      <Id>
+        <TypeId>Inventory</TypeId>
+        <SubtypeId>GVK-Raid-EventAction-Wave</SubtypeId>
+      </Id>
+      <Description>
+        [MES Event Action]
+        [SpawnCoords:{X:12000 Y:-4000 Z:3500}]
+        [SpawnFactionTags:SPRT]
+        [Spawner:GVK-Raid-Spawner-Wave1]
+      </Description>
+    </EntityComponent>
+
+  </EntityComponents>
+</Definitions>

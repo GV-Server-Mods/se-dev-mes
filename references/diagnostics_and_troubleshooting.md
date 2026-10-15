@@ -69,6 +69,8 @@ Controls verbose diagnostic logging for the encounter spawner. Set `<Type>` to a
 | `PostSpawn` | Post-spawn physics stabilization, ownership assignment, and AI attachment. |
 | `GameLog` | Routes all spawner debug messages directly to `SpaceEngineers.log`. |
 
+Also valid (`SpawnerDebugEnum`): `API`, `BlockLogic`, `Entity`, `Error`, `Settings`, `Startup`, `SpawnRecord`, `Dev`.
+
 - **Example**: Enable detailed spawn group condition logging and send output to `SpaceEngineers.log`:
   ```
   /MES.SpawnDebug.SpawnGroup.true
@@ -92,7 +94,13 @@ Controls verbose diagnostic logging for RivalAI grid behaviors. Set `<Type>` to 
 | `Collision` | Raycasting results, asteroid/terrain obstacle avoidance, and evasion maneuvers. |
 | `Despawn` | Timeout timers, player distance retreat checks, and force-despawn execution. |
 | `BehaviorMode` | Subclass switching (`ChangeBehaviorSubclass`) and state transitions. |
+| `BehaviorSetup` | Remote Control registration and behavior attachment at spawn (first stop when a grid has no AI at all). |
+| `Owner` | Remote Control and grid ownership handling. |
+| `General` | Behavior-manager messages, including `Exception in Parallel Calculations`. |
+| `Error` | Caught exceptions. |
 | `GameLog` | Routes all behavior debug messages directly to `SpaceEngineers.log`. |
+
+Also valid (`BehaviorDebugEnum`): `BehaviorSpecific`, `Settings`, `Spawn`, `Startup`, `Target`, `Thrust` (logs thruster removal only), `Dev`, `BehaviorLog`.
 
 - **Example**: Track why a combat trigger isn't firing:
   ```
@@ -107,24 +115,19 @@ MES can dump internal diagnostic logs directly to your Windows clipboard for fas
 
 | Chat Command | Shortcut | Data Copied to Windows Clipboard |
 | :--- | :--- | :--- |
-| `/MES.Info.GetLogging.SpawnDebug` | `/MES.IGLSD` | Dumps the active Spawner debug log buffer to clipboard. |
-| `/MES.Info.GetLogging.BehaviorDebug` | `/MES.IGLBD` | Dumps the active Behavior/AI debug log buffer to clipboard. |
+| `/MES.Info.GetLogging.SpawnDebug.<Type>` | `/MES.IGLSD.<Type>` | Copies one spawner log buffer, e.g. `/MES.IGLSD.SpawnGroup`. |
+| `/MES.Info.GetLogging.BehaviorDebug.<Type>` | `/MES.IGLBD.<Type>` | Copies one behavior log buffer, e.g. `/MES.IGLBD.Trigger`. |
 | `/MES.Info.GetGridBehavior` | `/MES.IGGB` | Dumps targeted grid's active behavior, autopilot, and trigger states. |
 | `/MES.Info.GetGridData` | `/MES.IGGD` | Dumps targeted grid's core MES entity parameters. |
 | `/MES.Info.GetEligibleSpawnsAtPosition` | `/MES.GESAP` | Lists all spawn groups eligible to spawn at the player's current location. |
 | `/MES.Info.GetThreatScore` | `/MES.GTS` | Calculates and displays player combat threat score at current position. |
 | `/MES.Info.GetDiagnostics` | `/MES.IGD` | General diagnostic telemetry dump. |
 
+**[HARD] The `<Type>` is required** on `GetLogging` (`LoggerTools.GetLogging` needs 5 parts): a bare `/MES.IGLBD` or `/MES.IGLSD` only returns `Command Missing Parameters.` Each debug type has its own buffer, so copy each type you enabled (`.Trigger`, `.Condition`, `.Action`, …).
+
 ### D. Spawning & Encounter Force-Spawn Commands
-- `/MES.Spawning.Enabled [true/false]`: Globally toggles MES spawning.
-- `/MES.Spawn.SpaceCargoShip [SpawnGroupName]` (or `/MES.SSCS`): Forces a space cargo ship spawn near player.
-- `/MES.Spawn.PlanetaryCargoShip [SpawnGroupName]` (or `/MES.SPCS`): Forces a planetary cargo ship spawn.
-- `/MES.Spawn.PlanetaryInstallation [SpawnGroupName]` (or `/MES.SPI`): Forces a planetary installation spawn.
-- `/MES.Spawn.BossEncounter [SpawnGroupName]` (or `/MES.SBE`): Forces a boss encounter spawn.
-- `/MES.Spawn.RandomEncounter [SpawnGroupName]` (or `/MES.SRE`): Forces a random encounter spawn.
-- `/MES.Spawn.Custom [SpawnGroupName]`: Force-spawns an encounter at the player's crosshair.
-- `/MES.Reset.Counters`: Resets all session sandbox counters to 0.
-- `/MES.GPS.Encounters [true/false]`: Toggles GPS waypoints for all active MES encounters in the world.
+- `/MES.Spawn.<Type>.<SpawnGroupName>` (`ChatMessage.ProcessSpawn`): runs a spawn of that type at your position; with the optional `.<SpawnGroupName>` it tries only that group (still subject to its conditions). Parts are split on `.`, so a SpawnGroup name containing a dot cannot be named here. Types and shortcuts: `SpaceCargoShip` (`/MES.SSCS`), `RandomEncounter` (`/MES.SRE`), `PlanetaryCargoShip` (`/MES.SPCS`), `PlanetaryInstallation` (`/MES.SPI`), `BossEncounter` (`/MES.SBE`), `Creature` (`/MES.SC`), `DroneEncounter` (`/MES.SDE`), `StaticEncounter` (`/MES.SSE`), `Prefab` (`/MES.SP`), `PrefabStation` (`/MES.SSP`). Also `/MES.Spawn.WaveSpawner.<Space|Planet|Creature>` and `/MES.Spawn.ForceSpawnTimer`.
+- There is no chat command to toggle all MES spawning, reset all counters or GPS-mark encounters; use `/MES.Debug.ChangeCounter` / `ChangeBool` below for single values and `/MES.Info.GetActiveNpcs` to list live NPCs.
 - `/MES.Debug.ShowZone.<PublicName|ZoneSubtypeId>`, `/MES.Debug.HideZone.<...>`, `/MES.Debug.ShowAllZones`, `/MES.Debug.HideAllZones` *(2.74.04)*: Draw zone spheres (including multi-sphere zones) in-world, with temporary GPS markers.
 - `/MES.Debug.CreateKPL.<Faction>.<Radius>.<Minutes>.<MaxEncounters>.<MinThreat>`: Creates a Known Player Location at your position. Minutes defaults to `30`; since 2.74.04 a value of `0` or less creates nothing (HUD: `KPL Not Created: Duration Must Be Greater Than 0`).
   - `ShowAllZones` draws KPLs too (they are active zones), but the visualizer keys zones by `PublicName`, then `Name`, and KPLs have neither, so only **one** KPL is drawn at a time and `ShowZone` cannot target a KPL (`ZoneDebugVisualizer.GetZoneKey`). Still the quickest way to see whether a KPL exists and how far it reaches.
@@ -132,9 +135,8 @@ MES can dump internal diagnostic logs directly to your Windows clipboard for fas
 - `/MES.Debug.ChangeBool.<Name>.<true|false>`: sets a sandbox boolean. `/MES.Debug.ChangeCounter.<Name>.<Amount>`: **adds** `<Amount>` to a sandbox counter (use a negative amount to subtract; it is not a set).
 - `/MES.Debug.ClearUniqueEncounters`: forgets which `UniqueEncounter` spawn groups have spawned. `/MES.Debug.ClearStaticEncounters`: invalidates every saved static-encounter record, so statics respawn.
 
-### E. Interactive HUD Overlays (`/RivalAI.*`)
-- `/RivalAI.Debug.Toggle`: Toggles on-screen HUD diagnostics showing current behavior state, target coordinates, speed, and active triggers for the targeted grid.
-- `/RivalAI.Debug.Triggers`: Dumps a list of all active triggers, cooldowns, and action profiles on the targeted grid's Remote Control block.
+### E. No `/RivalAI.*` Commands
+RivalAI is merged into MES; current MES has no `/RivalAI.*` chat commands (none are parsed in `Sync/ChatMessage.cs`). For a grid's live AI state use `/MES.IGGB` (§C), and `/MES.Debug.DrawPaths` (§D) for waypoints.
 
 ---
 
@@ -154,7 +156,7 @@ When a modder or player reports that an encounter is not spawning, triggers aren
 flowchart TD
     A["1. Identify Failure Domain<br/>(Spawning vs Trigger vs Autopilot)"] --> B["2. Enable Logging In-Game<br/>(/MES.SpawnDebug or /MES.BehaviorDebug)"]
     B --> C["3. Reproduce Issue In-Game<br/>(Force spawn or trigger action)"]
-    C --> D["4. Dump Logs to Clipboard<br/>(/MES.IGLSD or /MES.IGLBD)"]
+    C --> D["4. Dump Logs to Clipboard<br/>(/MES.IGLSD.&lt;Type&gt; or /MES.IGLBD.&lt;Type&gt;)"]
     D --> E["5. Provide Output to AI Agent<br/>(Pinpoint exact failure)"]
 ```
 
@@ -165,7 +167,7 @@ flowchart TD
      /MES.SpawnDebug.Spawning.true
      ```
    - Attempt a spawn (or run `/MES.GESAP` at the intended spawn position).
-   - Run `/MES.IGLSD` and paste the clipboard output to the agent.
+   - Run `/MES.IGLSD.SpawnGroup` (and `/MES.IGLSD.Spawning`) and paste the clipboard output to the agent.
    - The output will state the exact condition that failed (e.g. `ThreatScore Too High`, `MinAltitude Failed`, `Zone Condition Mismatch`).
 
 2. **Step 2: Trigger / Action Failures** (NPC ignores player, weapons don't shoot, reinforcements don't spawn):
@@ -176,7 +178,7 @@ flowchart TD
      /MES.BehaviorDebug.Action.true
      ```
     - Engage or shoot the grid to trigger the event.
-    - Run `/MES.IGLBD` and paste the clipboard output to the agent.
+    - Run `/MES.IGLBD.Trigger` (then `.Condition`, `.Action`) and paste the clipboard output to the agent.
     - The output will identify whether the trigger evaluated false, failed a cooldown check, or threw an action error.
 
 3. **Step 3: Deep-Dive / Complex Issues (The GameLog File Workflow)**:
@@ -224,9 +226,13 @@ When troubleshooting encounter loading or execution failures, search `SpaceEngin
 - **Fix**: Use `[CustomCountersTargets:-1]` with `[CounterCompareTypes:LessOrEqual]` or `[CounterCompareTypes:Greater]`.
 
 ### 4. `System.ArgumentOutOfRangeException: Index was out of range... CargoShipWaypoints`
-- **Cause**: `[Type:WaypointNear]` or `[Type:WaypointFar]` executed when waypoints list was empty or completed.
-- **Result**: Breaks the trigger loop on the grid permanently.
-- **Fix**: Use `[Type:TargetNear]` / `[Type:TargetFar]` or `[Type:BehaviorTriggerA]` instead.
+- **Cause**: `[Type:WaypointNear]` / `[Type:WaypointFar]` read `AutoPilot.State.CargoShipWaypoints[0]` with no count check (`TriggerChecks.CheckWaypointNear`/`Far`). Only `[BehaviorName:CargoShip]` fills that list; on any other behavior, or once a CargoShip has used up its waypoints, it is empty.
+- **Result [HARD]**: the exception escapes `ProcessTriggersParallel`, so `BehaviorManager.ProcessParallelMethods` catches it and resets `Mode` to `Parallel` instead of `MainThread`. The main-thread pass (`ProcessAutoPilotMain`, `ProcessWeaponsMain`, `ProcessTriggersMain`, `ProcessDespawnConditions`, `ProcessMainBehavior`) then never runs for **any** NPC on the server while that grid exists: every MES AI stops acting, not just this grid. The log repeats `Exception in Parallel Calculations`.
+- **Fix**: Remove the trigger, or use one that measures what you meant:
+  - Arrival at a Patrol point: `[Type:BehaviorTriggerA]` (`Patrol.cs` sets it on reaching the offset waypoint; what A–G mean differs per behavior, so check that behavior's `.cs` before using one elsewhere).
+  - A fixed spot: `[Type:Position]` + `[GlobalPosition:{X:… Y:… Z:…}]` + `[TargetDistance:]` (distance from the Remote Control).
+  - Not `[Type:TargetNear]`/`[Type:TargetFar]`: those measure distance to the current **target**, not a waypoint.
+  - `WaypointNear`/`Far` are safe only on `CargoShip` behaviors while waypoints remain.
 
 ### 5. `System.IndexOutOfRangeException: Index was outside the bounds of the array... ChangeBlocksShareModeAll`
 - **Cause**: The inner block loop indexed `AllTerminalBlocks[i]` (the grid index) instead of `[j]`, so the action threw or hit the wrong blocks.

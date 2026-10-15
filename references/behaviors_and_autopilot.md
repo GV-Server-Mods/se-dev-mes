@@ -48,7 +48,7 @@ flowchart TD
 
 ### State Switching Implementation:
 - **Transitioning to Combat**:
-  Trigger on `[Type:Damage]` or `[Type:TargetNear]`:
+  Trigger on `[Type:Damage]` (with `[DamageTypes:Any]`, or it never fires) or `[Type:TargetNear]`:
   ```xml
   [RivalAI Action]
   [ChangeBehaviorSubclass:true]
@@ -69,6 +69,23 @@ flowchart TD
   [EnableTriggerTags:Cruising]
   [DisableTriggerTags:InCombat]
   ```
+
+### Action Step Order & Switch Pairs [HARD]
+Checked against MES `37455cf` (upstream master).
+- **One action runs its steps in a fixed order, not in the order of its tags** (`ActionSystem.cs`): booleans and counters (85-149), `BroadcastCommandProfiles` (509), `AssignEscortFromCommand` (881), `ChangeTargetProfile` (1094), `OverwriteAutopilotProfile` (1777), `ChangeAutopilotProfile` (1786), `StopAllThrust` (1866), `SetCustomStrings` (1953), `ChangeBehaviorSubclass` (2025), `ResetCooldownTimeOfTriggers` (2985), `EnableTriggers` (2994), `DisableTriggers` (3004), `ManuallyActivateTrigger` (3014).
+  - A trigger the action activates manually already sees the booleans and subclass that action set, so its conditions can test them.
+  - Enable runs before Disable: an action that names the same trigger in both leaves it disabled.
+- **Manual activation runs at once, with every check** (`TriggerSystem.cs:1095-1112`, `TriggerProfile.cs:383-420`): `UseTrigger`, `MaxActions`, the cooldown and the conditions all apply. A manual trigger on cooldown, or whose condition fails, does nothing and is not retried.
+- **`ToggleWithTriggerProfile` flips only when the trigger actually runs** (`TriggerSystem.cs:1149-1152`). Two switch triggers that toggle each other ("to combat" enabled while patrolling, "to patrol" enabled in combat) stay in step only through their own runs.
+  - **Fails as:** any other action that changes the subclass (a fly-away failsafe, an escort system, a KPL timeout) leaves the pair out of step. The unit is back in Patrol but "to combat" stays disabled, so `TargetNear` can't start combat again until something runs "to patrol".
+  - **Fix:** route every state change through the pair. Give the switch triggers a `[Tags:]` and fire them with `[ManuallyActivatedTriggerTags:]`; the disabled one is skipped, so the tag reaches whichever switch is live. A trigger can carry several `[Tags:]` lines (`TriggerProfile.Tags` is a list).
+
+### Swapping an Autopilot into a Slot [HARD]
+`[OverwriteAutopilotProfile:true]` + `[OverwriteAutopilotMode:<Primary|Secondary|Tertiary>]` + `[OverwriteAutopilotId:<autopilot SubtypeId>]` replaces the profile held in a slot at runtime (`AutoPilotSystem.cs:2379`, `AssignAutoPilotDataMode`).
+- It only stores the profile; it doesn't switch to it. It runs before `ChangeAutopilotProfile` in the same action, so one action can load a slot and switch to it.
+- An unknown ID is ignored silently (`:2383`).
+- Use it when a grid needs more than three autopilots, e.g. a jump or landing profile that borrows a slot and puts the slot's usual profile back afterwards.
+- Not checked: whether a swapped slot survives a save and reload.
 
 ---
 
@@ -103,10 +120,20 @@ flowchart TD
 Checked against MES `b8f86a2` (upstream master); `Escort.cs` and `EscortSystem.cs` are identical in the GV-Server-Mods fork `5fd61d1`. Upstream: MeridiusIX/Modular-Encounters-Systems#388 (slot release); GVK-Settings#699.
 - **Slots are never freed while the escort is alive.** `EscortSystem` removes an `ActiveEscorts` entry only when `EscortProfile.ValidationCheck()` fails (parent or child behavior gone or not `IsAIReady()`), in `InitializeEscorts()` (called once, from `CoreBehavior` at behavior init) and `DoesEscortExistLocally()` (no callers). An escort that switches to Patrol/Horsefly, or whose parent dies, keeps its entry and its `ParentEscort`. **Fails as**: a parent with one `[EscortOffsets:]` entry takes one escort per behavior init and then logs "No Available Offsets To Assign Escort To"; a former escort asking again can get "Requestor Already Has Closer Parent". Plan for one-shot slots, or count on a reload.
 - **A dead escort also holds its slot.** `ProcessEscortRequest()` counts used offsets from `ActiveEscorts` without validating them first.
-- **A refused request sends no reply.** `AssignEscortFromCommand` only logs the result. If the parent's action also broadcasts a reply command, the requester gets it even when no slot was assigned. Gate the reply: `[MatchReceiverEscort:true]` (MES master from #386, merged 2026-10-12; check your Workshop MES build includes it: the receiver must be an active Escort whose leader is the sender), or only reply when your own state says a slot is free.
+- **A refused request sends no reply.** `AssignEscortFromCommand` only logs the result. If the parent's action also broadcasts a reply command, the requester gets it even when no slot was assigned. Gate the reply: `[MatchReceiverEscort:true]` (MES master from #386, merged 2026-10-12; check your Workshop MES build includes it: the receiver must be an active Escort whose leader is the sender; see §5B2), or only reply when your own state says a slot is free.
 - **Escort Retreat is one-way.** In `WaitingForTarget` with no valid parent, `Escort.cs` goes to `BehaviorMode.Retreat` once `AutoPilot.Data.WaypointWaitTimeTrigger` seconds have passed (default 5), and nothing in `Escort.cs` leaves Retreat; the grid despawns when the nearest player is beyond `RetreatDespawnDistance`. A profile with `WaypointWaitTimeTrigger:0` retreats on the first tick without a parent. Only `ChangeBehaviorSubclass` (which resets `Mode` to `Init`) gets a unit out. Fixes: keep the wait above the request/reply round trip (about 2 s with the usual 60-tick command delays) and add a timer that returns to Patrol sooner; or keep the unit in Patrol until the slot is confirmed.
 - **A subclass change keeps the slot.** `ParentEscort` lives in `StoredSettings`, which `ChangeBehaviorSubclass` does not reset, and `SetDefaultTags()` (which swaps in `RAI-Generic-Autopilot-Escort`) runs only for the first subclass a behavior is given, not when it converts to Escort later. So a unit assigned a slot while still in Patrol can convert to Escort with its parent already valid.
 - **`BehaviorTriggerA`/`B` on Escort**: A is raised when a valid parent is found (entering `ApproachWaypoint`), B when a valid parent stops being valid during approach. B is not raised for a unit that never had a parent.
+
+### E. Offset Direction: `OffsetMaxAngleFromTarget` [HARD]
+Checked against MES `37455cf` (upstream master). Applies to every subclass that flies to an offset around its target (`OffsetWaypoint` mode): Horsefly, HorseFighter, Strike, FighterPlane.
+- **What it's for:** keeping the offset on the grid's own side of the target. With the default `180` the offset direction is level and random, so a grid often crosses right over or in front of its target to reach an offset on the far side, and can run into it on the way. Below `180` the direction is drawn from a cone around the line from the target to the grid, at most this many degrees off it (`AutoPilotSystem.cs:1534-1563`, added in `bb746bf`). The source comment: 180 can fly past the target, 90 comes close, 10 keeps its distance. **[SOFT]** (GVK playtest) `90` stops most of the crossing and ramming.
+- **Caveats** (what the code does; how visible they are in flight depends on the grid's turn rate and was not measured):
+  - **Redrawn on every autopilot cycle.** `CalculateCurrentWaypoint()` calls `OffsetWaypointGenerator()` on every cycle in `OffsetWaypoint` mode (`AutoPilotSystem.cs:578`, `:1206`), about 3-4 times a second (`BehaviorManager.cs` runs a cycle every 15 idle ticks plus its processing ticks). The level default pick runs only when a new offset is requested (`:1450-1526`); the cone pick sits outside that check, so each cycle draws a new random direction while the distance and altitude stay. The grid steers toward a point that keeps jumping around the target. The near-side effect still holds because every draw is on the grid's side: a 90° cone averages out to the target-to-grid line at half the offset distance.
+  - **Not level.** The cone is 3D (`VectorHelper.cs:102`) and the offset distance is applied along it (`AutoPilotSystem.cs:1597`). At `90` a draw can point steeply up or down: a 30° tilt on a 1,500 m offset puts the point 750 m above the target, and a downward tilt goes underground and is pushed up to the terrain floor. Aircraft chase the point up and down; ground units can't follow it at all.
+  - **Replaces FighterPlane's after-breakaway offset.** At breakaway FighterPlane asks for an offset straight ahead along its velocity, but that call only sets flags and returns (`:1437-1446`); the per-cycle call that builds the offset passes `keepInDirectionOfVelocity:false`, so the cone check at `:1534` runs and the next line-up point lands on the plane's side of the target instead of ahead of it.
+- **Choosing a value:** use `90` or lower when crossing or ramming the target is the bigger problem, `180` for a steady flight to one point. A smaller angle narrows both the side-to-side jump and the tilt.
+- **Upstream:** not yet reported (GVK-Settings#708 tracks it). Proposed fix: draw the cone only when a new offset is requested, and flatten it on planets as the default pick does. **Revise this rule if it is fixed.**
 
 ---
 
@@ -193,6 +220,17 @@ RivalAI allows inter-grid communication using radio commands:
 - A static station summons a dynamic courier grid (`[SingleRecipient:true]`, `[CommandCheckFromParent:true]`).
 - Transmits landing coordinates via `[AddWaypointFromCommand:true]`.
 - Courier approaches, reduces altitude (`NewAutopilotMinAltitude:15`), lands, resupplies stock, and retreats.
+- **[HARD] "Parent" means the grid whose `[RivalAI Spawn]` profile (run from an action) spawned this NPC** (`ActionSystem.cs` sets `SpawnProfile.ParentId`, `PrefabSpawner.cs` copies it to `NpcData.ParentId`). SpawnGroup/event spawns have no parent.
+- **[HARD] `CommandFromParent` was broken through MES `b8f86a2` (fixed in `0900b20`, GV PR #386, 2026-10-12)**: `ParentId` stored the parent RC's **owner identity**, not its entity, and was not saved. The condition passed for a command from *any* grid with the same owner (usually every grid of that NPC faction), and after a server restart it never passed. It now compares the sender's Remote Control `EntityId` and `ParentId` is saved (`[ProtoMember(49)]`). NPCs spawned before the fix still have `ParentId = 0` after a reload and never match.
+
+### B2. Receiver Filters for Parent/Child and Escort Commands (`[RivalAI Command]`) [HARD]
+Added in `0900b20`/`531802f` (GV PR #386). All default `false`; each one that is `true` must pass (AND), checked on receipt together with `MatchSenderReceiverOwners`/`CheckRelationSenderReceiver`, before any `CommandReceived` trigger runs. A filtered-out grid is skipped completely: it does not take a `SingleRecipient` slot and is not added to `AllowUniqueCommandCodeSenderOnly` (see C).
+- `[MatchReceiverParent:true]`: only the grid that spawned the sender receives it (child ➔ parent).
+- `[MatchReceiverChild:true]`: only grids the sender spawned receive it (parent ➔ children).
+- `[MatchReceiverEscort:true]`: only grids whose active behavior is `Escort` and that are escorting the sender receive it (leader ➔ escorts).
+- `[MatchReceiverLeader:true]`: only the grid the sender is escorting receives it; the sender must be running `Escort` (escort ➔ leader).
+- Leave `[MatchSenderReceiverOwners:true]` (default) on; it still applies. Prefer these over `[CommandCheckFromParent:]` on the receiver, which only gates one trigger's condition, while these stop the command at the radio.
+- Requires an MES build with `531802f` (upstream master after 2026-10-12). On older builds the tags are ignored and the command goes to every receiver in range.
 
 ### C. Command Delivery Semantics (`TriggerSystem.cs` / `CommandHelper.cs`) [HARD]
 - **Synchronous delivery**: with `[CommandDelayTicks:0]` (default) `CommandHelper.SendCommand` invokes every listener immediately, inside the sender's action. A receiver's reply is therefore delivered back to the sender *before the sender's action finishes*.
@@ -421,5 +459,5 @@ Setting artificial horizon leveling tags on combat craft causes total loss of pi
 - **A `DespawnMES` trigger needs `[DespawnTypeFromSpawner:]`, or it effectively never fires.** `TriggerSystem.ProcessMESDespawnTriggers` runs the trigger only if the setting is `Any` or **equals the grid's despawn source exactly**; an empty setting matches only an empty source, and only `/MES.Debug.RemoveAllNpcs` leaves the source empty. Sources MES sets: `CleanUp-BlockCount`, `CleanUp-Distance`, `CleanUp-Timer` (`Cleaning.cs`), `Despawn-Behavior` (`DespawnSystem.cs`), `Despawn-Debug` (`LoggerTools.cs`), `Cargo Ship Reached End of Path / Distance` (`CargoShipWatcher.cs`), and a caller-supplied reason or `ForceRemove` (`Cleaning.cs`). **Fails as**: a `DespawnMES` trigger written without a type never fires in normal play. Upstream: MeridiusIX/Modular-Encounters-Systems#387. `audit_mes_tags.ps1` flags it.
 - **`CleanUp` and `PathEnd` never match.** The function computes `despawnMatch` for them and never reads it, so only `Any` or an exact source string such as `CleanUp-Distance` works.
 - **A behavior's own despawn reaches `DespawnMES` too.** `DespawnSystem.cs` runs the `Type:Despawn` triggers, then `DespawnGrid()` flags the grid with source `Despawn-Behavior`, and `Tasks/GridCleanup.cs` invokes the `DespawnMES` actions. **Technique**: one `[Type:DespawnMES]` + `[DespawnTypeFromSpawner:Any]` trigger covers every removal; a separate `Type:Despawn` trigger with the same actions runs them twice on a behavior despawn.
-- **`DespawnMES` actions run just before the grid closes.** `GridCleanup` invokes them and queues `cubeGrid.Close()` on the game thread straight after. **Fails as**: a command with `[CommandDelayTicks:]` above `0` is dropped, because the receive side rejects a sender that no longer exists (`TriggerSystem.cs`, sender check). Send commands from despawn actions with no delay.
+- **`DespawnMES` actions run just before the grid closes.** `GridCleanup` invokes them and queues `cubeGrid.Close()` on the game thread straight after. **Fails as**: a command with `[CommandDelayTicks:]` above `0` is dropped, because by the time it is delivered the sender's Remote Control is closed. The null check in `TriggerSystem.cs` does not catch it (the closed entity's position component is not null); the command fails the range check instead, since the closed sender no longer reports its real position **[SOFT: mechanism from a test run's trace; the drop itself is HARD]**. Send commands from despawn actions with no delay.
 

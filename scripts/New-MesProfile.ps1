@@ -13,7 +13,7 @@
     1. DefendedWreck: Derelict encounter with damage/proximity triggers, defense drone spawner, and cleanup.
     2. ConvoyLeaderEscort: Cargo ship leader with follower escorts and break-formation combat behavior.
     3. DynamicZoneLadder: Dynamic territory zone with MES Event counter-driven radius progression ladder.
-    4. StoreGrid: Economy store grid setup (Prefab StoreItem, FactionTypes_Economy Builder snippet, MES Store profile).
+    4. StoreGrid: Economy store grid setup (MES store-items file, MES Store profile, store refresh action).
     5. DynamicStateNpc: Dynamic Behavior Subclass & Autopilot Switching (CargoShip transit -> Fighter dogfight -> transit return).
     6. PlanetaryInstallation: Static defended outpost with interior defense spawner, turret range unclamp, and distress beacon.
     7. CombatDrone: High-performance combat drone with Fighter behavior, 6-DOF strafing, lead prediction, and collision evasion.
@@ -156,6 +156,7 @@ switch ($Pattern) {
       <Description>
         [RivalAI Trigger]
         [Type:Damage]
+        [DamageTypes:Any]
         [UseTrigger:true]
         [StartsReady:true]
         [Actions:${ModPrefix}-Action-Damage-${Name}]
@@ -344,6 +345,7 @@ switch ($Pattern) {
       <Description>
         [RivalAI Trigger]
         [Type:Damage]
+        [DamageTypes:Any]
         [UseTrigger:true]
         [Actions:${ModPrefix}-Action-LeaderDamage-${Name}]
       </Description>
@@ -551,21 +553,31 @@ switch ($Pattern) {
     "StoreGrid" {
         Append-Header "Store Grid Pattern"
         [void]$sb.AppendLine(@"
-  <!-- 1. Vanilla StoreItem Definition -->
-  <StoreItems>
-    <StoreItem>
-      <Id>
-        <TypeId>MyObjectBuilder_StoreItemDefinition</TypeId>
-        <SubtypeId>${ModPrefix}-StoreItem-${Name}</SubtypeId>
-      </Id>
-      <ItemType>Prefab</ItemType>
-      <ItemPrefabName>${ModPrefix}-Prefab-${Name}</ItemPrefabName>
-      <PricePerUnit>5000000</PricePerUnit>
-      <Amount>1</Amount>
-    </StoreItem>
-  </StoreItems>
+  <!--
+    1. MES store items file. MES does not read vanilla StoreItemDefinitions.
+    Save this as its own file: Data\StoreItems\${ModPrefix}-StoreItems-${Name}.xml
 
-  <!-- 2. MES Store Profile -->
+    <?xml version="1.0"?>
+    <StoreItemsContainer xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+      <StoreItems>
+        <StoreItem>
+          <StoreItemId>${Name}</StoreItemId>
+          <ItemType>Prefab</ItemType>
+          <ItemSubtypeId>${ModPrefix}-Prefab-${Name}</ItemSubtypeId>
+          <Offer>
+            <CustomPrice>5000000</CustomPrice>
+            <MinPriceMultiplier>100</MinPriceMultiplier>
+            <MaxPriceMultiplier>100</MaxPriceMultiplier>
+          </Offer>
+        </StoreItem>
+      </StoreItems>
+    </StoreItemsContainer>
+
+    A prefab is always listed as quantity 1. FactionTypes_Economy.sbc GridsForSale is NOT
+    needed for MES stores (only Keen-generated stations read it). See economy_and_stores.md.
+  -->
+
+  <!-- 2. MES Store Profile, applied to the store block by the action below -->
   <EntityComponents>
     <EntityComponent xsi:type="MyObjectBuilder_InventoryComponentDefinition">
       <Id>
@@ -580,23 +592,22 @@ switch ($Pattern) {
         [RequiredOffers:${Name}]
       </Description>
     </EntityComponent>
-  </EntityComponents>
 
-  <!-- 
-    NOTE FOR FactionTypes_Economy.sbc:
-    In Keen's engine, grid sales ONLY function under <FactionType> with <SubtypeId>Builder</SubtypeId>.
-    Ensure the following is added to your FactionTypes_Economy.sbc:
-
-    <FactionType>
+    <!-- 3. Station behavior action that stocks the store block named Store-${Name} -->
+    <EntityComponent xsi:type="MyObjectBuilder_InventoryComponentDefinition">
       <Id>
-        <TypeId>FactionTypeDefinition</TypeId>
-        <SubtypeId>Builder</SubtypeId>
+        <TypeId>Inventory</TypeId>
+        <SubtypeId>${ModPrefix}-Action-${Name}-RefreshStore</SubtypeId>
       </Id>
-      <GridsForSale>
-        <PrefabSubtypeId>${ModPrefix}-Prefab-${Name}</PrefabSubtypeId>
-      </GridsForSale>
-    </FactionType>
-  -->
+      <Description>
+        [RivalAI Action]
+        [ApplyStoreProfiles:true]
+        [ClearStoreContentsFirst:true]
+        [StoreBlocks:Store-${Name}]
+        [StoreProfiles:${ModPrefix}-StoreProfile-${Name}]
+      </Description>
+    </EntityComponent>
+  </EntityComponents>
 "@)
         Append-Footer
     }
@@ -715,6 +726,7 @@ switch ($Pattern) {
       <Description>
         [RivalAI Trigger]
         [Type:Damage]
+        [DamageTypes:Any]
         [UseTrigger:true]
         [StartsReady:true]
         [Tags:Cruising]
@@ -873,6 +885,7 @@ switch ($Pattern) {
       <Description>
         [RivalAI Trigger]
         [Type:Damage]
+        [DamageTypes:Any]
         [UseTrigger:true]
         [StartsReady:true]
         [Actions:${ModPrefix}-Action-Damage-${Name}]
@@ -916,6 +929,7 @@ switch ($Pattern) {
       <Description>
         [RivalAI Trigger]
         [Type:Damage]
+        [DamageTypes:Any]
         [Conditions:${ModPrefix}-Condition-Distress-${Name}]
         [UseTrigger:true]
         [StartsReady:true]
@@ -1098,6 +1112,7 @@ switch ($Pattern) {
       <Description>
         [RivalAI Trigger]
         [Type:Damage]
+        [DamageTypes:Any]
         [UseTrigger:true]
         [StartsReady:true]
         [Actions:${ModPrefix}-Action-SendDistress-${Name}]
@@ -1253,6 +1268,7 @@ switch ($Pattern) {
       <Description>
         [RivalAI Trigger]
         [Type:Damage]
+        [DamageTypes:Any]
         [UseTrigger:true]
         [StartsReady:true]
         [MaxActions:1]
@@ -1299,6 +1315,7 @@ switch ($Pattern) {
       <Description>
         [RivalAI Trigger]
         [Type:Damage]
+        [DamageTypes:Any]
         [Conditions:${ModPrefix}-Condition-Phase2-${Name}]
         [UseTrigger:true]
         [StartsReady:true]

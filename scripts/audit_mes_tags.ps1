@@ -33,6 +33,10 @@
         match for them and never reads it; only Any or an exact source string works).
         Cross-file despawn checks (delayed commands, duplicate actions) are in
         audit_mes_references.ps1.
+    16. [Type:Damage] triggers without [DamageTypes:] (the list starts empty, so the trigger
+        never fires; TriggerSystem.cs checks DamageTypes.Contains(type) || Contains("Any")).
+    17. Comma lists in [Triggers:] / [TriggerGroups:] (TagStringCheck reads "A,B" as one name).
+    Line checks skip XML comments, so commented-out tags are not reported.
 .PARAMETER Path
     Path to search for .sbc files. Defaults to current directory.
 #>
@@ -129,7 +133,9 @@ function Get-TagValues($block, $tagName) {
 
 foreach ($file in $files) {
     $content = [System.IO.File]::ReadAllText($file.FullName)
-    $lines = $content -split "`r?`n"
+    # Blank XML comments (keeping line breaks) so commented-out tags are not reported
+    $scan = [System.Text.RegularExpressions.Regex]::Replace($content, '(?s)<!--.*?-->', { param($m) $m.Value -replace '[^\r\n]', '' })
+    $lines = $scan -split "`r?`n"
 
     # Line-by-line checks
     for ($i = 0; $i -lt $lines.Count; $i++) {
@@ -146,7 +152,7 @@ foreach ($file in $files) {
 
         # Check 2: WaypointNear / WaypointFar crash hazard
         if ($line -match '\[Type:Waypoint(Near|Far)\]') {
-            Write-Host "[ERROR] $($file.Name):$lineNum - Type:WaypointNear/Far crashes trigger loops if CargoShipWaypoints is empty! Use TargetNear/Far instead." -ForegroundColor Red
+            Write-Host "[ERROR] $($file.Name):$lineNum - Type:WaypointNear/Far reads CargoShipWaypoints[0] unchecked; on a non-CargoShip grid (or one out of waypoints) the exception stops every MES NPC's main AI pass. Use BehaviorTriggerA (Patrol arrival) or Type:Position + [GlobalPosition:]; TargetNear/Far measure target distance, not waypoints." -ForegroundColor Red
             $issuesFound++
         }
 
@@ -242,6 +248,18 @@ foreach ($file in $files) {
         }
         if (($block -match '\[(RivalAI|MES AI) Condition\]') -and ($block -notmatch '\[UseConditions:true\]' -and $block -notmatch '\[UseConditions:false\]')) {
             Write-Host "[ERROR] $($file.Name) - [RivalAI Condition] is missing required [UseConditions:true] activation tag!" -ForegroundColor Red
+            $issuesFound++
+        }
+
+        # Check 16: Damage trigger without DamageTypes never fires
+        if ($block -match '\[(RivalAI|MES AI) Trigger\]' -and $block -match '\[Type\s*:\s*Damage\s*\]' -and $block -notmatch '\[DamageTypes\s*:') {
+            Write-Host "[ERROR] $($file.Name) - [Type:Damage] trigger has no [DamageTypes:] and never fires. Add [DamageTypes:Any]." -ForegroundColor Red
+            $issuesFound++
+        }
+
+        # Check 17: one profile name per [Triggers:] / [TriggerGroups:] tag
+        foreach ($tm in [System.Text.RegularExpressions.Regex]::Matches($block, '\[(Triggers|TriggerGroups)\s*:\s*([^\]]*,[^\]]*)\]')) {
+            Write-Host "[ERROR] $($file.Name) - [$($tm.Groups[1].Value):$($tm.Groups[2].Value)] is read as ONE profile name. Use one [$($tm.Groups[1].Value):Name] tag per profile." -ForegroundColor Red
             $issuesFound++
         }
 
