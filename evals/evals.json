@@ -13,7 +13,7 @@
         "The event action names the spawn profile with [SpawnData:], not [Spawner:]",
         "The condition sets [CheckCustomCounters:true]",
         "No counter-target value in the condition ([CustomCountersTargets:] or [CustomSandboxCountersTargets:]) is a literal 0 (zero-stripping bug avoided)",
-        "No XML comments (<!-- -->) appear inside any <Description>"
+        "Sets spawn coordinates and faction via valid Event Action tags ([SpawnCoords:] and [SpawnFactionTags:]) rather than invalid direct tags"
       ]
     },
     {
@@ -115,7 +115,7 @@
         "Uses [UseGridDereliction:true] with [DerelictionProfiles:] pointing to a dereliction profile",
         "The dereliction profile sets [UseSeparatePercentages:true] so the integrity percentages are used",
         "Uses [RandomizeWeapons:true]",
-        "Addresses the <Public>true</Public> requirement for the custom weapon definitions (warns, or confirms the user's defs are public)",
+        "Addresses custom weapon definition compatibility with MES WeaponRandomizer (notes <Public>true</Public> / Block Restrictions or [AllowIfNonPublic:true] / weapon mod rules)",
         "Covers the 'some blocks removed' requirement with an actual MES mechanism (e.g. block removal/replacement or dereliction removal tags)"
       ]
     },
