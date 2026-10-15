@@ -8,7 +8,7 @@ A comprehensive, production-grade developer skill, reference library, and automa
 
 Equips AI coding assistants (Antigravity, Claude Code, Cursor, Cline) and encounter modders with source-verified engine constraints, syntax rules, pitfall detection, safe XML tooling, and automated scaffolding.
 
-![se-dev-mes Architecture & Toolkit](docs/se-dev-mes-diagram-only.png)
+[![se-dev-mes Architecture & Toolkit](docs/se-dev-mes-diagram-only.png)](docs/se-dev-mes-diagram-only.png)
 
 ---
 

@@ -34,7 +34,7 @@ with open('docs/se-dev-mes-architecture.svg', 'w', encoding='utf-8') as f:
     f.write(standalone_svg)
 print('Exported docs/se-dev-mes-architecture.svg')
 
-# 3. Create minimal HTML for exact diagram-only capture at 1200x760
+# 3. Create minimal HTML for exact diagram-only capture at 2x High-DPI (2000x1860)
 diag_html = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -42,8 +42,8 @@ diag_html = f"""<!DOCTYPE html>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
-    html, body {{ background: #f5f5f5; width: 1200px; height: 760px; overflow: hidden; }}
-    svg {{ width: 1200px; height: 760px; display: block; }}
+    html, body {{ background: #f5f5f5; width: 2000px; height: 1860px; overflow: hidden; }}
+    svg {{ width: 2000px; height: 1860px; display: block; }}
   </style>
 </head>
 <body>
@@ -58,21 +58,21 @@ with open(temp_html, 'w', encoding='utf-8') as f:
 edge_exe = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 temp_diag_png = os.path.join(os.environ['TEMP'], 'diagram_only_raw.png')
 
-cmd1 = f'Start-Process -FilePath "{edge_exe}" -ArgumentList "--headless --disable-gpu --window-size=1200,760 --screenshot={temp_diag_png} file:///{temp_html.replace(chr(92), "/")}" -Wait'
+cmd1 = f'Start-Process -FilePath "{edge_exe}" -ArgumentList "--headless --disable-gpu --window-size=2000,1860 --screenshot={temp_diag_png} file:///{temp_html.replace(chr(92), "/")}" -Wait'
 subprocess.run(["powershell", "-Command", cmd1], check=True)
 
 if os.path.exists(temp_diag_png):
     img = Image.open(temp_diag_png)
-    cropped = img.crop((0, 0, 1200, 760))
-    pixel_only = Image.new('RGB', (1200, 760), (245, 245, 245))
+    cropped = img.crop((0, 0, 2000, 1860))
+    pixel_only = Image.new('RGB', (2000, 1860), (245, 245, 245))
     pixel_only.paste(cropped, (0, 0))
     pixel_only.save('docs/se-dev-mes-diagram-only.png', 'PNG', optimize=True)
-    print('Saved docs/se-dev-mes-diagram-only.png (1200x760, clean pixel data only)')
+    print('Saved docs/se-dev-mes-diagram-only.png (2000x1860, 2x Retina high-resolution pixel data)')
 
 # 4. Render full editorial page
 temp_full_png = os.path.join(os.environ['TEMP'], 'diagram_full_raw.png')
 html_full_path = os.path.abspath('docs/se-dev-mes-architecture.html').replace('\\', '/')
-cmd2 = f'Start-Process -FilePath "{edge_exe}" -ArgumentList "--headless --disable-gpu --window-size=1280,1050 --screenshot={temp_full_png} file:///{html_full_path}" -Wait'
+cmd2 = f'Start-Process -FilePath "{edge_exe}" -ArgumentList "--headless --disable-gpu --window-size=1200,1280 --screenshot={temp_full_png} file:///{html_full_path}" -Wait'
 subprocess.run(["powershell", "-Command", cmd2], check=True)
 
 if os.path.exists(temp_full_png):
