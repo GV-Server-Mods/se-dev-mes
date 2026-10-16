@@ -135,6 +135,33 @@ Checked against MES `37455cf` (upstream master). Applies to every subclass that 
 - **Choosing a value:** use `90` or lower when crossing or ramming the target is the bigger problem, `180` for a steady flight to one point. A smaller angle narrows both the side-to-side jump and the tilt.
 - **Upstream:** not yet reported (GVK-Settings#708 tracks it). Proposed fix: draw the cone only when a new offset is requested, and flatten it on planets as the default pick does. **Revise this rule if it is fixed.**
 
+### F. Aircraft Flight Model (`[UseAircraftFlightModel:true]`) [HARD]
+Merged in MES `fc5cb29` / `6c61bba` (PR #390, Villanor). Adds an optional flight model for gyro-steered aircraft in gravity. Switched on per autopilot profile with `[UseAircraftFlightModel:true]` (default `false`). With this flag `false`, no flight model logic runs. All tags below are read only when it is `true`:
+
+- **`[MaxAngleFromVelocity:<double>]` (0–180°, default `180` = off)**:
+  Limits how far the grid's nose can point away from its flight velocity vector, preventing planes from sliding sideways during aggressive turns (`AircraftFlightModel.cs:56-82`).
+  - At speed > 1 m/s: starting at 60% of the limit, outward rotation away from the flight vector is faded out linearly (`worldRate -= away * outward * (1 - keep)`).
+  - If the angle exceeds the limit, an active restorative rotation of 3x the excess angle in rad/s is applied back toward the velocity vector. Roll is unaffected.
+  - Recommended for winged aircraft: `20` to `35`. Separate from `AngleAllowedForForwardThrust` (which only controls forward thrust gating).
+- **`[RollIntoTurnsMultiplier:<float>]` (default `0` = off)**:
+  Banks the aircraft into turns in gravity like an airplane (`AircraftFlightModel.cs:100-139`).
+  - Calculates horizontal heading error (angle between nose and target/waypoint on the gravity plane).
+  - Commanded bank angle = `RollIntoTurnsMultiplier * headingError`, clamped to `[-MaxBankAngle, MaxBankAngle]`.
+  - Stays smooth when `LimitSpeed` cuts yaw commands. Negative values roll the grid in reverse. Has no effect outside gravity.
+  - Recommended: `0.5` to `1.2`.
+- **`[MaxBankAngle:<double>]` (0–89°, default `45`)**:
+  Caps the maximum bank angle commanded by `RollIntoTurnsMultiplier`.
+- **`[ReturnToLevelMultiplier:<float>]` (0–1, default `0` = off)**:
+  Smoothly rolls the aircraft back to wings-level in gravity when the autopilot is not actively steering toward a waypoint/target and commands no yaw or roll (`AircraftFlightModel.cs:141-169`).
+  - Has a 3° dead zone. Scaled by horizontal wing alignment; fades out between 90° and 150° of bank so near-inverted craft are not violently flipped.
+  - Recommended: `0.1` to `0.4`.
+- **`[ReturnToLevelSpeedCutOff:<double>]` (m/s, default `10`)**:
+  Disables `ReturnToLevelMultiplier` below this speed (default 10 m/s) so aircraft parked or landed on slopes/runways do not roll themselves over.
+- **`[MaxRotationStep:<double>]` (rad/s, default `0` = off)**:
+  Rate-of-change clamp between current physics angular velocity and the newly commanded angular velocity (`AircraftFlightModel.cs:84-98`).
+  - **The Keen Gyro Ramp Trap**: Keen's `MyGridGyroSystem` ramps gyro override acceleration based on the gap between target and current rotation. A step delta > 1.57 rad/s imposes a 120-frame ramp-up that is reset on every rewrite, severely degrading gyro authority across all axes on rapid update loops.
+  - `MaxRotationStep` clamps this single-tick delta (e.g. `0.2` to `0.4`), keeping gyro acceleration smooth and responsive.
+
 ---
 
 ## 4. Target Acquisition & Prioritization (`[RivalAI Target]`)

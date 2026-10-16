@@ -56,15 +56,15 @@
     ]
   },
   "metadata": {
-    "generated_at": "2026-10-15T00:08:28.570011+00:00",
+    "generated_at": "2026-10-16T02:31:56.545038+00:00",
     "mes_path": "C:\\Users\\blayl\\AppData\\Roaming\\SpaceEngineers\\Mods\\Modular-Encounters-Systems\\Data\\Scripts\\ModularEncountersSystems",
-    "source_hash": "db3726932d83d511",
+    "source_hash": "b0a74ede5814ac48",
     "git_commit": {
-      "sha": "37455cf9681f5a8f14cbe96bed77e1babc766ae8",
-      "date": "2026-10-12",
-      "subject": "Merge pull request #386 from GV-Server-Mods/fix/command-parent-child"
+      "sha": "001d5dbd3aba2747aa9cb1d5924448b89b7b6db9",
+      "date": "2026-10-15",
+      "subject": "Merge branch 'master' of https://github.com/MeridiusIX/Modular-Encounters-Systems"
     },
-    "total_tags": 1854,
+    "total_tags": 1861,
     "total_profiles": 41
   },
   "tags": [
@@ -10417,7 +10417,7 @@
       "tag": "DisableInertiaDampeners",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 371,
+      "line": 385,
       "parser": "TagBoolCheck"
     },
     {
@@ -10425,7 +10425,7 @@
       "tag": "ForceDampenersEnabled",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 378,
+      "line": 392,
       "parser": "TagBoolCheck"
     },
     {
@@ -10433,7 +10433,7 @@
       "tag": "IdealMaxSpeed",
       "type": "float",
       "file": "AutoPilotProfile.cs",
-      "line": 385,
+      "line": 399,
       "parser": "TagFloatCheck"
     },
     {
@@ -10441,7 +10441,7 @@
       "tag": "IdealMinSpeed",
       "type": "float",
       "file": "AutoPilotProfile.cs",
-      "line": 392,
+      "line": 406,
       "parser": "TagFloatCheck"
     },
     {
@@ -10449,7 +10449,7 @@
       "tag": "SlowDownOnWaypointApproach",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 399,
+      "line": 413,
       "parser": "TagBoolCheck"
     },
     {
@@ -10457,7 +10457,7 @@
       "tag": "ExtraSlowDownDistance",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 406,
+      "line": 420,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10465,7 +10465,7 @@
       "tag": "MaxSpeedTolerance",
       "type": "float",
       "file": "AutoPilotProfile.cs",
-      "line": 413,
+      "line": 427,
       "parser": "TagFloatCheck"
     },
     {
@@ -10473,7 +10473,7 @@
       "tag": "FlyLevelWithGravity",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 420,
+      "line": 434,
       "parser": "TagBoolCheck"
     },
     {
@@ -10481,7 +10481,7 @@
       "tag": "LevelWithGravityWhenIdle",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 427,
+      "line": 441,
       "parser": "TagBoolCheck"
     },
     {
@@ -10489,7 +10489,7 @@
       "tag": "MaxPlanetPathCheckDistance",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 434,
+      "line": 448,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10497,7 +10497,7 @@
       "tag": "IdealPlanetAltitude",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 441,
+      "line": 455,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10505,7 +10505,7 @@
       "tag": "MinimumPlanetAltitude",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 448,
+      "line": 462,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10513,7 +10513,7 @@
       "tag": "AltitudeTolerance",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 455,
+      "line": 469,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10521,7 +10521,7 @@
       "tag": "WaypointTolerance",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 462,
+      "line": 476,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10529,7 +10529,7 @@
       "tag": "OffsetSpaceMinDistFromTarget",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 469,
+      "line": 483,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10537,7 +10537,7 @@
       "tag": "OffsetSpaceMaxDistFromTarget",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 476,
+      "line": 490,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10545,7 +10545,7 @@
       "tag": "OffsetPlanetMinDistFromTarget",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 483,
+      "line": 497,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10553,7 +10553,7 @@
       "tag": "OffsetPlanetMaxDistFromTarget",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 490,
+      "line": 504,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10561,7 +10561,7 @@
       "tag": "OffsetPlanetMinTargetAltitude",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 497,
+      "line": 511,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10569,7 +10569,7 @@
       "tag": "OffsetPlanetMaxTargetAltitude",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 504,
+      "line": 518,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10577,7 +10577,7 @@
       "tag": "ReverseOffsetDistAltAboveHeight",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 511,
+      "line": 525,
       "parser": "TagBoolCheck"
     },
     {
@@ -10585,7 +10585,7 @@
       "tag": "ReverseOffsetHeight",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 518,
+      "line": 532,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10593,7 +10593,7 @@
       "tag": "CircleTargetClockwise",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 525,
+      "line": 539,
       "parser": "TagBoolCheck"
     },
     {
@@ -10601,7 +10601,7 @@
       "tag": "CircleTargetRadiusConstriction",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 532,
+      "line": 546,
       "parser": "TagBoolCheck"
     },
     {
@@ -10609,7 +10609,7 @@
       "tag": "CircleTargetRadiusConstrictionAmount",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 539,
+      "line": 553,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10617,7 +10617,7 @@
       "tag": "CircleTargetAltitudeConstriction",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 546,
+      "line": 560,
       "parser": "TagBoolCheck"
     },
     {
@@ -10625,7 +10625,7 @@
       "tag": "CircleTargetAltitudeConstrictionAmount",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 553,
+      "line": 567,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10633,7 +10633,7 @@
       "tag": "CircleTargetUpAngleLimit",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 560,
+      "line": 574,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10641,7 +10641,7 @@
       "tag": "CircleTargetDriftExemption",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 567,
+      "line": 581,
       "parser": "TagBoolCheck"
     },
     {
@@ -10649,7 +10649,7 @@
       "tag": "Unused",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 574,
+      "line": 588,
       "parser": "TagBoolCheck"
     },
     {
@@ -10657,7 +10657,7 @@
       "tag": "CollisionEvasionWaypointDistance",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 581,
+      "line": 595,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10665,7 +10665,7 @@
       "tag": "CollisionFallEvasionWaypointDistance",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 588,
+      "line": 602,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10673,7 +10673,7 @@
       "tag": "CollisionEvasionResumeDistance",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 595,
+      "line": 609,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10681,7 +10681,7 @@
       "tag": "CollisionEvasionResumeTime",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 602,
+      "line": 616,
       "parser": "TagIntCheck"
     },
     {
@@ -10689,7 +10689,7 @@
       "tag": "CollisionEvasionWaypointCalculatedAwayFromEntity",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 609,
+      "line": 623,
       "parser": "TagBoolCheck"
     },
     {
@@ -10697,7 +10697,7 @@
       "tag": "CollisionEvasionWaypointFromEntityMaxAngle",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 616,
+      "line": 630,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10705,7 +10705,7 @@
       "tag": "UseProjectileLeadPrediction",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 623,
+      "line": 637,
       "parser": "TagBoolCheck"
     },
     {
@@ -10713,7 +10713,7 @@
       "tag": "UseCollisionLeadPrediction",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 630,
+      "line": 644,
       "parser": "TagBoolCheck"
     },
     {
@@ -10721,7 +10721,7 @@
       "tag": "RotationMultiplier",
       "type": "float",
       "file": "AutoPilotProfile.cs",
-      "line": 641,
+      "line": 655,
       "parser": "TagFloatCheck"
     },
     {
@@ -10729,7 +10729,7 @@
       "tag": "RotationMultiplierPitch",
       "type": "float",
       "file": "AutoPilotProfile.cs",
-      "line": 648,
+      "line": 662,
       "parser": "TagFloatCheck"
     },
     {
@@ -10737,7 +10737,7 @@
       "tag": "RotationMultiplierYaw",
       "type": "float",
       "file": "AutoPilotProfile.cs",
-      "line": 655,
+      "line": 669,
       "parser": "TagFloatCheck"
     },
     {
@@ -10745,7 +10745,7 @@
       "tag": "RotationMultiplierRoll",
       "type": "float",
       "file": "AutoPilotProfile.cs",
-      "line": 662,
+      "line": 676,
       "parser": "TagFloatCheck"
     },
     {
@@ -10753,7 +10753,7 @@
       "tag": "RotationSlowdownAngle",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 669,
+      "line": 683,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10761,7 +10761,7 @@
       "tag": "UseForcedRotationDampening",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 676,
+      "line": 690,
       "parser": "TagBoolCheck"
     },
     {
@@ -10769,7 +10769,7 @@
       "tag": "ForcedRotationDampeningAmount",
       "type": "float",
       "file": "AutoPilotProfile.cs",
-      "line": 683,
+      "line": 697,
       "parser": "TagFloatCheck"
     },
     {
@@ -10777,7 +10777,7 @@
       "tag": "UseRotationBoostUp",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 690,
+      "line": 704,
       "parser": "TagBoolCheck"
     },
     {
@@ -10785,7 +10785,7 @@
       "tag": "RotationBoostUpAmount",
       "type": "float",
       "file": "AutoPilotProfile.cs",
-      "line": 697,
+      "line": 711,
       "parser": "TagFloatCheck"
     },
     {
@@ -10793,7 +10793,7 @@
       "tag": "AngleAllowedForForwardThrust",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 704,
+      "line": 718,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10801,7 +10801,7 @@
       "tag": "MaxVelocityAngleForSpeedControl",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 711,
+      "line": 725,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10809,7 +10809,7 @@
       "tag": "AllowStrafing",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 718,
+      "line": 732,
       "parser": "TagBoolCheck"
     },
     {
@@ -10817,7 +10817,7 @@
       "tag": "StrafeMinDurationMs",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 725,
+      "line": 739,
       "parser": "TagIntCheck"
     },
     {
@@ -10825,7 +10825,7 @@
       "tag": "StrafeMaxDurationMs",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 732,
+      "line": 746,
       "parser": "TagIntCheck"
     },
     {
@@ -10833,7 +10833,7 @@
       "tag": "StrafeMinCooldownMs",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 739,
+      "line": 753,
       "parser": "TagIntCheck"
     },
     {
@@ -10841,7 +10841,7 @@
       "tag": "StrafeMaxCooldownMs",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 746,
+      "line": 760,
       "parser": "TagIntCheck"
     },
     {
@@ -10849,7 +10849,7 @@
       "tag": "StrafeSpeedCutOff",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 753,
+      "line": 767,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10857,7 +10857,7 @@
       "tag": "StrafeDistanceCutOff",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 760,
+      "line": 774,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10865,7 +10865,7 @@
       "tag": "StrafeMinimumTargetDistance",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 767,
+      "line": 781,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10873,7 +10873,7 @@
       "tag": "StrafeMinimumSafeAngleFromTarget",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 774,
+      "line": 788,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10881,7 +10881,7 @@
       "tag": "PadDistanceFromTarget",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 785,
+      "line": 799,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10889,7 +10889,7 @@
       "tag": "TryToLevelWithTarget",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 791,
+      "line": 805,
       "parser": "TagBoolCheck"
     },
     {
@@ -10897,7 +10897,7 @@
       "tag": "BarrelRollMinDurationMs",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 801,
+      "line": 815,
       "parser": "TagIntCheck"
     },
     {
@@ -10905,7 +10905,7 @@
       "tag": "BarrelRollMaxDurationMs",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 808,
+      "line": 822,
       "parser": "TagIntCheck"
     },
     {
@@ -10913,7 +10913,7 @@
       "tag": "RamMinDurationMs",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 815,
+      "line": 829,
       "parser": "TagIntCheck"
     },
     {
@@ -10921,7 +10921,7 @@
       "tag": "RamMaxDurationMs",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 822,
+      "line": 836,
       "parser": "TagIntCheck"
     },
     {
@@ -10929,7 +10929,7 @@
       "tag": "EngageDistanceSpace",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 829,
+      "line": 843,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10937,7 +10937,7 @@
       "tag": "EngageDistancePlanet",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 836,
+      "line": 850,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10945,7 +10945,7 @@
       "tag": "DisengageDistanceSpace",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 843,
+      "line": 857,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10953,7 +10953,7 @@
       "tag": "DisengageDistancePlanet",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 850,
+      "line": 864,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10961,7 +10961,7 @@
       "tag": "WaypointWaitTimeTrigger",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 857,
+      "line": 871,
       "parser": "TagIntCheck"
     },
     {
@@ -10969,7 +10969,7 @@
       "tag": "TargetApproachTimer",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 864,
+      "line": 878,
       "parser": "TagIntCheck"
     },
     {
@@ -10977,7 +10977,7 @@
       "tag": "TargetEngageTimer",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 871,
+      "line": 885,
       "parser": "TagIntCheck"
     },
     {
@@ -10985,7 +10985,7 @@
       "tag": "TimeBetweenNewTargetChecks",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 878,
+      "line": 892,
       "parser": "TagIntCheck"
     },
     {
@@ -10993,7 +10993,7 @@
       "tag": "LostTargetTimerTrigger",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 885,
+      "line": 899,
       "parser": "TagIntCheck"
     },
     {
@@ -11001,7 +11001,7 @@
       "tag": "DistanceToCheckEngagableTarget",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 892,
+      "line": 906,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11009,7 +11009,7 @@
       "tag": "EngageOnCameraDetection",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 899,
+      "line": 913,
       "parser": "TagBoolCheck"
     },
     {
@@ -11017,7 +11017,7 @@
       "tag": "EngageOnWeaponActivation",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 906,
+      "line": 920,
       "parser": "TagBoolCheck"
     },
     {
@@ -11025,7 +11025,7 @@
       "tag": "EngageOnTargetLineOfSight",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 913,
+      "line": 927,
       "parser": "TagBoolCheck"
     },
     {
@@ -11033,7 +11033,7 @@
       "tag": "CameraDetectionMaxRange",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 920,
+      "line": 934,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11041,7 +11041,7 @@
       "tag": "WaypointAbandonTimeTrigger",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 927,
+      "line": 941,
       "parser": "TagIntCheck"
     },
     {
@@ -11049,7 +11049,7 @@
       "tag": "OffsetMaxAngleFromTarget",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 935,
+      "line": 949,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11057,7 +11057,7 @@
       "tag": "RotateTowardsTargetWhileAtPosition",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 944,
+      "line": 958,
       "parser": "TagBoolCheck"
     },
     {
@@ -11065,7 +11065,7 @@
       "tag": "AttackRunDistanceSpace",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 951,
+      "line": 965,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11073,7 +11073,7 @@
       "tag": "AttackRunDistancePlanet",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 958,
+      "line": 972,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11081,7 +11081,7 @@
       "tag": "AttackRunBreakawayDistance",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 965,
+      "line": 979,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11089,7 +11089,7 @@
       "tag": "OffsetRecalculationTime",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 972,
+      "line": 986,
       "parser": "TagIntCheck"
     },
     {
@@ -11097,7 +11097,7 @@
       "tag": "AttackRunUseSafePlanetPathing",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 979,
+      "line": 993,
       "parser": "TagBoolCheck"
     },
     {
@@ -11105,7 +11105,7 @@
       "tag": "AttackRunUseCollisionEvasionSpace",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 986,
+      "line": 1000,
       "parser": "TagBoolCheck"
     },
     {
@@ -11113,7 +11113,7 @@
       "tag": "AttackRunUseCollisionEvasionPlanet",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 993,
+      "line": 1007,
       "parser": "TagBoolCheck"
     },
     {
@@ -11121,7 +11121,7 @@
       "tag": "AttackRunOverrideWithDistanceAndTimer",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 1000,
+      "line": 1014,
       "parser": "TagBoolCheck"
     },
     {
@@ -11129,7 +11129,7 @@
       "tag": "AttackRunOverrideTimerTrigger",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 1007,
+      "line": 1021,
       "parser": "TagIntCheck"
     },
     {
@@ -11137,7 +11137,7 @@
       "tag": "AttackRunOverrideDistance",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1014,
+      "line": 1028,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11145,7 +11145,7 @@
       "tag": "DespawnCoordsMinDistance",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1021,
+      "line": 1035,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11153,7 +11153,7 @@
       "tag": "DespawnCoordsMaxDistance",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1028,
+      "line": 1042,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11161,7 +11161,7 @@
       "tag": "DespawnCoordsMinAltitude",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1035,
+      "line": 1049,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11169,7 +11169,7 @@
       "tag": "DespawnCoordsMaxAltitude",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1042,
+      "line": 1056,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11177,7 +11177,7 @@
       "tag": "MinAngleForLeveledDescent",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1049,
+      "line": 1063,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11185,7 +11185,7 @@
       "tag": "MaxAngleForLeveledAscent",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1056,
+      "line": 1070,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11193,7 +11193,7 @@
       "tag": "LimitRotationSpeed",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 1063,
+      "line": 1077,
       "parser": "TagBoolCheck"
     },
     {
@@ -11201,28 +11201,12 @@
       "tag": "MaxRotationMagnitude",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1070,
-      "parser": "TagDoubleCheck"
-    },
-    {
-      "profile": "RivalAI Autopilot",
-      "tag": "MinGravity",
-      "type": "double",
-      "file": "AutoPilotProfile.cs",
-      "line": 1077,
-      "parser": "TagDoubleCheck"
-    },
-    {
-      "profile": "RivalAI Autopilot",
-      "tag": "MaxGravity",
-      "type": "double",
-      "file": "AutoPilotProfile.cs",
       "line": 1084,
       "parser": "TagDoubleCheck"
     },
     {
       "profile": "RivalAI Autopilot",
-      "tag": "AvoidPlayerCollisions",
+      "tag": "UseAircraftFlightModel",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
       "line": 1091,
@@ -11230,23 +11214,23 @@
     },
     {
       "profile": "RivalAI Autopilot",
-      "tag": "UseSurfaceHoverThrustMode",
-      "type": "bool (true/false)",
-      "file": "AutoPilotProfile.cs",
-      "line": 1098,
-      "parser": "TagBoolCheck"
-    },
-    {
-      "profile": "RivalAI Autopilot",
-      "tag": "MaxVerticalSpeed",
+      "tag": "MaxAngleFromVelocity",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1105,
+      "line": 1098,
       "parser": "TagDoubleCheck"
     },
     {
       "profile": "RivalAI Autopilot",
-      "tag": "HoverPathStepDistance",
+      "tag": "RollIntoTurnsMultiplier",
+      "type": "float",
+      "file": "AutoPilotProfile.cs",
+      "line": 1105,
+      "parser": "TagFloatCheck"
+    },
+    {
+      "profile": "RivalAI Autopilot",
+      "tag": "MaxBankAngle",
       "type": "double",
       "file": "AutoPilotProfile.cs",
       "line": 1112,
@@ -11254,47 +11238,47 @@
     },
     {
       "profile": "RivalAI Autopilot",
-      "tag": "HoverCliffAngle",
+      "tag": "ReturnToLevelMultiplier",
+      "type": "float",
+      "file": "AutoPilotProfile.cs",
+      "line": 1119,
+      "parser": "TagFloatCheck"
+    },
+    {
+      "profile": "RivalAI Autopilot",
+      "tag": "ReturnToLevelSpeedCutOff",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1118,
+      "line": 1126,
       "parser": "TagDoubleCheck"
     },
     {
       "profile": "RivalAI Autopilot",
-      "tag": "HoverUpAngle",
+      "tag": "MaxRotationStep",
       "type": "double",
-      "file": "AutoPilotProfile.cs",
-      "line": 1125,
-      "parser": "TagDoubleCheck"
-    },
-    {
-      "profile": "RivalAI Autopilot",
-      "tag": "UseVelocityCollisionEvasion",
-      "type": "TagBoolEnumCheck",
       "file": "AutoPilotProfile.cs",
       "line": 1133,
-      "parser": "TagBoolEnumCheck"
+      "parser": "TagDoubleCheck"
     },
     {
       "profile": "RivalAI Autopilot",
-      "tag": "UseVerticalRetreat",
-      "type": "bool (true/false)",
+      "tag": "MinGravity",
+      "type": "double",
       "file": "AutoPilotProfile.cs",
       "line": 1140,
-      "parser": "TagBoolCheck"
+      "parser": "TagDoubleCheck"
     },
     {
       "profile": "RivalAI Autopilot",
-      "tag": "UseWaterPatrolMode",
-      "type": "bool (true/false)",
+      "tag": "MaxGravity",
+      "type": "double",
       "file": "AutoPilotProfile.cs",
       "line": 1147,
-      "parser": "TagBoolCheck"
+      "parser": "TagDoubleCheck"
     },
     {
       "profile": "RivalAI Autopilot",
-      "tag": "UseSubgridThrust",
+      "tag": "AvoidPlayerCollisions",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
       "line": 1154,
@@ -11302,10 +11286,82 @@
     },
     {
       "profile": "RivalAI Autopilot",
+      "tag": "UseSurfaceHoverThrustMode",
+      "type": "bool (true/false)",
+      "file": "AutoPilotProfile.cs",
+      "line": 1161,
+      "parser": "TagBoolCheck"
+    },
+    {
+      "profile": "RivalAI Autopilot",
+      "tag": "MaxVerticalSpeed",
+      "type": "double",
+      "file": "AutoPilotProfile.cs",
+      "line": 1168,
+      "parser": "TagDoubleCheck"
+    },
+    {
+      "profile": "RivalAI Autopilot",
+      "tag": "HoverPathStepDistance",
+      "type": "double",
+      "file": "AutoPilotProfile.cs",
+      "line": 1175,
+      "parser": "TagDoubleCheck"
+    },
+    {
+      "profile": "RivalAI Autopilot",
+      "tag": "HoverCliffAngle",
+      "type": "double",
+      "file": "AutoPilotProfile.cs",
+      "line": 1181,
+      "parser": "TagDoubleCheck"
+    },
+    {
+      "profile": "RivalAI Autopilot",
+      "tag": "HoverUpAngle",
+      "type": "double",
+      "file": "AutoPilotProfile.cs",
+      "line": 1188,
+      "parser": "TagDoubleCheck"
+    },
+    {
+      "profile": "RivalAI Autopilot",
+      "tag": "UseVelocityCollisionEvasion",
+      "type": "TagBoolEnumCheck",
+      "file": "AutoPilotProfile.cs",
+      "line": 1196,
+      "parser": "TagBoolEnumCheck"
+    },
+    {
+      "profile": "RivalAI Autopilot",
+      "tag": "UseVerticalRetreat",
+      "type": "bool (true/false)",
+      "file": "AutoPilotProfile.cs",
+      "line": 1203,
+      "parser": "TagBoolCheck"
+    },
+    {
+      "profile": "RivalAI Autopilot",
+      "tag": "UseWaterPatrolMode",
+      "type": "bool (true/false)",
+      "file": "AutoPilotProfile.cs",
+      "line": 1210,
+      "parser": "TagBoolCheck"
+    },
+    {
+      "profile": "RivalAI Autopilot",
+      "tag": "UseSubgridThrust",
+      "type": "bool (true/false)",
+      "file": "AutoPilotProfile.cs",
+      "line": 1217,
+      "parser": "TagBoolCheck"
+    },
+    {
+      "profile": "RivalAI Autopilot",
       "tag": "MaxSubgridThrustAngle",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1161,
+      "line": 1224,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11313,7 +11369,7 @@
       "tag": "EscortUsesRelativeDampening",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 1167,
+      "line": 1230,
       "parser": "TagBoolCheck"
     },
     {
@@ -11321,7 +11377,7 @@
       "tag": "EscortSpeedMatchMinDistance",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1173,
+      "line": 1236,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11329,7 +11385,7 @@
       "tag": "EscortSpeedMatchMaxDistance",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1179,
+      "line": 1242,
       "parser": "TagDoubleCheck"
     },
     {

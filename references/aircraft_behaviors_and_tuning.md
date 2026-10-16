@@ -54,7 +54,7 @@ plane's velocity direction (`FighterPlane.cs:256`); both read their distances fr
 - **Reported upstream:** MeridiusIX/Modular-Encounters-Systems#392 proposes using the forward component of the velocity (`forwardVelocityAmt`), as `CalculateHoverThrust` already does; the hover path is not affected. **Revise this rule if #392 is fixed:** with a direction-aware brake, values above 90 become safe and the cap can go.
 
 ### Autopilot tags that do little or nothing for aircraft **[HARD]**
-Checked against MES `37455cf` (upstream master).
+Checked against MES `001d5db` (upstream master).
 
 | Tag | What the code does |
 | :--- | :--- |
@@ -67,6 +67,7 @@ Checked against MES `37455cf` (upstream master).
 | `ReverseOffsetDistAltAboveHeight` + `ReverseOffsetHeight` | When the target is more than `ReverseOffsetHeight` above the surface, the offset distance and altitude ranges swap (`AutoPilotSystem.cs:1495-1511`): the line-up point goes offset-distance **above** the target. That is the upward cascade in item 5 above; avoid it for air-to-air. |
 
 Tags that do work and are easy to miss:
+- **`[UseAircraftFlightModel:true]` (MES 2.74.06 dev / PR #390)**: Native atmospheric flight physics rules for gyro-steered aircraft. Enables `MaxAngleFromVelocity` (stops flat sideways sliding/drifting, e.g. `25`), `RollIntoTurnsMultiplier` (banks naturally into turns in gravity, e.g. `0.8`), `MaxBankAngle` (caps bank degrees, e.g. `45`), `ReturnToLevelMultiplier` (auto-levels wings when idle above `ReturnToLevelSpeedCutOff`), and `MaxRotationStep` (e.g. `0.3`, solves Keen's 120-frame gyro override ramp degradation). See `behaviors_and_autopilot.md` §3F.
 - **`[Unused:]` (default true) breaks off an attack run** when a velocity collision is predicted within `CollisionTimeTrigger` (5 s, set in `SetDefaultTags`) (`FighterPlane.cs:252, 329`; `Strike.cs` the same). At 130 m/s that is about 650 m, so a run near terrain or close to the target can end before `AttackRunBreakawayDistance`.
 - **`UseForcedRotationDampening` + `ForcedRotationDampeningAmount` (default off, 0.15):** after each gyro update MES cuts the grid's existing spin by the amount, directly through `Physics.SetSpeeds` (`RotationSystem.cs:47-80`). Less overshoot and wobble, slower turns. **[SOFT]** not flight-tested.
 - **`RotationSlowdownAngle` (default 70):** above this error the gyro runs at full rate; below it the rate is the error in radians (`RotationSystem.cs:118`). It changes big turns only; small-angle wobble is already in the proportional range.
