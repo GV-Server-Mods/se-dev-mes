@@ -392,7 +392,6 @@ Observed on live servers, not yet checked against the MES code. Re-test after ME
   - Don't raze blocks that can sit on subgrids.
   - Don't `RazeBlocks` the RivalAI Remote Control: `UpdateShape()` can crash if the block has split from its parent grid.
   - Don't run `GenerateExplosion` and a raze on the same block (for example the RivalAI Remote) at the same time.
-- **Static spawn groups:** some seemed to ignore their `[SpawnConditionsProfiles:]`, and putting the tags in the spawn group itself fixed it. For space statics this matches a source bug: off-planet the spawn-type check passes every conditions profile, so the Description's own profile is used first (`spawning_and_conditions.md` §2, static encounters). Before MES 2.75.00, `ResetThisStaticEncounters` also aborted when a non-static conditions profile was listed first (§2D). Check `ConditionIndex` in `/MES.IGGD` to see which profile a spawn used.
 - **Static encounter reset:** `[ResetThisStaticEncounter:true]` with `[ForceDespawn:true]` removes a static encounter and lets it respawn (not on the wiki).
 - **Particles:** can be played from actions much like sounds (not on the wiki).
 - **Climbing too steeply:** an `IdealPlanetAltitude` far above `MinimumPlanetAltitude` makes aircraft climb sharply and spoils their angle of attack.
