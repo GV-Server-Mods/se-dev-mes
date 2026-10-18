@@ -360,6 +360,14 @@ When troubleshooting encounter loading or execution failures, search `SpaceEngin
   `scripts/audit_sbc.ps1` reports empty and whitespace-only files (prefab folders included).
 - **Fix**: delete the file, or restore it from git (`git checkout -- <file>`). Never leave a placeholder `.sbc`; a file that should define nothing still needs `<?xml version="1.0"?><Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"></Definitions>`.
 
+### 17. NPC ship with 12 or more grids only partly despawns (`Attempted Despawn 10 Times. Aborting Process.`)
+- **Symptom**: after a behavior despawn, `[ForceDespawn:true]`, spawner cleanup or `/MES.Debug.DeleteGrid` / `RemoveAllNpcs`, the main grid and some wheels, rotor or piston heads stay in the world. Open as MeridiusIX/Modular-Encounters-Systems#412 (checked against `bc71965`).
+- **Log** (`/MES.SpawnDebug.CleanUp.true`): eleven `Grid is Closed.` lines, then `<grid> Attempted Despawn 10 Times. Aborting Process.` for every grid still queued.
+- **[HARD] Cause**: `Cleaning.RemoveGrid` queues the grid and all its linked grids. `Tasks/GridCleanup.cs` removes them one per run, and before each one adds 1 to `grid.Npc.DespawnAttempts`, skipping the grid once the count is above 10. Grids spawned together in this session share one NpcData object (`GridEntity.cs`, looked up by `UniqueSpawnIdentifier` in `NpcManager.SpawnedNpcData`), so the whole ship shares one counter: 11 grids go, the rest are dropped. Seen in GVK on a 13-grid land cargo ship (main grid and 12 wheels); the shared object was confirmed in play by the ship's `DespawnMES` triggers firing when its first wheel was removed. The limit dates from 2021 (`6d5ed75`).
+- **[SOFT] After a world reload** each grid reads its own copy of the NpcData from its storage, so the counter should no longer be shared for ships loaded from a save. `DespawnAttempts` is saved (`[ProtoMember(18)]`), though, so a leftover saved after a failed despawn may still start above 10. Not tested.
+- **Find affected prefabs**: count the `<CubeGrid>` elements per prefab; 12 or more is affected (`scripts/audit_prefabs.ps1` warns). Stations count too: a static base with turrets on rotors is despawned the same way.
+- **Workaround until fixed**: keep NPC prefabs at 11 grids or fewer (merge or remove subgrids, use fewer wheels). MES cannot remove the leftovers either: `/MES.Debug.DeleteGrid` goes through the same cleanup and hits the same spent counter. Delete them as an admin (Space Master, Ctrl+X).
+
 ---
 
 ## 5. Sim-Speed Health & Anti-Clang Physics Mitigations

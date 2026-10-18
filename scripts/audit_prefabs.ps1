@@ -7,6 +7,7 @@
     2. Stale .sbcB5 binary cache files (causes Keen to load outdated grid definitions).
     3. Remote Control Block Verification (ensures spawned NPC grids can run RivalAI).
     4. Empty or missing SubtypeId definitions.
+    5. Prefabs with 12 or more grids (MES despawns only the first 11, MES #412).
 .PARAMETER Path
     Path to search for prefab .sbc files. Defaults to "Data/Prefabs" or ".".
 .PARAMETER CleanStaleB5
@@ -112,6 +113,14 @@ foreach ($file in $prefabFiles) {
         Write-Host "       File Name:   '$fileNameWithoutExt'" -ForegroundColor DarkGray
         Write-Host "       Internal ID: '$internalSubtype'" -ForegroundColor DarkGray
         Write-Host "       SpawnGroups reference '$internalSubtype', NOT the file name. Mismatches cause confusion." -ForegroundColor DarkGray
+        $warningsFound++
+    }
+
+    # Check 2C: 12+ grids. GridCleanup counts DespawnAttempts on the NpcData the ship's grids
+    # share, so only the first 11 grids are removed (MeridiusIX/Modular-Encounters-Systems#412).
+    $gridCount = [System.Text.RegularExpressions.Regex]::Matches($raw, '<CubeGrid(?=[\s>])').Count
+    if ($gridCount -ge 12) {
+        Write-Host "[WARN] $($file.Name) - $gridCount grids (main grid + subgrids). MES despawns only the first 11 of a ship spawned this session (MES #412); keep NPC prefabs at 11 or fewer." -ForegroundColor Yellow
         $warningsFound++
     }
 
