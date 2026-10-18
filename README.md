@@ -78,6 +78,7 @@ se-dev-mes/
 │   ├── economy_and_stores.md               # Store grid sales, purchase spawn placement, store refresh
 │   ├── third_party_integrations.md         # WeaponCore (800m clamp), Shields, AiEnabled, Water Mod
 │   ├── diagnostics_and_troubleshooting.md  # Admin commands, error signatures, sim-speed, anti-clang
+│   ├── testing_and_debugging.md            # In-game test procedures: spawn, visual checks, debug chat, logs
 │   └── sbc_xml_editing_guide.md            # IDE setup, <Description> rules, safe [//] comments
 ├── examples/                               # Production-tested workshop implementations
 │   ├── role_combattype_state_machine.sbc   # Enenra MSB Role + CombatType state machine
@@ -167,6 +168,7 @@ Checks all `.sbc` files for fatal Keen deserializer traps:
 - Duplicate `<SubtypeId>` within `<Id>` blocks.
 - Duplicate `<Id>` attributes inside `<Prefab>`.
 - XML comments inside `<Description>` tags.
+- Empty or whitespace-only `.sbc` files, prefabs included (`Root element is missing` stops the world loading).
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/audit_sbc.ps1 -Path ".\Content\Data"
 ```
@@ -256,8 +258,9 @@ To measure how effectively `se-dev-mes` prevents silent failure modes, the proje
 ## Known MES & SE Engine Pitfalls Documented in Skill
 
 - **XML Comments in `<Description>`**: Standard XML comments (`<!-- -->`) inside `<Description>` tags throw `System.Xml.XmlException` in Keen's `ReadElementString()`, causing the game to abort loading the entire mod (`MOD_CRITICAL_ERROR`).
+- **Empty `.sbc` Files**: a 0-byte or whitespace-only `.sbc` anywhere under `Data/` throws `Root element is missing`; Keen rethrows it after reading all files and the whole world load fails, not just the mod.
 - **Zero-Stripping Bug**: `TagParse.cs` strips `0` values from integer lists unless called with `preserveZero: true`. Using `[CustomCountersTargets:0]` produces an empty list and breaks conditions.
-- **Aircraft Speed Control & Reverse Braking**: `MaxVelocityAngleForSpeedControl` defaults to 5° (bypassing speed control and overshooting moving waypoints). Above 90°, reverse thrusters engage blindly while drifting away, accelerating away from the waypoint. Optimal setting is 90°.
+- **Aircraft Speed Control & Reverse Braking**: `MaxVelocityAngleForSpeedControl` defaults to 5° (bypassing speed control and overshooting moving waypoints). Before MES 2.75.00, values above 90° made reverse thrusters engage blindly while drifting away, accelerating away from the waypoint; 2.75.00 brakes on forward speed, so any value up to 180° is safe. Use 90°.
 - **WeaponCore AI Shoot Mode**: Fixed guns saved in "Auto (AI Controlled)" ignore MES fire commands. They must be set to "Mouse Control" in prefabs (audited via `wc_shootmode.py`).
 - **WeaponRandomizer `<Public>true</Public>` Gate**: MES skips non-public block definitions. Author custom weapons with `<Public>true</Public>` and let Block Restrictions restrict them from players dynamically.
 - **`WaypointNear` / `WaypointFar` Unchecked Index**: Reads `CargoShipWaypoints[0]` without a count check; on grids without cargo waypoints, this exception halts the main AI loop of **every MES NPC on the server**.

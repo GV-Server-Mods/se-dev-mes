@@ -126,7 +126,7 @@ MES can dump internal diagnostic logs directly to your Windows clipboard for fas
 **[HARD] The `<Type>` is required** on `GetLogging` (`LoggerTools.GetLogging` needs 5 parts): a bare `/MES.IGLBD` or `/MES.IGLSD` only returns `Command Missing Parameters.` Each debug type has its own buffer, so copy each type you enabled (`.Trigger`, `.Condition`, `.Action`, …).
 
 ### D. Spawning & Encounter Force-Spawn Commands
-- `/MES.Spawn.<Type>.<SpawnGroupName>` (`ChatMessage.ProcessSpawn`): runs a spawn of that type at your position; with the optional `.<SpawnGroupName>` it tries only that group (still subject to its conditions). Parts are split on `.`, so a SpawnGroup name containing a dot cannot be named here. Types and shortcuts: `SpaceCargoShip` (`/MES.SSCS`), `RandomEncounter` (`/MES.SRE`), `PlanetaryCargoShip` (`/MES.SPCS`), `PlanetaryInstallation` (`/MES.SPI`), `BossEncounter` (`/MES.SBE`), `Creature` (`/MES.SC`), `DroneEncounter` (`/MES.SDE`), `StaticEncounter` (`/MES.SSE`), `Prefab` (`/MES.SP`), `PrefabStation` (`/MES.SSP`). Also `/MES.Spawn.WaveSpawner.<Space|Planet|Creature>` and `/MES.Spawn.ForceSpawnTimer`.
+- `/MES.Spawn.<Type>.<SpawnGroupName>` (`ChatMessage.ProcessSpawn`): runs a spawn of that type at your position; with the optional `.<SpawnGroupName>` it tries only that group (still subject to its conditions). Parts are split on `.`, so a SpawnGroup name containing a dot cannot be named here. Types and shortcuts: `SpaceCargoShip` (`/MES.SSCS`), `RandomEncounter` (`/MES.SRE`), `PlanetaryCargoShip` (`/MES.SPCS`), `PlanetaryInstallation` (`/MES.SPI`), `BossEncounter` (`/MES.SBE`), `Creature` (`/MES.SC`), `DroneEncounter` (`/MES.SDE`), `Prefab` (`/MES.SP`), `PrefabStation` (`/MES.SSP`). **[HARD]** `/MES.SSE` is rewritten to `/MES.Spawn.StaticEncounter`, which `ProcessSpawn` does not handle (reply: `No Spawning Type From Chat`); statics spawn when a player comes near, and reset with the commands below. It is an admin spawn: spawn timeouts and the global NPC cap are skipped, every other condition still applies, and the group needs a conditions profile with the matching spawn type (table in `testing_and_debugging.md` §2). Also `/MES.Spawn.WaveSpawner.<Space|Planet|Creature>` and `/MES.Spawn.ForceSpawnTimer`.
 - There is no chat command to toggle all MES spawning, reset all counters or GPS-mark encounters; use `/MES.Debug.ChangeCounter` / `ChangeBool` below for single values and `/MES.Info.GetActiveNpcs` to list live NPCs.
 - `/MES.Debug.ShowZone.<PublicName|ZoneSubtypeId>`, `/MES.Debug.HideZone.<...>`, `/MES.Debug.ShowAllZones`, `/MES.Debug.HideAllZones` *(2.74.04)*: Draw zone spheres (including multi-sphere zones) in-world, with temporary GPS markers.
 - `/MES.Debug.CreateKPL.<Faction>.<Radius>.<Minutes>.<MaxEncounters>.<MinThreat>`: Creates a Known Player Location at your position. Minutes defaults to `30`; since 2.74.04 a value of `0` or less creates nothing (HUD: `KPL Not Created: Duration Must Be Greater Than 0`).
@@ -134,7 +134,7 @@ MES can dump internal diagnostic logs directly to your Windows clipboard for fas
 - `/MES.Debug.DrawPaths`: toggles in-world lines from every AI-ready NPC to its waypoints (`AutoPilotSystem.DebugDrawingToWaypoints`): **green** current waypoint, **cyan** offset waypoint (attack-run line-up, escort slot), **magenta** planet-pathing waypoint, **red/orange** collision evasion. Drawn from the behavior loop, so it shows in singleplayer or on the hosting machine **[SOFT]: not expected to show for a client of a dedicated server**.
 - `/MES.Debug.ChangeBool.<Name>.<true|false>`: sets a sandbox boolean. `/MES.Debug.ChangeCounter.<Name>.<Amount>`: **adds** `<Amount>` to a sandbox counter (use a negative amount to subtract; it is not a set).
 - `/MES.Debug.ClearUniqueEncounters`: forgets which `UniqueEncounter` spawn groups have spawned. `/MES.Debug.ClearStaticEncounters`: invalidates every saved static-encounter record, so statics respawn.
-- `/MES.Debug.ResetStaticEncounters` *(MES 2.74.06 dev / PR #389)*: replaces every spawned static encounter in the world with a fresh copy from current definitions (useful after a mod update changed prefabs, behaviors, or coordinates). Grids are closed directly (bypassing Despawn handling and Compromised/Despawn triggers) and re-spawned immediately. Skips any encounter whose grids have player-owned blocks (`FactionHelper.IsIdentityPlayer`), players seated, foreign attached grids, or other entities within 250m.
+- `/MES.Debug.ResetStaticEncounters` *(MES 2.75.00 / PR #389)*: replaces every spawned static encounter in the world with a fresh copy from current definitions (useful after a mod update changed prefabs, behaviors, or coordinates). Grids are closed directly (bypassing Despawn handling and Compromised/Despawn triggers) and re-spawned immediately. Skips any encounter whose grids have player-owned blocks (`FactionHelper.IsIdentityPlayer`), players seated, foreign attached grids, or other entities within 250m.
 - `/MES.Debug.ResetStaticEncounters.Info`: dry-run report for `ResetStaticEncounters`; evaluates every spawned static encounter, reports which would reset or be skipped (with reasons), copies output to the clipboard, and writes to `SpawnRecord.log`.
 - `/MES.Debug.ResetThisStaticEncounters.<SpawnGroupName>`: resets a single named static encounter so it respawns when players next approach. Fixed in commit `af492a5` to scan for the first `[StaticEncounter:true]` condition profile rather than aborting if non-static condition profiles are listed first.
 
@@ -145,7 +145,7 @@ RivalAI is merged into MES; current MES has no `/RivalAI.*` chat commands (none 
 
 ## 3. The Agent Troubleshooting Protocol (When Something Fails)
 
-When a modder or player reports that an encounter is not spawning, triggers aren't firing, or an NPC is behaving abnormally, the AI agent should guide the user through this systematic protocol:
+When a modder reports that an encounter is not spawning, triggers aren't firing, or an NPC is behaving abnormally, write them a test procedure following [`testing_and_debugging.md`](testing_and_debugging.md): spawn the NPC with an MES spawn command (§2 there), check visually with the debug commands first (§3), then debug chat messages (§4), then logs (§5, summarised below), and only as a last resort debug lines in the local MES copy (§6).
 
 > [!TIP]
 > **Look before you log.** MES logs are long and slow to work through. Start with the visual tools and only turn on logging if they don't explain the problem:
@@ -155,13 +155,7 @@ When a modder or player reports that an encounter is not spawning, triggers aren
 >
 > Give the user the exact commands for whatever they are testing, including the spawn command and where to stand.
 
-```mermaid
-flowchart TD
-    A["1. Identify Failure Domain<br/>(Spawning vs Trigger vs Autopilot)"] --> B["2. Enable Logging In-Game<br/>(/MES.SpawnDebug or /MES.BehaviorDebug)"]
-    B --> C["3. Reproduce Issue In-Game<br/>(Force spawn or trigger action)"]
-    C --> D["4. Dump Logs to Clipboard<br/>(/MES.IGLSD.&lt;Type&gt; or /MES.IGLBD.&lt;Type&gt;)"]
-    D --> E["5. Provide Output to AI Agent<br/>(Pinpoint exact failure)"]
-```
+Log workflow, once the visual checks and debug messages don't explain it:
 
 1. **Step 1: Spawner Failures** (Encounter won't spawn or wrong ship appears):
    - Instruct the user to run:
@@ -296,8 +290,8 @@ When troubleshooting encounter loading or execution failures, search `SpaceEngin
   3. Once past the waypoint, `RotationSystem.cs` rotates the craft 180° to face the waypoint behind it.
   4. Moving backwards relative to its heading at max speed, `velocityToTargetAngle` exceeds `MaxVelocityAngleForSpeedControl`, triggering 100% forward thrust override into deep space.
   5. On rovers, reverse velocity exceeding `MaxSpeed` locks reverse thrust at 100% permanently because `velocity.Length()` is an unsigned scalar.
-  6. With `MaxVelocityAngleForSpeedControl` above 90, the same unsigned check catches aircraft too: a grid facing its waypoint while moving away from it faster than `MaxSpeed` shows `Brake To Desired Speed` in `/MES.IGGB` and accelerates away indefinitely (MeridiusIX/Modular-Encounters-Systems#392).
-- **Fix** (for item 6: keep `MaxVelocityAngleForSpeedControl` at 90 or less, see [aircraft_behaviors_and_tuning.md](aircraft_behaviors_and_tuning.md) section 1; revisit if #392 is fixed):
+  6. **Before MES 2.75.00**, with `MaxVelocityAngleForSpeedControl` above 90, the same unsigned check caught aircraft too: a grid facing its waypoint while moving away from it faster than `MaxSpeed` showed `Brake To Desired Speed` in `/MES.IGGB` and accelerated away indefinitely. Fixed in 2.75.00 (MES PR #402): `CalculateDirectForwardThrust` now brakes on the forward component of the velocity, so a grid moving backwards gets forward thrust.
+- **Fix** (for item 6 on MES older than 2.75.00: keep `MaxVelocityAngleForSpeedControl` at 90 or less, see [aircraft_behaviors_and_tuning.md](aircraft_behaviors_and_tuning.md) section 1):
   1. Add at least one working thruster in all six cardinal directions.
   2. For atmospheric aircraft with forward-only thrust, switch behavior subclass to `FighterPlane` (which uses velocity-aligned climbing breakaway without braking).
   3. For thrust-driven rovers, see [behaviors_and_autopilot.md §6.C](file:///c:/Users/blayl/source/repos/se-dev-mes/references/behaviors_and_autopilot.md#c-thrust-driven-rovers--ground-vehicles-best-practices--pitfalls-hard--soft) for the complete rover setup (`[UseSurfaceHoverThrustMode:true]`, `[FlyLevelWithGravity:false]`, and matching `[IdealPlanetAltitude]` to Remote Control height).
@@ -346,7 +340,8 @@ When troubleshooting encounter loading or execution failures, search `SpaceEngin
 
 ### 15. NPCs treated as players (wrong targets, `[Owners:NPC]` never matches) on MES 2.73.07-2.74.04; offline players treated as NPCs through 2.74.05
 - **Cause**: `FactionHelper.IsIdentityNPC` returned `false` for any identity without an **online** `IMyPlayer` (`MyAPIGateway.Players.TryGetIdentityId` only searches connected players), which is every normal NPC faction identity. Effects: NPC owners classified as `Player` by the target `Owner` filter (`EntityEvaluator.GetOwnersFromList`), NPC-vs-player relations skipped the reputation lookup (`GetRelationBetweenIdentities`), `[CheckIfDamagerIsNpc:true]` never passed, and spawn-time NPC store setup did not fund the owner for inserted orders. **Fixed in MES 2.74.05** (#375): no Steam id, or an online bot, counts as NPC.
-- **[HARD] Fixed in 2.74.06 dev (commits `2361acf`, `13bcb1d`, `cb6f3b0`, 2026-10-04 to 10-09)**: `FactionHelper.IsIdentityNPC`/`IsIdentityPlayer` were rewritten to classify by online `IMyPlayer` + Steam id: a Steam id with no online player is an **offline player**, a bot with a Steam id is a vanilla bot (NPC), a non-bot with no Steam id is an AiEnabled bot (NPC), and an identity with neither is an NPC only if it was in the session's `NonPlayerIdentities` list. The ad-hoc `IsBot` / `SteamUserId <= 0` / `TryGetSteamId` checks in target selection, spawn conditions, relations, known player locations, chat recipients, the shield manager, NPC thrusters and ammo refill were switched to these two helpers (other code, e.g. `GridCleanup`, still uses `OwnershipHelper.IsNPC`). Re-check the effects below with `/MES.Info.GetActiveNpcs` on that build.
+- **[HARD] Fixed in 2.75.00 (developed as 2.74.06 dev, commits `2361acf`, `13bcb1d`, `cb6f3b0`, 2026-10-04 to 10-09; patch note "Offline players being considered NPCs")**: `FactionHelper.IsIdentityNPC`/`IsIdentityPlayer` were rewritten to classify by online `IMyPlayer` + Steam id: a Steam id with no online player is an **offline player**, a bot with a Steam id is a vanilla bot (NPC), a non-bot with no Steam id is an AiEnabled bot (NPC), and an identity with neither is an NPC only if it was in the session's `NonPlayerIdentities` list. The ad-hoc `IsBot` / `SteamUserId <= 0` / `TryGetSteamId` checks in target selection, spawn conditions, relations, known player locations, chat recipients, the shield manager, NPC thrusters and ammo refill were switched to these two helpers (other code, e.g. `GridCleanup`, still uses `OwnershipHelper.IsNPC`). Re-check the effects below with `/MES.Info.GetActiveNpcs` on that build.
+  - **[HARD] Startup order, 2.74.06 dev through 2.75.01 (fixed in MES master `814e6fb`, PR #406, after 2.75.01)**: `FactionHelper.Setup()` ran after `EntityWatcher` had scanned the grids already in the world, so every grid loaded from a save was checked against an empty NPC list. **Fails as**: after a world reload or server restart, existing NPC ships with thrust restrictions (`[RestrictNpcAtmoThrust:true]` etc.) have every thruster switched off (`NpcThrusterLogic` treats the owner as a player); newly spawned ships are fine. Fix: an MES build with `814e6fb`; on older builds the affected ships stay dead until they are despawned and respawned.
   - **[SOFT] Residual gap (read from `FactionHelper.Setup`, not observed)**: the NPC list is read **once** from the session checkpoint at load, so an NPC identity created later in the session, with no online player and no Steam id, matches neither helper.
 - **[HARD] Through 2.74.05 (since 2.73.07, MES #379)**: `IsIdentityPlayer` also requires an online player, so an **offline** player is not a player to MES. `GetGridOwnerships` classifies grids owned by offline players as `NpcMajority`/`NpcMinority`, and caches the result until the grid's ownership changes (`GridEntity.OwnershipChange`); logging in does not recheck it.
   - At world load no one is connected (Keen's `LoadPlayerInternal` creates no `MyPlayer` for disconnected players), so `Tasks/NewGrid.cs` gives every loaded player grid blank `NpcData` (`SpawnType OtherNPC`, `SpawnedByMES` false), adds it to `NpcManager.ActiveNpcs`, and saves that `NpcData` into the grid's storage (`ProcessTertiaryAttributes` → `Update()`). The storage entry stays after the grid is later reclassified.
@@ -354,6 +349,16 @@ When troubleshooting encounter loading or execution failures, search `SpaceEngin
   - Cleanup skips them only while the OtherNPC config keeps `OnlyCleanNpcsFromMes` at its default `true`.
   - `[CheckIfDamagerIsPlayer:]`, `[CheckIfTargetIsPlayerOwned:]` and `[CheckIfTargetIsNpcOwned:]` misreport offline owners.
   - Check with `/MES.Info.GetActiveNpcs` (copies to clipboard): player grids listed under `Npc Majority`.
+
+### 16. `System.Xml.XmlException: Root element is missing` (world or server will not load)
+- **Cause**: an `.sbc` anywhere under the mod's `Data/` folder is **empty (0 bytes) or whitespace only**. Typical sources: an editor or agent tool that truncated the file, a failed save, or a placeholder created and never filled (seen in GVK: a 0-byte `GVK-Test-TargetFar-SpawnCondition.sbc`).
+- **[HARD] What Keen does** (SE 1.210.014, `MyDefinitionManager.GetDefinitionBuilders`): every mod `.sbc` is opened with `CheckPrefabs`, whose `XmlReader.Read()` throws on an empty file. The catch writes `MOD SKIPPED, Cannot load definition file` with the exception to the definition errors, queues the exception, and after all files are read rethrows the queue as an `AggregateException`. `LoadData` does not catch it, so the whole world load aborts (dedicated server: startup fails), not just that mod.
+- **Find it**: the log line names the mod but not always the file. Search the mod for empty files:
+  ```powershell
+  Get-ChildItem -Path "Data" -Filter *.sbc -Recurse | Where-Object { $_.Length -eq 0 -or -not (Get-Content $_.FullName -Raw).Trim() }
+  ```
+  `scripts/audit_sbc.ps1` reports empty and whitespace-only files (prefab folders included).
+- **Fix**: delete the file, or restore it from git (`git checkout -- <file>`). Never leave a placeholder `.sbc`; a file that should define nothing still needs `<?xml version="1.0"?><Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"></Definitions>`.
 
 ---
 
@@ -379,7 +384,7 @@ Observed on live servers, not yet checked against the MES code. Re-test after ME
   - Don't raze blocks that can sit on subgrids.
   - Don't `RazeBlocks` the RivalAI Remote Control: `UpdateShape()` can crash if the block has split from its parent grid.
   - Don't run `GenerateExplosion` and a raze on the same block (for example the RivalAI Remote) at the same time.
-- **Static spawn groups:** some ignore their `[SpawnConditionsProfiles:]`; put those condition tags in the spawn group itself.
+- **Static spawn groups:** some seemed to ignore their `[SpawnConditionsProfiles:]`. Moving the tags into the spawn group's Description only works when the Description also sets the spawn type (`[StaticEncounter:true]`), because it then becomes its own, separate conditions profile (`spawning_and_conditions.md` §2, inline profiles). Before MES 2.75.00, `ResetThisStaticEncounters` also aborted when a non-static conditions profile was listed first (§2D). Check `ConditionIndex` in `/MES.IGGD` to see which profile a spawn used.
 - **Static encounter reset:** `[ResetThisStaticEncounter:true]` with `[ForceDespawn:true]` removes a static encounter and lets it respawn (not on the wiki).
 - **Particles:** can be played from actions much like sounds (not on the wiki).
 - **Climbing too steeply:** an `IdealPlanetAltitude` far above `MinimumPlanetAltitude` makes aircraft climb sharply and spoils their angle of attack.

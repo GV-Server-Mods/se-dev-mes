@@ -44,6 +44,7 @@ Detail lives in `references/`; open the file for the topic at hand. Keep this fi
 | [economy_and_stores.md](references/economy_and_stores.md) | Store grid sales (MES store items + `[MES Store]`), purchase spawn placement, icons, automated store refresh. |
 | [third_party_integrations.md](references/third_party_integrations.md) | WeaponCore (800m clamp, range desync, lead prediction, NPC handicaps, flares, weapon setup matrix), Defense Shields, AiEnabled, Water Mod. |
 | [diagnostics_and_troubleshooting.md](references/diagnostics_and_troubleshooting.md) | In-game admin commands, log error signatures, sim-speed optimization, anti-clang mitigations. |
+| [testing_and_debugging.md](references/testing_and_debugging.md) | Writing in-game test procedures: spawning test NPCs by spawn type, visual checks, debug messages, log triage, instrumenting local MES. |
 | [sbc_xml_editing_guide.md](references/sbc_xml_editing_guide.md) | IDE setup (`*.sbc -> xml`), `<Description>` protection, encoding rules, safe formatting. |
 
 ### C. Production-Tested Examples
@@ -72,6 +73,7 @@ Annotated `.sbc` implementations based on real workshop mods:
 > 2. **One `<Id>` per `<Prefab>` block** — duplicates register the prefab under the wrong Subtype.
 > 3. **Never put XML comments inside `<Description>`** — `ReadElementString()` throws `XmlException` and aborts loading the entire mod. Use `[//Comment]` instead.
 > 4. **UTF-8 encoding only** — UTF-16 or legacy-codepage saves fail the deserializer.
+> 5. **No empty `.sbc` files** — a 0-byte or whitespace-only file throws `Root element is missing` and the whole world fails to load.
 
 Full XML examples, formatting rules, and snippet tooling (`Format-MesSbc.ps1`, `Add-MesProfileSnippet.ps1`): [`sbc_xml_editing_guide.md`](references/sbc_xml_editing_guide.md).
 
@@ -113,7 +115,8 @@ Full token table, rules, and Tag broadcast system: [`profiles_and_tags.md`](refe
 - **[HARD] Weapon Randomizer Public Definition**: non-public weapon definitions skipped unless `<Public>true</Public>`. → [`manipulation_and_dereliction.md`](references/manipulation_and_dereliction.md) §2
 - **[HARD] Faction Resolution Drop**: non-existent or misspelled faction tag silently rejects spawn with 0% rate (`Could Not Get Valid NPC Faction`) → [`spawning_and_conditions.md`](references/spawning_and_conditions.md) §6
 - **[HARD] Waypoints/Commands/Timers**: `RelativeRandom` follows the grid (use `EntityRandom`); random waypoints ignore water; replies beat `EnableTriggers`; `CommandFromParent` fixed in MES `0900b20`; cooldowns re-roll and persist. → [`behaviors_and_autopilot.md`](references/behaviors_and_autopilot.md) §5, §7, §8
-- **[HARD] `MaxVelocityAngleForSpeedControl` ≤ 90**: above 90 the brake can fling a grid away from its waypoint (MES #392; revise if fixed). → [`aircraft_behaviors_and_tuning.md`](references/aircraft_behaviors_and_tuning.md) §1
+- **[HARD] `MaxVelocityAngleForSpeedControl`**: default 5 overshoots moving waypoints; use 90. Above 90 is safe only on MES 2.75.00+ (before, the brake could fling a grid away from its waypoint). → [`aircraft_behaviors_and_tuning.md`](references/aircraft_behaviors_and_tuning.md) §1
+- **[HARD] Target triggers (master after 2.75.01)**: `TargetFar` + `[AllowTargetFarWithoutTarget:true]` fires once the target is gone, and every `LostTarget`/`AcquiredTarget` trigger sees the edge; older builds: first trigger only, use a `NoTarget` timer. → [`aircraft_behaviors_and_tuning.md`](references/aircraft_behaviors_and_tuning.md) §2
 - **[HARD] Escort slots**: one `[EscortOffsets:]` entry = one escort per behavior init, never freed while it lives; a refused request gets no reply; Escort Retreat is one-way. → [`behaviors_and_autopilot.md`](references/behaviors_and_autopilot.md) §3D
 - **[HARD] WeaponCore fixed guns ignore MES on "Auto (AI Controlled)"**: save them on **Mouse Control** in the prefab (`scripts/wc_shootmode.py`); **[SOFT]** relax `[WeaponMaxAngleFromTarget]` to 8°–12°. → [`third_party_integrations.md`](references/third_party_integrations.md) §1C
 - **[HARD] WC2 flares invisible to MES**: `[UseAntiSmartWeapons]` only sees WC1 `AntiSmart`. Use a self-tracking fixed flare with `LockedSmartOnly` off (status: GVK-Settings #695/#696). → [`third_party_integrations.md`](references/third_party_integrations.md) §1F
@@ -141,11 +144,13 @@ Run from the skill root: Python as `uv run scripts/<name>.py` (`pyproject.toml` 
 | `wc_shootmode.py` | WeaponCore shoot mode: `list`/`classify`/`audit` prefabs, set Mouse Control |
 | `Format-MesSbc.ps1` | XML formatting that protects `<Description>` |
 | `Add-MesProfileSnippet.ps1` | Safe `EntityComponent` injection (`-TargetFile`, `-SnippetFile`) |
-| `audit_sbc.ps1` | Deserializer hazards (dup SubtypeIds, illegal comments, encoding) |
+| `audit_sbc.ps1` | Deserializer hazards (dup SubtypeIds, illegal comments, encoding, empty files) |
 | `audit_mes_tags.ps1` | Semantic linter (master gates, zero-stripping, faction validation) |
 | `audit_mes_references.ps1` | Cross-file profile references (`-WarnOrphans -SkipPrefabs`) |
 | `audit_prefabs.ps1` | Prefab SubtypeId vs filename; stale `.sbcB5` purge (`-CleanStaleB5`) |
 | `New-MesProfile.ps1` | Scaffolding (`-Pattern -ModPrefix -Name -Faction`): `DefendedWreck`, `ConvoyLeaderEscort`, `DynamicZoneLadder`, `StoreGrid`, `DynamicStateNpc`, `PlanetaryInstallation`, `CombatDrone`, `ReinforcementNetwork`, `BossEncounter` |
 
 ### B. In-Game Diagnostics & Agent Troubleshooting Protocol
-When an encounter fails to spawn, triggers don't fire, or AI malfunctions, have the user enable logging (`/MES.SpawnDebug.SpawnGroup.true` + `/MES.SpawnDebug.Spawning.true`; `/MES.BehaviorDebug.Trigger.true` + `.Condition.true` + `.Action.true`), copy each buffer with its type (`/MES.IGLSD.SpawnGroup`; `/MES.IGLBD.Trigger`, `.Condition`, `.Action`; the bare command fails), and for a grid's AI state `/MES.Info.GetGridBehavior` (`/MES.IGGB`). For intermittent issues append `.GameLog.true` and read `%AppData%\SpaceEngineers\SpaceEngineers*.log` directly. Full command list: [`diagnostics_and_troubleshooting.md`](references/diagnostics_and_troubleshooting.md) §2-3.
+**Write test procedures per [`testing_and_debugging.md`](references/testing_and_debugging.md)**: spawn the NPC with `/MES.Spawn.<Type>.<SpawnGroup>` (its conditions need that spawn type; never paste a blueprint), visual checks first (`/MES.Debug.DrawPaths`, `/MES.IGGB`, `/MES.Debug.ShowAllZones`), then `[DebugMessage:]`, then logs, and only last debug lines in the local MES copy. Only steps and checks a player can actually do and see.
+
+When visual checks and debug messages don't explain it, have the user enable logging (`/MES.SpawnDebug.SpawnGroup.true` + `/MES.SpawnDebug.Spawning.true`; `/MES.BehaviorDebug.Trigger.true` + `.Condition.true` + `.Action.true`), copy each buffer with its type (`/MES.IGLSD.SpawnGroup`; `/MES.IGLBD.Trigger`, `.Condition`, `.Action`; the bare command fails), and for a grid's AI state `/MES.Info.GetGridBehavior` (`/MES.IGGB`). For intermittent issues append `.GameLog.true` and read `%AppData%\SpaceEngineers\SpaceEngineers*.log` directly. Full command list: [`diagnostics_and_troubleshooting.md`](references/diagnostics_and_troubleshooting.md) §2-3.

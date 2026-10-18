@@ -8,6 +8,7 @@
     3. Duplicate <Id> elements inside a <Prefab> definition.
     4. Empty or whitespace-only SubtypeId elements.
     5. Malformed XML syntax or missing closing tags.
+    6. Empty or whitespace-only files, including prefabs (Keen throws "Root element is missing" and the world fails to load).
 .PARAMETER Path
     Path to search for .sbc files. Defaults to current directory.
 #>
@@ -15,13 +16,33 @@ param(
     [string]$Path = "."
 )
 
-$files = Get-ChildItem -Path $Path -Filter *.sbc -Recurse | Where-Object { 
-    $_.FullName -notmatch '\\(bin|obj|Prefabs|StorePrefabs)(\\|$)' 
+$allFiles = Get-ChildItem -Path $Path -Filter *.sbc -Recurse | Where-Object {
+    $_.FullName -notmatch '\\(bin|obj)(\\|$)'
+}
+$files = $allFiles | Where-Object {
+    $_.FullName -notmatch '\\(Prefabs|StorePrefabs)(\\|$)'
 }
 
 $errorsFound = 0
 
+# Check 6: Empty files. Keen reads every .sbc under Data/ (prefabs too), and an empty one throws
+# XmlException "Root element is missing" in MyDefinitionManager.CheckPrefabs. Prefabs are only
+# size-checked here: reading them whole is slow and they are exported by the game, not hand-edited.
+$emptyFiles = @{}
+foreach ($file in $allFiles) {
+    $isEmpty = $file.Length -eq 0
+    if (-not $isEmpty -and $file.Length -lt 4096) {
+        $isEmpty = [string]::IsNullOrWhiteSpace([System.IO.File]::ReadAllText($file.FullName).Trim([char]0xFEFF))
+    }
+    if ($isEmpty) {
+        Write-Host "[ERROR] $($file.FullName) - Empty or whitespace-only .sbc! Keen throws 'Root element is missing' and the world fails to load. Delete the file or restore its content." -ForegroundColor Red
+        $errorsFound++
+        $emptyFiles[$file.FullName] = $true
+    }
+}
+
 foreach ($file in $files) {
+    if ($emptyFiles.ContainsKey($file.FullName)) { continue }
     $bytes = [System.IO.File]::ReadAllBytes($file.FullName)
 
     # Check 0: Encoding & BOM integrity (Keen deserializer requires UTF-8)

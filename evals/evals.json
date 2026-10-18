@@ -52,7 +52,7 @@
       "assertions": [
         "The command profile uses [MatchReceiverChild:true]",
         "The fighter trigger is [Type:CommandReceived] with a [CommandReceiveCode:] matching the command's [CommandCode:]",
-        "Mentions that MatchReceiverChild needs an MES build that includes PR #386 / commit 531802f, or that CommandFromParent only matched by owner before 0900b20",
+        "Mentions that MatchReceiverChild needs MES 2.75.00 or later (PR #386 / commit 531802f), or that CommandFromParent only matched by owner before 0900b20",
         "Does not use filter tags that do not exist in MES (e.g. OnlySendToChildren, OnlyFromParent)"
       ]
     },
@@ -163,12 +163,12 @@
       "id": 13,
       "name": "escort-overshoots-slot",
       "prompt": "My GVK escort fighters keep overshooting their escort slot at full throttle, turning around and overshooting again forever. Escort speed matching doesn't seem to do anything. Autopilot profile is mostly defaults. What should I change?",
-      "expected_output": "MaxVelocityAngleForSpeedControl default 5 is too low; use 90, never above 90.",
+      "expected_output": "MaxVelocityAngleForSpeedControl default 5 is too low; use 90. Above 90 only on MES 2.75.00+.",
       "files": [],
       "assertions": [
         "Identifies [MaxVelocityAngleForSpeedControl:] (default 5) as the cause of full-thrust overshoot on moving waypoints",
         "Recommends 90 for escorts and aircraft",
-        "Warns against values above 90 because the brake can then push the grid away from its waypoint"
+        "Says values above 90 are only safe on MES 2.75.00 or later (older builds brake on total speed and can push the grid away from its waypoint)"
       ]
     },
     {
@@ -182,6 +182,33 @@
         "Tells the user to copy the log with /MES.Info.GetLogging.BehaviorDebug.<Type> or /MES.IGLBD.<Type> (e.g. .Trigger)",
         "Mentions /MES.Info.GetGridBehavior or /MES.IGGB to see the grid's AI state",
         "Checks common silent causes such as [UseTrigger:true] missing or the trigger not listed in the behavior's [Triggers:]"
+      ]
+    },
+    {
+      "id": 15,
+      "name": "write-test-procedure-for-npc",
+      "prompt": "I made a GVK patrol rover (spawngroup GVK-Test-Rover) that should switch to Fighter when a player gets within 1500 m and go back to patrol when they leave. It normally only spawns from a RivalAI Spawn profile on a base. Give me a step by step in-game test I can run in singleplayer to check it works.",
+      "expected_output": "A test procedure that spawns the rover with an MES admin spawn command, checks visually first, then debug messages, then logs.",
+      "files": [],
+      "assertions": [
+        "Spawns the rover with /MES.Spawn.PlanetaryCargoShip.GVK-Test-Rover (or /MES.SPCS) or another /MES.Spawn command, not by pasting a blueprint",
+        "Says the spawn group needs a conditions profile with the matching spawn type (e.g. [AtmosphericCargoShip:true], optionally with [AdminSpawnOnly:true])",
+        "Uses visual checks such as /MES.IGGB or /MES.Debug.DrawPaths before turning on logs",
+        "Suggests a [DebugMessage:] action on the subclass-switch triggers",
+        "Does not ask the user to paste anything into a Remote Control or other block, or to look for HUD elements MES does not show"
+      ]
+    },
+    {
+      "id": 16,
+      "name": "root-element-missing",
+      "prompt": "Server won't load the world anymore after I added some test profiles to the GVK derelicts mod. Log says System.Xml.XmlException: Root element is missing. What broke?",
+      "expected_output": "An empty or whitespace-only .sbc in the mod; find and delete or restore it.",
+      "files": [],
+      "assertions": [
+        "Identifies an empty (0-byte) or whitespace-only .sbc file as the cause",
+        "Says the exception stops the whole world from loading, not just one profile",
+        "Gives a way to find empty .sbc files (audit_sbc.ps1 or a file-size search)",
+        "Fix is to delete the file or restore its content"
       ]
     }
   ]

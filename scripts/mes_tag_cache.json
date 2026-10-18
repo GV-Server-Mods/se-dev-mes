@@ -56,13 +56,13 @@
     ]
   },
   "metadata": {
-    "generated_at": "2026-10-16T02:31:56.545038+00:00",
+    "generated_at": "2026-10-17T23:59:19.007954+00:00",
     "mes_path": "C:\\Users\\blayl\\AppData\\Roaming\\SpaceEngineers\\Mods\\Modular-Encounters-Systems\\Data\\Scripts\\ModularEncountersSystems",
-    "source_hash": "b0a74ede5814ac48",
+    "source_hash": "318079be3276c052",
     "git_commit": {
-      "sha": "001d5dbd3aba2747aa9cb1d5924448b89b7b6db9",
-      "date": "2026-10-15",
-      "subject": "Merge branch 'master' of https://github.com/MeridiusIX/Modular-Encounters-Systems"
+      "sha": "bc7196536e1565bb588859997391c742091ea37f",
+      "date": "2026-10-17",
+      "subject": "Merge pull request #410 from GV-Server-Mods/fix/allow-target-far-without-target"
     },
     "total_tags": 1861,
     "total_profiles": 41
@@ -11424,7 +11424,7 @@
       "tag": "RemoteControlCode",
       "type": "List<string> (comma-separated)",
       "file": "CoreBehavior.cs",
-      "line": 1188,
+      "line": 1198,
       "parser": "TagStringListCheck"
     },
     {

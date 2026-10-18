@@ -97,7 +97,7 @@ Every profile must be defined inside an `<EntityComponent xsi:type="MyObjectBuil
   - **Container Loot**: `[ApplyContainerTypeToInventoryBlock:true]` + `[ContainerTypeBlockNames:...]` + `[ContainerTypeSubtypeIds:...]`.
   - **SafeZone Generation**: `[CreateSafeZone:true]`, `[SafeZoneProfile:...]`, `[LinkSafeZoneToRemoteControl:true]`, `[SafeZonePositionGridCenter:true]`.
   - **Despawn/Retreat**: `[Retreat:true]`, `[ForceDespawn:true]`. Triggers that react to removal: `Type:Despawn`, `Type:DespawnMES` (needs `[DespawnTypeFromSpawner:]`; `behaviors_and_autopilot.md` §9).
-  - **HUD GPS**: `[AddGPSToPlayers:true]` + `[GPSNames:]`/`[GPSDescriptions:]`/`[GPSColors:]`/`[GPSColorVariables:]` (MES 2.74.06 dev; colour channel order and details in `events_and_zones.md` §2.A).
+  - **HUD GPS**: `[AddGPSToPlayers:true]` + `[GPSNames:]`/`[GPSDescriptions:]`/`[GPSColors:]`/`[GPSColorVariables:]` (MES 2.75.00; colour channel order and details in `events_and_zones.md` §2.A).
   - **Diagnostic Debugging**: `[DebugMessage:<Text>]` (Direct chat test message with token evaluation; do not use in production).
 
 ### D. Condition Profiles (RivalAI Grid-Bound)
