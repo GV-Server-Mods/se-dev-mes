@@ -163,12 +163,12 @@
       "id": 13,
       "name": "escort-overshoots-slot",
       "prompt": "My GVK escort fighters keep overshooting their escort slot at full throttle, turning around and overshooting again forever. Escort speed matching doesn't seem to do anything. Autopilot profile is mostly defaults. What should I change?",
-      "expected_output": "MaxVelocityAngleForSpeedControl default 5 is too low; use 90. Above 90 only on MES 2.75.00+.",
+      "expected_output": "MaxVelocityAngleForSpeedControl default 5 is too low; use 180 on MES 2.75.00+, at most 90 on older builds.",
       "files": [],
       "assertions": [
         "Identifies [MaxVelocityAngleForSpeedControl:] (default 5) as the cause of full-thrust overshoot on moving waypoints",
-        "Recommends 90 for escorts and aircraft",
-        "Says values above 90 are only safe on MES 2.75.00 or later (older builds brake on total speed and can push the grid away from its waypoint)"
+        "Recommends 180 on MES 2.75.00 or later",
+        "Says older builds must stay at 90 or less, because their brake uses total speed and can push the grid away from its waypoint"
       ]
     },
     {

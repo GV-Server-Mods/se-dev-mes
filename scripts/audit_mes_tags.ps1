@@ -36,6 +36,7 @@
     16. [Type:Damage] triggers without [DamageTypes:] (the list starts empty, so the trigger
         never fires; TriggerSystem.cs checks DamageTypes.Contains(type) || Contains("Any")).
     17. Comma lists in [Triggers:] / [TriggerGroups:] (TagStringCheck reads "A,B" as one name).
+    18. [RivalAI Chat] [MinTime:] above [MaxTime:] (default 1): MES silently lowers MinTime to MaxTime.
     Line checks skip XML comments, so commented-out tags are not reported.
 .PARAMETER Path
     Path to search for .sbc files. Defaults to current directory.
@@ -261,6 +262,18 @@ foreach ($file in $files) {
         foreach ($tm in [System.Text.RegularExpressions.Regex]::Matches($block, '\[(Triggers|TriggerGroups)\s*:\s*([^\]]*,[^\]]*)\]')) {
             Write-Host "[ERROR] $($file.Name) - [$($tm.Groups[1].Value):$($tm.Groups[2].Value)] is read as ONE profile name. Use one [$($tm.Groups[1].Value):Name] tag per profile." -ForegroundColor Red
             $issuesFound++
+        }
+
+        # Check 18: chat timer window. ChatProfile.InitTags clamps MinTime down to MaxTime
+        # (default 1), so [MinTime:] alone gives a 1 s window with no error.
+        if ($block -match '\[(RivalAI|MES AI) Chat\]' -and $block -match '\[MinTime\s*:\s*(-?\d+)\s*\]') {
+            $minTime = [int]$matches[1]
+            $maxTime = 1
+            if ($block -match '\[MaxTime\s*:\s*(-?\d+)\s*\]') { $maxTime = [int]$matches[1] }
+            if ($minTime -gt $maxTime) {
+                Write-Host "[WARN] $($file.Name) - [RivalAI Chat] [MinTime:$minTime] is above MaxTime ($maxTime); MES lowers MinTime to $maxTime. Set [MaxTime:] too." -ForegroundColor Yellow
+                $issuesFound++
+            }
         }
 
         # Check 8: Autopilot Conflicts

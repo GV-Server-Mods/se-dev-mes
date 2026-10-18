@@ -4,6 +4,9 @@
     Enenra's GFA Pattern: Parent-Child Courier Logistics Network
     A static parent station summons a dynamic courier grid, transmits exchange coordinates,
     and the courier navigates to the station, drops speed/altitude, loads resources, and retreats.
+    The station must spawn the courier from a [RivalAI Spawn] profile in its own action: from MES 2.75.00
+    [CommandFromParent:true] only passes for that exact parent grid. A courier from a SpawnGroup or event
+    has no parent and never matches (before 2.75.00 any grid with the same owner counted as the parent).
   -->
   <EntityComponents>
     <!-- Courier Behavior -->
