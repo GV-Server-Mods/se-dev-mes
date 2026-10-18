@@ -85,6 +85,8 @@ switch ($Pattern) {
       </Id>
       <Description>
         [Modular Encounters SpawnGroup]
+        [UseRivalAi:true]
+        [RivalAiReplaceRemoteControl:true]
         [SpawnConditionsProfiles:${ModPrefix}-SpawnCondition-${Name}]
         [UseGridDereliction:true]
         [DerelictionProfiles:${ModPrefix}-Dereliction-${Name}]
@@ -278,6 +280,8 @@ switch ($Pattern) {
       </Id>
       <Description>
         [Modular Encounters SpawnGroup]
+        [UseRivalAi:true]
+        [RivalAiReplaceRemoteControl:true]
         [SpawnConditionsProfiles:${ModPrefix}-SpawnCondition-${Name}]
       </Description>
       <IsPirate>true</IsPirate>
@@ -623,6 +627,8 @@ switch ($Pattern) {
       </Id>
       <Description>
         [Modular Encounters SpawnGroup]
+        [UseRivalAi:true]
+        [RivalAiReplaceRemoteControl:true]
         [SpawnConditionsProfiles:${ModPrefix}-SpawnCondition-${Name}]
       </Description>
       <IsPirate>true</IsPirate>
@@ -815,6 +821,8 @@ switch ($Pattern) {
       </Id>
       <Description>
         [Modular Encounters SpawnGroup]
+        [UseRivalAi:true]
+        [RivalAiReplaceRemoteControl:true]
         [SpawnConditionsProfiles:${ModPrefix}-SpawnCondition-${Name}]
       </Description>
       <IsPirate>true</IsPirate>
@@ -989,6 +997,8 @@ switch ($Pattern) {
       </Id>
       <Description>
         [Modular Encounters SpawnGroup]
+        [UseRivalAi:true]
+        [RivalAiReplaceRemoteControl:true]
         [SpawnConditionsProfiles:${ModPrefix}-SpawnCondition-${Name}]
       </Description>
       <IsPirate>true</IsPirate>
@@ -1186,6 +1196,8 @@ switch ($Pattern) {
       </Id>
       <Description>
         [Modular Encounters SpawnGroup]
+        [UseRivalAi:true]
+        [RivalAiReplaceRemoteControl:true]
         [SpawnConditionsProfiles:${ModPrefix}-SpawnCondition-${Name}]
       </Description>
       <IsPirate>true</IsPirate>

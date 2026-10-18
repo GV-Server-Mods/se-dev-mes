@@ -22,7 +22,7 @@ To eliminate the guesswork and silent failures that plague Space Engineers moddi
 
 ## What `se-dev-mes` Gives You
 
-1. **1,861 C# Verified Tags (Not Guesswork)**:
+1. **1,862 C# Verified Tags (Not Guesswork)**:
    - Full tag database across all 41 MES & RivalAI profile schemas, parsed line-by-line from source code.
    - Every rule is classified as **`[HARD]`** (code-verified against Keen/MES binaries) or **`[SOFT]`** (field-tested operational heuristic) so you know exactly how much to trust it.
 2. **Safe XML Tooling (Eliminating `MOD_CRITICAL_ERROR`)**:
@@ -45,7 +45,7 @@ To eliminate the guesswork and silent failures that plague Space Engineers moddi
 |---|---|---|
 | **AI Router** | [`SKILL.md`](SKILL.md) | Progressive disclosure router, golden rules, and high-density mental models for AI assistants |
 | **Audit Runner** | [`run-mes-audit.ps1`](run-mes-audit.ps1) | Single pre-flight command to audit SBCs, tags, references, prefabs, or WeaponCore modes |
-| **Tag Engine** | [`scripts/mes_tag_cache.json`](scripts/mes_tag_cache.json)<br>[`scripts/query_mes_tags.py`](scripts/query_mes_tags.py)<br>[`scripts/check_mes_sync.py`](scripts/check_mes_sync.py) | 1,861 C# verified tags across 41 profile schemas, instant CLI tag inspector, and automated upstream staleness detector |
+| **Tag Engine** | [`scripts/mes_tag_cache.json`](scripts/mes_tag_cache.json)<br>[`scripts/query_mes_tags.py`](scripts/query_mes_tags.py)<br>[`scripts/check_mes_sync.py`](scripts/check_mes_sync.py) | 1,862 C# verified tags across 41 profile schemas, instant CLI tag inspector, and automated upstream staleness detector |
 | **Scaffolding & XML** | [`scripts/New-MesProfile.ps1`](scripts/New-MesProfile.ps1)<br>[`scripts/Format-MesSbc.ps1`](scripts/Format-MesSbc.ps1)<br>[`scripts/Add-MesProfileSnippet.ps1`](scripts/Add-MesProfileSnippet.ps1) | 9 boilerplate encounter patterns, safe `[//]` XML comment formatter, and snippet injector |
 | **Linter Suite** | [`scripts/audit_sbc.ps1`](scripts/audit_sbc.ps1)<br>[`scripts/audit_mes_tags.ps1`](scripts/audit_mes_tags.ps1)<br>[`scripts/audit_prefabs.ps1`](scripts/audit_prefabs.ps1)<br>[`scripts/wc_shootmode.py`](scripts/wc_shootmode.py) | Catches Keen deserializer traps, missing master gates, zero-stripping bugs, unchecked `WaypointNear` crashes, and stale `.sbcB5` binary caches |
 | **Domain Guides** | [`references/`](references/) *(11 guides)* | Code-verified documentation: spawning, aircraft 90° speed-control braking, store sales, dereliction, and admin diagnostics |
@@ -67,11 +67,12 @@ se-dev-mes/
 ├── evals/                                  # 1.11.0 Benchmark test suite
 │   ├── evals.json                          # 14 challenge scenarios & 55 quantitative assertions
 │   └── files/GVK-Raid-Profiles.sbc         # Intentionally broken SBC fixture for deserializer audits
-├── references/                             # 11 deep-dive reference guides (loaded on demand)
+├── references/                             # 13 deep-dive reference guides (loaded on demand)
+│   ├── tag_recipes.md                      # Audited tag groups per feature (start here for new profiles)
 │   ├── profiles_and_tags.md                # 41 profile schemas, registration phases, tag types
 │   ├── spawning_and_conditions.md          # Spawners, environment gates, threat scoring
 │   ├── behaviors_and_autopilot.md          # 11 behavior subclasses, Role vs. CombatType, DespawnMES
-│   ├── dialogue_and_chat.md                # Dialogue banks, shared chat profiles, chatter triggers
+│   ├── dialogue_and_chat.md                # Dialogue banks, shared chat profiles, chatter triggers, chat sounds
 │   ├── aircraft_behaviors_and_tuning.md    # Attack runs, fixed-gun gates, 90° speed-control braking
 │   ├── manipulation_and_dereliction.md     # Block replacement, weapon randomizer, <Public> rules
 │   ├── events_and_zones.md                 # MES Events vs Triggers, master gates, zero-stripping
@@ -87,14 +88,15 @@ se-dev-mes/
 │   ├── automated_economy_store.sbc         # Mike Dude GVK automated store inventory refresh loop
 │   └── merchant_safezone_station.sbc       # TOC safezone station ([CreateSafeZone:true]) + merchant
 └── scripts/                                # Automation, diagnostics, and scaffolding suite
-    ├── mes_tag_cache.json                  # Offline database of 1,861 tags across 41 profile schemas
+    ├── mes_tag_cache.json                  # Offline database of 1,862 tags across 41 profile schemas
     ├── query_mes_tags.py                   # Tag inspector CLI (search local MES source or cache)
     ├── check_mes_sync.py                   # Automated staleness & version drift detector
     ├── audit_sbc.ps1                       # SBC XML deserialization auditor
     ├── audit_mes_tags.ps1                  # Semantic tag linter (master gates, zero-stripping)
-    ├── audit_mes_references.ps1            # Cross-file reference validator
+    ├── audit_mes_references.ps1            # Cross-file reference validator, RivalAI remote setup
     ├── audit_prefabs.ps1                   # Prefab SubtypeId auditor & stale .sbcB5 binary cache cleaner
     ├── audit_unknown_tags.py               # Finds tags MES silently ignores and invalid values
+    ├── test_tag_recipes.py                 # Builds and audits every recipe in tag_recipes.md
     ├── wc_shootmode.py                     # Audits/sets WeaponCore shoot mode in prefabs
     ├── Format-MesSbc.ps1                   # Safe XML formatter protecting <Description> & comments
     ├── Add-MesProfileSnippet.ps1           # Safe profile snippet injector for SBC files

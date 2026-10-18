@@ -102,7 +102,7 @@ Every profile must be defined inside an `<EntityComponent xsi:type="MyObjectBuil
 
 ### D. Condition Profiles (RivalAI Grid-Bound)
 - **Header**: `[RivalAI Condition]` or `[MES AI Condition]`
-- **Required Gate**: `[UseConditions:true]`
+- **Gate**: none needed. `[UseConditions:]` defaults to `true` (`ConditionReferenceProfile` constructor); `[UseConditions:false]` switches the profile off.
 - **Key Tags**:
   - `[MatchAnyCondition:bool]`: If `false` (default), all conditions must match (AND). If `true`, any match passes (OR).
   - `[CheckGridSpeed:bool]`, `[MinGridSpeed:<float>]`, `[MaxGridSpeed:<float>]`.

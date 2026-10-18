@@ -1,6 +1,6 @@
 # Dialogue Banks, Chat Profiles & Chatter Triggers Reference
 
-How NPC chat actually runs: dialogue banks, the shared chat profile behind them, chance rolls, tokens, broadcast range, and the trigger patterns that drive "radio chatter". Everything here is generic: any number marked **[SOFT]** is an illustrative starting point to tune per server, not a rule.
+How NPC chat actually runs: dialogue banks, the shared chat profile behind them, chance rolls, tokens, broadcast range, the trigger patterns that drive "radio chatter", and chat sounds (section 7). Everything here is generic: any number marked **[SOFT]** is an illustrative starting point to tune per server, not a rule.
 
 **Classification**: **[HARD]** = read in the MES source (paths under `Data/Scripts/ModularEncountersSystems/`, MES `b8f86a2` / 2.74.06 dev, rechecked for the target-edge and recipient-filter items against `bc71965` (master after 2.75.01); line numbers drift between builds, so search by function name if a line is off). **[SOFT]** = inferred, a design recommendation, or not yet measured in play. Each item says what it "Fails as" so it can be used as a pitfall line.
 
@@ -94,3 +94,39 @@ Bank file: <mod>/Data/DialogueBanks/MyBank             (XML, not an .sbc profile
 - **[HARD] Before MES master `d6e5e43` (PR #405, after 2.75.01), the first `AcquiredTarget`, `LostTarget`, `SwitchedTarget` or `ChangedTarget` trigger to check its flag also cleared it**, so in one pass only the first such trigger in the behavior's list order saw the edge. **Fails as** (older builds): a chatter trigger listed before a behavior-switching trigger of the same type silently steals the edge from it. From `d6e5e43` every trigger of that type sees the edge in the same pass. On older builds give each grid one trigger per edge type, or make the other consumers state-based (`aircraft_behaviors_and_tuning.md` §2).
 - **[HARD] `[ConditionCheckResetsTimer:true]` resets the cooldown only when the trigger's conditions fail, not when its type check fails** (`TriggerProfile.ValidateTrigger`). **Technique**: to require a state to hold for N seconds in a row, use `[Type:Timer]` with a condition for the state, for example `[NoTarget:true]`, plus `[ConditionCheckResetsTimer:true]`.
 - **[SOFT] Pattern: "lost contact" only after a real loss** (not yet confirmed in play). A `LostTarget` trigger arms a disabled `Timer` trigger with `[EnableTriggers:]` and `[ResetCooldownTimeOfTriggers:]`; the Timer trigger uses the debounce above, plays the chatter and disables itself. Put the disable in its own action (section 3) so a failed chance roll can't leave the trigger armed. A cooldown on the `LostTarget` trigger is a per-server choice; it caps how often one grid can say the line. Before `d6e5e43` this `LostTarget` trigger takes the edge from any later `LostTarget` trigger on the grid (above), so switch the grid back to patrol with a `NoTarget` timer, not `LostTarget`.
+
+---
+
+## 7. Chat Sounds
+
+Rechecked against MES master `5899d09`.
+
+```text
+[ChatMessages:Contact. Moving to intercept.]
+[ChatAudio:ArcHudGPSNotification1]
+[BroadcastChatType:Chat]
+[ChatMessages:Taking fire!]
+[ChatAudio:ArcHudGPSNotification2]
+[BroadcastChatType:Chat]
+```
+
+- **[HARD] One `[BroadcastChatType:]` per message, or nothing is sent.** With fewer type lines than messages the type stays `None` and `ChatProfile.ProcessChat` drops the line (`Broadcast None` in the chat debug log), text and sound both. A bank's chat profile needs at least one. `audit_mes_tags.ps1` check 19 flags short lists.
+- **[HARD] One `[ChatAudio:]` line per `[ChatMessages:]` line, matched by position.** `ChatProfile.GetChatAndSoundFromLists` uses the sound only when there are at least as many `[ChatAudio:]` entries as messages. **Fails as**: one `[ChatAudio:]` for three messages plays no sound on any of them. `[BroadcastChatType:]`, `[ChatAvatar:]` and `[ChatVolumeMultiplier:]` pair the same way. Each line is one entry: `[ChatAudio:A,B]` is a single sound named `A,B`.
+- **[HARD] In a dialogue bank each `<Entry>` has its own `<AudioId>`** (`DialogueBank.cs` builds a one-message chat from the chosen entry). Empty or `None` means no sound.
+- **[HARD] The sound plays in 2D on each recipient's client**, so it is heard in vacuum and with realistic sound on (`EffectManager.ProcessPlayerSoundEffect`, `PlaySound(..., force2D: true, alwaysHearOnRealistic: true)`). Volume is the sound definition's `<Volume>` times `[ChatVolumeMultiplier:]`.
+- **[HARD] Chat sounds queue per player:** the next one waits until the current one stops. **Fails as**: a looping sound (`<Loopable>true</Loopable>`, such as `ArcSoundBlockAlert1`) never stops, so that player hears no other NPC chat sound until they change what they control or respawn. Use short one-shot sounds.
+- **[HARD] Name lookup** (`MySoundPair.Init`): the exact sound SubtypeId first, then `Arc` + name and `Real` + name. A name that matches nothing plays nothing and only writes `Could not find any sound for '<name>'` to the **client** log.
+
+### Common NPC chat sounds
+
+From the `[ChatAudio:]` values in 642 locally installed workshop mods (6 of them use chat audio):
+
+| SubtypeId | Source | Use |
+| :--- | :--- | :--- |
+| `ArcHudGPSNotification1` | Vanilla (GPS ping) | Most used; a short ping before any line |
+| `ArcHudGPSNotification2` | Vanilla (GPS ping) | Second most used; gives a second voice or faction a different ping |
+| `ArcHudGPSNotification3` | Vanilla (GPS ping) | Third variant |
+| `MES-HostileJumpIn` | Ships with MES | Hostile arrival sting, no extra mod needed |
+
+- A voiced line needs its own sound: an `.xwm` file plus a `MyObjectBuilder_AudioDefinition` with `<Category>HUD</Category>` in the mod's `Data/Audio*.sbc`.
+- **Pitfalls seen in workshop mods**: `GreetingSoundId-A`/`-B` is a placeholder from the MES wiki, not a real sound (silent in three mods). `ArcHudSensors` is not vanilla; it comes from another workshop mod, so it is silent without that mod.

@@ -8,7 +8,8 @@
     3. [RivalAI Action] zone custom bool/counter changes: missing gates, misaligned lists,
        comma lists on one-value-per-line tags, and [KnownPlayerAreaTimer:] <= 0 (no KPL created).
     4. [CutVoxels:true] on Spawn Conditions (does not exist in MES).
-    5. Missing activation flags ([UseTrigger:true], [UseSpawn:true], [UseChat:true], [UseEvent:true], [UseConditions:true]).
+    5. Missing activation flags ([UseTrigger:true], [UseSpawn:true], [UseChat:true], [UseEvent:true]).
+       [UseConditions:] defaults to true, so a [RivalAI Condition] needs no gate.
     6. Conflicting Autopilot flags (FlyLevelWithGravity + UseSurfaceHoverThrustMode).
     7. Boolean formatting errors (True, TRUE, 1 instead of true).
     8. RivalAI vs MES Event Action tag mismatches ([Spawner:] vs [SpawnData:]; [Chat:] is not a tag - both use [ChatData:]).
@@ -29,14 +30,16 @@
         defined in arbitrary external/workshop mods.
     15. [Type:DespawnMES] triggers that can never fire: no [DespawnTypeFromSpawner:] (an empty
         type only matches an empty despawn source, which only /MES.Debug.RemoveAllNpcs leaves),
-        or the dead values CleanUp / PathEnd (TriggerSystem.ProcessMESDespawnTriggers computes a
-        match for them and never reads it; only Any or an exact source string works).
+        or CleanUp / PathEnd, which never match up to MES 2.75.01 (ProcessMESDespawnTriggers
+        computed a match and never read it; fixed in master 16f6a16).
         Cross-file despawn checks (delayed commands, duplicate actions) are in
         audit_mes_references.ps1.
     16. [Type:Damage] triggers without [DamageTypes:] (the list starts empty, so the trigger
         never fires; TriggerSystem.cs checks DamageTypes.Contains(type) || Contains("Any")).
     17. Comma lists in [Triggers:] / [TriggerGroups:] (TagStringCheck reads "A,B" as one name).
     18. [RivalAI Chat] [MinTime:] above [MaxTime:] (default 1): MES silently lowers MinTime to MaxTime.
+    19. [RivalAI Chat] paired lists shorter than [ChatMessages:]: too few [BroadcastChatType:] drops
+        every line; too few [ChatAudio:]/[ChatAvatar:]/[ChatVolumeMultiplier:] ignores that list.
     Line checks skip XML comments, so commented-out tags are not reported.
 .PARAMETER Path
     Path to search for .sbc files. Defaults to current directory.
@@ -247,10 +250,7 @@ foreach ($file in $files) {
             Write-Host "[ERROR] $($file.Name) - [MES Event] is missing required [UseEvent:true] activation tag!" -ForegroundColor Red
             $issuesFound++
         }
-        if (($block -match '\[(RivalAI|MES AI) Condition\]') -and ($block -notmatch '\[UseConditions:true\]' -and $block -notmatch '\[UseConditions:false\]')) {
-            Write-Host "[ERROR] $($file.Name) - [RivalAI Condition] is missing required [UseConditions:true] activation tag!" -ForegroundColor Red
-            $issuesFound++
-        }
+        # [RivalAI Condition] needs no gate: ConditionReferenceProfile's constructor sets UseConditions = true.
 
         # Check 16: Damage trigger without DamageTypes never fires
         if ($block -match '\[(RivalAI|MES AI) Trigger\]' -and $block -match '\[Type\s*:\s*Damage\s*\]' -and $block -notmatch '\[DamageTypes\s*:') {
@@ -276,6 +276,31 @@ foreach ($file in $files) {
             }
         }
 
+        # Check 19: chat list pairing. ChatProfile.GetChatAndSoundFromLists reads each paired list
+        # only when it has at least as many entries as [ChatMessages:]; a short BroadcastChatType
+        # list leaves the type None and ProcessChat drops the line ("Broadcast None").
+        if ($block -match '\[(RivalAI|MES AI) Chat\]') {
+            $msgCount = [regex]::Matches($block, '\[ChatMessages\s*:').Count
+            if ($msgCount -gt 0) {
+                $typeCount = [regex]::Matches($block, '\[BroadcastChatType\s*:').Count
+                if ($typeCount -lt $msgCount) {
+                    Write-Host "[ERROR] $($file.Name) - [RivalAI Chat] has $msgCount [ChatMessages:] but $typeCount [BroadcastChatType:]; MES then sends none of the lines. Add one [BroadcastChatType:Chat] (or Notify/Both) per message." -ForegroundColor Red
+                    $issuesFound++
+                }
+                if ($block -match '\[ChatAudio\s*:\s*GreetingSoundId-') {
+                    Write-Host "[WARN] $($file.Name) - [RivalAI Chat] uses [ChatAudio:GreetingSoundId-...], a placeholder from the MES wiki, not a sound; the line plays silent. Use a real sound such as ArcHudGPSNotification1, or None." -ForegroundColor Yellow
+                    $issuesFound++
+                }
+                foreach ($paired in 'ChatAudio', 'ChatAvatar', 'ChatVolumeMultiplier') {
+                    $pc = [regex]::Matches($block, "\[$paired\s*:").Count
+                    if ($pc -gt 0 -and $pc -lt $msgCount) {
+                        Write-Host "[WARN] $($file.Name) - [RivalAI Chat] has $msgCount [ChatMessages:] but $pc [${paired}:]; MES ignores [${paired}:] for every line unless there is one per message." -ForegroundColor Yellow
+                        $issuesFound++
+                    }
+                }
+            }
+        }
+
         # Check 8: Autopilot Conflicts
         if ($block -match '\[(RivalAI|MES AI) Autopilot\]') {
             if ($block -match '\[FlyLevelWithGravity:true\]' -and $block -match '\[UseSurfaceHoverThrustMode:true\]') {
@@ -294,7 +319,7 @@ foreach ($file in $files) {
                 Write-Host "[WARN] $($file.Name) - [Type:DespawnMES] trigger has no [DespawnTypeFromSpawner:]. An empty type only matches an empty despawn source (set only by /MES.Debug.RemoveAllNpcs), so it never fires in normal play. Add [DespawnTypeFromSpawner:Any]." -ForegroundColor Yellow
                 $issuesFound++
             } elseif ($dtValue -ceq 'CleanUp' -or $dtValue -ceq 'PathEnd') {
-                Write-Host "[WARN] $($file.Name) - [DespawnTypeFromSpawner:$dtValue] never matches: MES computes a match for it and never reads the result. Use Any, or the exact source string (for example CleanUp-Distance, CleanUp-Timer, CleanUp-BlockCount, Despawn-Behavior)." -ForegroundColor Yellow
+                Write-Host "[WARN] $($file.Name) - [DespawnTypeFromSpawner:$dtValue] never matches up to MES 2.75.01 (fixed in master 16f6a16, PR #411). For every build use Any, or the exact source string (for example CleanUp-Distance, CleanUp-Timer, CleanUp-BlockCount, Despawn-Behavior)." -ForegroundColor Yellow
                 $issuesFound++
             } elseif ($dtValue -ieq 'Any' -and $dtValue -cne 'Any') {
                 Write-Host "[WARN] $($file.Name) - [DespawnTypeFromSpawner:$dtValue] is compared case-sensitively; only 'Any' matches every despawn." -ForegroundColor Yellow

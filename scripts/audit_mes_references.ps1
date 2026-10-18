@@ -50,6 +50,9 @@
        a bank does not define (INFO), [Type:DespawnMES] actions that broadcast delayed
        commands (the grid is gone before they are delivered) and a behavior that runs the
        same actions from both [Type:Despawn] and [Type:DespawnMES] (INFO).
+    3c. RivalAI setup (Pass 4c, WARN only): a RivalAI <Behaviour> without [UseRivalAi:true] +
+       [RivalAiReplaceRemoteControl:true] in one manipulation profile, a prefab with no (named)
+       Remote Control, and a behavior baked into a vanilla remote's CustomData.
     4. Cross-reference definitions and references to flag:
        - Missing / Dangling references (referenced but never defined)
        - Case mismatches (e.g. 'GVK-Action-Foo' vs 'GVK-Action-foo')
@@ -251,8 +254,11 @@ $zoneReferences = [System.Collections.Generic.List[PSObject]]::new()
 $profileHeaders = @{}
 # Owning SubtypeId -> full Description text, for the Pass 4 semantic checks.
 $profileBlocks = @{}
-# SpawnGroup SubtypeId -> @{ File; Block (its Description); Behaviours (<Behaviour> names) }.
+# SpawnGroup SubtypeId -> @{ File; Block (its Description); Behaviours (<Behaviour> names);
+# Prefabs (@{ Id; Behaviour } per <Prefab> entry) }.
 $spawnGroupInfo = @{}
+# Prefab SubtypeId -> its Remote Control blocks (@{ Subtype; Name; HasBehavior }), for Pass 4c.
+$prefabRemotes = @{}
 
 function Register-TagReference($names, $file, $refType, $pool, $tokenResolves) {
     if ($null -eq $names) { return }
@@ -347,6 +353,7 @@ foreach ($file in $sbcFiles) {
         # nested item/blueprint/component Ids are deliberately not registered (see
         # Test-IsPrefabFile).
         $gridIdMatches = [regex]::Matches($content, "(?s)<Id>\s*<TypeId>$gridDefIdPattern</TypeId>\s*<SubtypeId>([^<]+)</SubtypeId>|<Id\s[^>]*?Subtype=`"([^`"]+)`"[^>]*>")
+        $gridStarts = [System.Collections.Generic.List[object]]::new()
         foreach ($gm in $gridIdMatches) {
             if ($gm.Groups[1].Success) {
                 $subId = $gm.Groups[1].Value
@@ -354,6 +361,21 @@ foreach ($file in $sbcFiles) {
                 $subId = $gm.Groups[2].Value
             } else { continue }
             Register-Definition $subId $file (Get-LineNumberAtIndex $content $gm.Index) "PrefabDefinition"
+            $gridStarts.Add(@($subId.Trim(), $gm.Index))
+        }
+        # Each prefab's grids follow its Id, up to the next prefab's Id. The behavior header in
+        # a remote's CustomData (block storage) marks a prefab shipped with its behavior baked in.
+        for ($g = 0; $g -lt $gridStarts.Count; $g++) {
+            $segEnd = if ($g + 1 -lt $gridStarts.Count) { $gridStarts[$g + 1][1] } else { $content.Length }
+            $seg = $content.Substring($gridStarts[$g][1], $segEnd - $gridStarts[$g][1])
+            $prefabRemotes[$gridStarts[$g][0]] = @([regex]::Matches($seg, '(?s)<MyObjectBuilder_CubeBlock\s+xsi:type="MyObjectBuilder_RemoteControl"[^>]*>(.*?)</MyObjectBuilder_CubeBlock>') | ForEach-Object {
+                $rb = $_.Groups[1].Value
+                [PSCustomObject]@{
+                    Subtype = [regex]::Match($rb, '<SubtypeName>([^<]*)</SubtypeName>').Groups[1].Value.Trim()
+                    Name = [regex]::Match($rb, '<CustomName>([^<]*)</CustomName>').Groups[1].Value
+                    HasBehavior = $rb -match '\[(RivalAI|Rival AI|MES AI) Behaviou?r\]'
+                }
+            })
         }
     } elseif ($isContainerTypesFile) {
         # Only the ContainerType's own Id (TypeId=ContainerTypeDefinition) is a
@@ -416,6 +438,12 @@ foreach ($file in $sbcFiles) {
             File = $file
             Block = if ($sgDesc.Success) { $sgDesc.Groups[1].Value } else { "" }
             Behaviours = @([regex]::Matches($sgBody, '<Behaviour>([^<]+)</Behaviour>') | ForEach-Object { $_.Groups[1].Value.Trim() })
+            Prefabs = @([regex]::Matches($sgBody, '(?s)<Prefab\s[^>]*SubtypeId="([^"]+)"[^>]*>(.*?)</Prefab>') | ForEach-Object {
+                [PSCustomObject]@{
+                    Id = $_.Groups[1].Value.Trim()
+                    Behaviour = [regex]::Match($_.Groups[2].Value, '<Behaviour>([^<]*)</Behaviour>').Groups[1].Value.Trim()
+                }
+            })
         }
     }
 
@@ -952,6 +980,11 @@ if ($behaviorBanks.Count -gt 0) {
             $maxChats = [regex]::Match($cb, '\[MaxChats\s*:\s*(-?\d+)\s*\]')
             $minTime = [regex]::Match($cb, '\[MinTime\s*:\s*(-?\d+)\s*\]')
             $maxTime = [regex]::Match($cb, '\[MaxTime\s*:\s*(-?\d+)\s*\]')
+            # DialogueBank.cs gives the profile one message per cue but keeps its own type list.
+            if ($cb -notmatch '\[BroadcastChatType\s*:') {
+                Write-Host "[ERROR] Dialogue Bank Chat Profile: $chatId (bank '$($hit.Rel)') has no [BroadcastChatType:]; the type stays None and ChatProfile.ProcessChat drops every cue ('Broadcast None'). Add [BroadcastChatType:Chat]." -ForegroundColor Red
+                $errors++
+            }
             if ($maxChats.Success -and [int]$maxChats.Groups[1].Value -ge 0) {
                 Write-Host "[WARN] Shared Chat Profile: $chatId (bank '$($hit.Rel)') sets [MaxChats:$($maxChats.Groups[1].Value)]. The profile is one shared copy, so this is a server-wide lifetime cap on the voice: the first grids to speak use it up for every grid until restart. Leave MaxChats unset (-1)." -ForegroundColor Yellow
                 $warnings++
@@ -1047,6 +1080,70 @@ foreach ($bid in $behaviorIds) {
         Write-Host "[INFO] Duplicate Despawn Actions: behavior $bid runs $($both -join ', ') from both a [Type:Despawn] and a [Type:DespawnMES] trigger. A behavior's own despawn reaches both, so they run twice; one [Type:DespawnMES] + [DespawnTypeFromSpawner:Any] trigger covers both (fine if you want different timing)." -ForegroundColor DarkCyan
     }
 }
+
+# --- 4c. RivalAI setup: <Behaviour>, manipulation tags and the prefab's Remote Control -------
+# Each manipulation profile runs on its own (PrefabManipulation.cs). Only a profile with
+# [UseRivalAi:true] calls BehaviorBuilder.RivalAiInitialize, and only [RivalAiReplaceRemoteControl:true]
+# in that same profile picks the main (or first, or [ApplyBehaviorToNamedBlock:]) remote, swaps a
+# vanilla one to RivalAIRemoteControlLarge/Small and writes the behavior to it. Otherwise the
+# <Behaviour> name goes to Keen's drone AI (NpcData.cs SetDroneBehaviourFull). BlockLogicManager.cs
+# starts a behavior only on a RivalAI control module whose CustomData has the behavior header, so a
+# prefab may also ship with it baked in. Vanilla remotes with Keen behaviors are a legitimate setup:
+# every finding here is a WARN, never an error. Not covered: [MES Prefab Data] manipulation profiles
+# and manipulation conditions that skip a profile.
+$rivalAiModules = @(   # DefinitionHelper.RivalAiControlModules
+    'RivalAIRemoteControlSmall', 'RivalAIRemoteControlLarge', 'K_Imperial_Dropship_Guild_RC', 'K_TIE_Fighter_RC',
+    'K_NewRepublic_EWing_RC', 'K_Imperial_RC_Largegrid', 'K_TIE_Drone_Core', 'K_Imperial_SpeederBike_FakePilot',
+    'K_Imperial_ProbeDroid_Top_II', 'K_Imperial_DroidCarrier_DroidBrain', 'K_Imperial_DroidCarrier_DroidBrain_Aggressor',
+    'GFA_SG_TIEFighter_Viewport')
+# Shipped in MES Data/Profiles/Manipulation/MES-Manipulation-RivalAi.sbc.
+if (-not $profileBlocks.ContainsKey('MES-Manipulation-RivalAi')) {
+    $profileBlocks['MES-Manipulation-RivalAi'] = '[MES Manipulation] [UseRivalAi:true] [RivalAiReplaceRemoteControl:true]'
+}
+$rivalChecked = 0
+$rivalWithPrefab = 0
+foreach ($sgId in ($spawnGroupInfo.Keys | Sort-Object)) {
+    $sg = $spawnGroupInfo[$sgId]
+    $mBlocks = @(Get-ManipulationBlocks $sg.Block)
+    $useRival = @($mBlocks | Where-Object { $_ -match '\[UseRivalAi\s*:\s*true\s*\]' })
+    $applies = @($useRival | Where-Object { $_ -match '\[RivalAiReplaceRemoteControl\s*:\s*true\s*\]' })
+    # A block replacer runs before RivalAI and can create the remote, so a prefab without one is not flagged.
+    $replacer = @($mBlocks | Where-Object { $_ -match '\[UseBlockReplacer(Profile)?\s*:\s*true\s*\]' }).Count -gt 0
+    $namedBlock = @($applies | ForEach-Object { Parse-CsvTags $_ 'ApplyBehaviorToNamedBlock' }) | Select-Object -First 1
+    foreach ($p in $sg.Prefabs) {
+        # Assigned in two steps: an empty array returned from an if-expression would turn into $null.
+        $remotes = $null
+        if ($prefabRemotes.ContainsKey($p.Id)) { $remotes = @($prefabRemotes[$p.Id]) }
+        $baked = $null -ne $remotes -and @($remotes | Where-Object { $_.HasBehavior -and $rivalAiModules -contains $_.Subtype }).Count -gt 0
+        $isRivalBeh = $p.Behaviour.Length -gt 0 -and ($behaviorIds -contains $p.Behaviour -or ($mesCoreDefinitions.Contains($p.Behaviour) -and $p.Behaviour -match 'Behavior'))
+        if ($isRivalBeh) { $rivalChecked++; if ($null -ne $remotes) { $rivalWithPrefab++ } }
+        $unseen = if ($null -eq $remotes) { " The prefab is not in the scanned files, so a remote with the behavior baked in could not be checked." } else { "" }
+        if ($isRivalBeh -and $applies.Count -eq 0 -and -not $baked) {
+            $why = if ($useRival.Count -gt 0) { "a manipulation profile sets [UseRivalAi:true] without [RivalAiReplaceRemoteControl:true] in the same manipulation profile, so MES writes the behavior to no remote (not even a RivalAI control module)" } else { "no manipulation profile sets [UseRivalAi:true]" }
+            Write-Host "[WARN] RivalAI Behavior Not Applied: spawn group $sgId, prefab $($p.Id) names RivalAI behavior $($p.Behaviour), but $why. MES hands the name to Keen's drone AI instead and the behavior never runs. Add [UseRivalAi:true] + [RivalAiReplaceRemoteControl:true] to one profile (or [ManipulationProfiles:MES-Manipulation-RivalAi]); for vanilla AI, name a Keen drone behavior instead.$unseen" -ForegroundColor Yellow
+            $warnings++
+        }
+        if ($null -eq $remotes) { continue }
+        if ($applies.Count -gt 0 -and -not $replacer) {
+            $cands = if ($namedBlock) { @($remotes | Where-Object { $_.Name -eq $namedBlock }) } else { $remotes }
+            if ($cands.Count -eq 0) {
+                $what = if ($namedBlock) { "no Remote Control named '$namedBlock' ([ApplyBehaviorToNamedBlock:])" } else { "no Remote Control block" }
+                Write-Host "[WARN] No Remote Control For RivalAI: spawn group $sgId applies RivalAI to prefab $($p.Id), which has $what. The behavior has nowhere to go ('Following Behavior Could Not Be Applied') and the grid spawns without AI." -ForegroundColor Yellow
+                $warnings++
+            }
+        }
+        # [ConvertAllRemoteControlBlocks:true] does not help: it matches subtypes RemoteControlLarge/Small,
+        # but the vanilla remotes are LargeBlockRemoteControl/SmallBlockRemoteControl.
+        if ($applies.Count -eq 0) {
+            $vanillaBaked = @($remotes | Where-Object { $_.HasBehavior -and $rivalAiModules -notcontains $_.Subtype } | ForEach-Object { $_.Subtype } | Sort-Object -Unique)
+            if ($vanillaBaked.Count -gt 0) {
+                Write-Host "[WARN] Behavior On Vanilla Remote: prefab $($p.Id) (spawn group $sgId) has a RivalAI behavior in the CustomData of a '$($vanillaBaked -join "', '")' remote. MES only starts behaviors on RivalAI control modules (RivalAIRemoteControlLarge/Small), so it never runs. Swap the block in the prefab, or add [UseRivalAi:true] + [RivalAiReplaceRemoteControl:true]." -ForegroundColor Yellow
+                $warnings++
+            }
+        }
+    }
+}
+Write-Host "RivalAI Setup: $rivalChecked spawn group prefab entries name a RivalAI behavior ($rivalWithPrefab with the prefab in the scanned files)." -ForegroundColor Gray
 
 # Pass 3: Check for orphans (optional)
 if ($WarnOrphans) {

@@ -11,7 +11,7 @@
         <TypeId>SpawnGroupDefinition</TypeId>
         <SubtypeId>GVK-SpawnGroup-ConvoyLeader</SubtypeId>
       </Id>
-      <Description>[Modular Encounters SpawnGroup]</Description>
+      <Description>[Modular Encounters SpawnGroup] [UseRivalAi:true] [RivalAiReplaceRemoteControl:true]</Description>
       <IsPirate>true</IsPirate>
       <Frequency>1.0</Frequency>
       <Prefabs>
@@ -31,7 +31,7 @@
         <TypeId>SpawnGroupDefinition</TypeId>
         <SubtypeId>GVK-SpawnGroup-ConvoyEscort</SubtypeId>
       </Id>
-      <Description>[Modular Encounters SpawnGroup]</Description>
+      <Description>[Modular Encounters SpawnGroup] [UseRivalAi:true] [RivalAiReplaceRemoteControl:true]</Description>
       <IsPirate>true</IsPirate>
       <Frequency>1.0</Frequency>
       <Prefabs>

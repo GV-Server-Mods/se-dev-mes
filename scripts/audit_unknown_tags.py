@@ -143,11 +143,19 @@ def profiles_in(path):
 def md_profiles_in(path):
     """Profiles inside fenced code blocks of a Markdown reference: each <Description> body, or a bare
     block of tag lines that starts with a [Profile Type] header. Prose outside code blocks is skipped,
-    so a sentence warning that a tag does not exist is not reported."""
+    so a sentence warning that a tag does not exist is not reported. In a tag_recipes.md block,
+    each "== <SubtypeId>" line starts a separate profile."""
     text = open(path, encoding="utf-8").read()
     for fence in re.finditer(r"^```[^\n]*\n(.*?)^```", text, re.M | re.S):
         body = fence.group(1)
         line = text.count("\n", 0, fence.start()) + 1
+        if re.search(r"^== ", body, re.M):
+            for chunk in re.split(r"^== ", body, flags=re.M)[1:]:
+                sid, _, desc = chunk.partition("\n")
+                m = HEADER_RE.search(desc)
+                if m:
+                    yield "line %d %s" % (line, sid.strip()), normalize_header(m.group(1).strip()), desc
+            continue
         descs = re.findall(r"<Description>(.*?)</Description>", body, re.S) or [body]
         for desc in descs:
             m = HEADER_RE.search(desc)
