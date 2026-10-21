@@ -56,15 +56,15 @@
     ]
   },
   "metadata": {
-    "generated_at": "2026-10-18T20:59:00.831287+00:00",
+    "generated_at": "2026-10-21T02:43:18.719719+00:00",
     "mes_path": "C:\\Users\\blayl\\AppData\\Roaming\\SpaceEngineers\\Mods\\Modular-Encounters-Systems\\Data\\Scripts\\ModularEncountersSystems",
-    "source_hash": "a52af7fa728d78e8",
+    "source_hash": "43becb17adb34bae",
     "git_commit": {
-      "sha": "5899d09fc934d249b3ffcfaf567f91e33af8f265",
-      "date": "2026-10-18",
-      "subject": "Merge pull request #411 from GV-Server-Mods/fix/despawnmes-type-match"
+      "sha": "a184f730daa2e9dcd3fb085e360042266c2c17ca",
+      "date": "2026-10-20",
+      "subject": "Merge pull request #430 from GV-Server-Mods/fix/weaponcore2-flare-detection"
     },
-    "total_tags": 1862,
+    "total_tags": 1863,
     "total_profiles": 41
   },
   "tags": [
@@ -7185,7 +7185,7 @@
       "tag": "SpawnGroupEnabled",
       "type": "bool (true/false)",
       "file": "ImprovedSpawnGroup.cs",
-      "line": 135,
+      "line": 137,
       "parser": "TagBoolCheck"
     },
     {
@@ -7193,7 +7193,7 @@
       "tag": "PersistentConditions",
       "type": "TagSpawnConditionsProfileCheck",
       "file": "ImprovedSpawnGroup.cs",
-      "line": 142,
+      "line": 144,
       "parser": "TagSpawnConditionsProfileCheck"
     },
     {
@@ -7201,7 +7201,7 @@
       "tag": "UseFirstConditionsAsPersistent",
       "type": "bool (true/false)",
       "file": "ImprovedSpawnGroup.cs",
-      "line": 149,
+      "line": 151,
       "parser": "TagBoolCheck"
     },
     {
@@ -7209,7 +7209,7 @@
       "tag": "SpawnConditionsProfiles",
       "type": "TagSpawnConditionsProfileCheck",
       "file": "ImprovedSpawnGroup.cs",
-      "line": 156,
+      "line": 158,
       "parser": "TagSpawnConditionsProfileCheck"
     },
     {
@@ -7217,7 +7217,7 @@
       "tag": "SpawnConditionGroups",
       "type": "List<string> (comma-separated)",
       "file": "ImprovedSpawnGroup.cs",
-      "line": 163,
+      "line": 165,
       "parser": "TagStringListCheck"
     },
     {
@@ -7225,7 +7225,7 @@
       "tag": "FactionOverride",
       "type": "string",
       "file": "ImprovedSpawnGroup.cs",
-      "line": 170,
+      "line": 172,
       "parser": "TagStringCheck"
     },
     {
@@ -7233,7 +7233,7 @@
       "tag": "IgnoreCleanupRules",
       "type": "bool (true/false)",
       "file": "ImprovedSpawnGroup.cs",
-      "line": 180,
+      "line": 182,
       "parser": "TagBoolCheck"
     },
     {
@@ -7241,7 +7241,15 @@
       "tag": "ReplenishSystems",
       "type": "bool (true/false)",
       "file": "ImprovedSpawnGroup.cs",
-      "line": 187,
+      "line": 189,
+      "parser": "TagBoolCheck"
+    },
+    {
+      "profile": "Modular Encounters SpawnGroup",
+      "tag": "ReplenishTanks",
+      "type": "bool (true/false)",
+      "file": "ImprovedSpawnGroup.cs",
+      "line": 196,
       "parser": "TagBoolCheck"
     },
     {
@@ -7249,7 +7257,7 @@
       "tag": "ReplenishProfiles",
       "type": "TagReplenishProfileCheck",
       "file": "ImprovedSpawnGroup.cs",
-      "line": 194,
+      "line": 203,
       "parser": "TagReplenishProfileCheck"
     },
     {
@@ -7257,7 +7265,7 @@
       "tag": "IgnoreGlobalReplenishProfiles",
       "type": "bool (true/false)",
       "file": "ImprovedSpawnGroup.cs",
-      "line": 201,
+      "line": 210,
       "parser": "TagBoolCheck"
     },
     {
@@ -7265,7 +7273,7 @@
       "tag": "UseNonPhysicalAmmo",
       "type": "bool (true/false)",
       "file": "ImprovedSpawnGroup.cs",
-      "line": 208,
+      "line": 217,
       "parser": "TagBoolCheck"
     },
     {
@@ -7273,7 +7281,7 @@
       "tag": "RemoveContainerContents",
       "type": "bool (true/false)",
       "file": "ImprovedSpawnGroup.cs",
-      "line": 215,
+      "line": 224,
       "parser": "TagBoolCheck"
     },
     {
@@ -7281,7 +7289,7 @@
       "tag": "InitializeStoreBlocks",
       "type": "bool (true/false)",
       "file": "ImprovedSpawnGroup.cs",
-      "line": 222,
+      "line": 231,
       "parser": "TagBoolCheck"
     },
     {
@@ -7289,7 +7297,7 @@
       "tag": "ContainerTypesForStoreOrders",
       "type": "List<string> (comma-separated)",
       "file": "ImprovedSpawnGroup.cs",
-      "line": 229,
+      "line": 238,
       "parser": "TagStringListCheck"
     },
     {
@@ -7297,7 +7305,7 @@
       "tag": "UseAutoPilotInSpace",
       "type": "bool (true/false)",
       "file": "ImprovedSpawnGroup.cs",
-      "line": 236,
+      "line": 245,
       "parser": "TagBoolCheck"
     },
     {
@@ -7305,7 +7313,7 @@
       "tag": "ManipulationProfiles",
       "type": "TagManipulationProfileCheck",
       "file": "ImprovedSpawnGroup.cs",
-      "line": 243,
+      "line": 252,
       "parser": "TagManipulationProfileCheck"
     },
     {
@@ -7313,7 +7321,7 @@
       "tag": "ManipulationGroups",
       "type": "List<string> (comma-separated)",
       "file": "ImprovedSpawnGroup.cs",
-      "line": 250,
+      "line": 259,
       "parser": "TagStringListCheck"
     },
     {
@@ -7321,7 +7329,7 @@
       "tag": "WeaponRandomizationOverrideProfile",
       "type": "TagManipulationProfileCheck",
       "file": "ImprovedSpawnGroup.cs",
-      "line": 257,
+      "line": 266,
       "parser": "TagManipulationProfileCheck"
     },
     {
@@ -7329,7 +7337,7 @@
       "tag": "PauseAutopilotAtPlayerDistance",
       "type": "double",
       "file": "ImprovedSpawnGroup.cs",
-      "line": 264,
+      "line": 273,
       "parser": "TagDoubleCheck"
     },
     {
@@ -7337,7 +7345,7 @@
       "tag": "PreventOwnershipChange",
       "type": "bool (true/false)",
       "file": "ImprovedSpawnGroup.cs",
-      "line": 271,
+      "line": 280,
       "parser": "TagBoolCheck"
     },
     {
@@ -7345,7 +7353,7 @@
       "tag": "ApplyFactionColor",
       "type": "bool (true/false)",
       "file": "ImprovedSpawnGroup.cs",
-      "line": 278,
+      "line": 287,
       "parser": "TagBoolCheck"
     },
     {
@@ -7353,7 +7361,7 @@
       "tag": "SpawnGroupAliases",
       "type": "List<string> (comma-separated)",
       "file": "ImprovedSpawnGroup.cs",
-      "line": 285,
+      "line": 294,
       "parser": "TagStringListCheck"
     },
     {

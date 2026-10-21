@@ -2,7 +2,7 @@
 
 How to test an NPC mod built on MES, and how an agent writes a test procedure the mod author can follow in game. Command details are in `diagnostics_and_troubleshooting.md` §2; error signatures in its §4.
 
-**Verified against**: MES `bc71965` (master after 2.75.01), `Sync/ChatMessage.cs`, `Logging/LoggerTools.cs`, `Spawning/SpawnRequest.cs`, `Spawning/SpawnConditions.cs`. **[HARD]** = read in source. **[SOFT]** = field practice.
+**Verified against**: MES `bc71965` (2.75.02), `Sync/ChatMessage.cs`, `Logging/LoggerTools.cs`, `Spawning/SpawnRequest.cs`, `Spawning/SpawnConditions.cs`. **[HARD]** = read in source. **[SOFT]** = field practice.
 
 ---
 

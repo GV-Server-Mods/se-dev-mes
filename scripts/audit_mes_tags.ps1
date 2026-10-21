@@ -319,7 +319,7 @@ foreach ($file in $files) {
                 Write-Host "[WARN] $($file.Name) - [Type:DespawnMES] trigger has no [DespawnTypeFromSpawner:]. An empty type only matches an empty despawn source (set only by /MES.Debug.RemoveAllNpcs), so it never fires in normal play. Add [DespawnTypeFromSpawner:Any]." -ForegroundColor Yellow
                 $issuesFound++
             } elseif ($dtValue -ceq 'CleanUp' -or $dtValue -ceq 'PathEnd') {
-                Write-Host "[WARN] $($file.Name) - [DespawnTypeFromSpawner:$dtValue] never matches up to MES 2.75.01 (fixed in master 16f6a16, PR #411). For every build use Any, or the exact source string (for example CleanUp-Distance, CleanUp-Timer, CleanUp-BlockCount, Despawn-Behavior)." -ForegroundColor Yellow
+                Write-Host "[WARN] $($file.Name) - [DespawnTypeFromSpawner:$dtValue] never matches up to MES 2.75.01 (fixed in 2.75.02, PR #411). For every build use Any, or the exact source string (for example CleanUp-Distance, CleanUp-Timer, CleanUp-BlockCount, Despawn-Behavior)." -ForegroundColor Yellow
                 $issuesFound++
             } elseif ($dtValue -ieq 'Any' -and $dtValue -cne 'Any') {
                 Write-Host "[WARN] $($file.Name) - [DespawnTypeFromSpawner:$dtValue] is compared case-sensitively; only 'Any' matches every despawn." -ForegroundColor Yellow
