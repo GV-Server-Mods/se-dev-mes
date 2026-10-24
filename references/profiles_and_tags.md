@@ -110,6 +110,7 @@ Every profile must be defined inside an `<EntityComponent xsi:type="MyObjectBuil
   - `[CheckPlayerReputation:bool]`, `[MinPlayerReputation:<int>]`, `[MaxPlayerReputation:<int>]`.
   - `[CheckCustomCounters:bool]`, `[CustomCounters:<string>]`, `[CustomCountersTargets:<int>]`, `[CounterCompareTypes:<Enum>]`.
   - `[CommandCheckFromParent:bool]`, `[CommandFromParent:bool]`. Matches by parent Remote Control entity only since MES `0900b20` (2026-10-12); before, it matched any sender with the same owner. See `behaviors_and_autopilot.md` §5B/B2 (`[MatchReceiverParent/Child/Escort/Leader:]` command filters).
+  - `[MatchTerrainType:bool]` with `[TerrainTypeWhitelistNames:]` / `[TerrainTypeBlacklistNames:]` (voxel `MaterialTypeName`, e.g. `Rock`). **[HARD]** On master after 2.75.02 (`ed9f908`, PR #440) it checks the terrain under the grid's current position; with no terrain (space) the whitelist is ignored. Up to 2.75.02 it compared against the terrain sampled once at spawn time, around the spawn request position (usually the player), not under the grid.
 
 ### E. Autopilot Profiles
 - **Header**: `[RivalAI Autopilot]` or `[MES AI Autopilot]`
