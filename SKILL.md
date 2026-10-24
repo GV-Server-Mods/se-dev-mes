@@ -105,6 +105,7 @@ Gate tables: [`events_and_zones.md`](references/events_and_zones.md) §2; RivalA
 Each is **[HARD]** unless marked; detail behind the arrow.
 
 - **Weapons**: turret ranges clamp to 800 m on spawn (`[SetWeaponsToMaxRange:true]`); WeaponCore fixed guns on "Auto (AI Controlled)" ignore MES, so save them on **Mouse Control** (`wc_shootmode.py`); `[UseAntiSmartWeapons]` sees only WC1 `AntiSmart` flares. → [`third_party_integrations.md`](references/third_party_integrations.md) §1
+- **Relations**: MES rates NPC-vs-NPC from the target owner's own reputation (none stored: `StartingReputation`, else Enemy), and 500 is Neutral to MES, Friendly in vanilla; turrets use the faction-to-faction relation (unset = Enemies). Forced targets use `[OverrideTargetData:]` (default Enemy-only). → [`behaviors_and_autopilot.md`](references/behaviors_and_autopilot.md) target profiles, [`third_party_integrations.md`](references/third_party_integrations.md) §1H
 - **Stores** sell prefabs from the MES store-items file (quantity 1); `GridsForSale` is only for Keen stations. → [`economy_and_stores.md`](references/economy_and_stores.md)
 - **`[Type:WaypointNear]`/`WaypointFar` off a CargoShip stalls every NPC's AI**; use `BehaviorTriggerA` or `Position`. → [`diagnostics_and_troubleshooting.md`](references/diagnostics_and_troubleshooting.md) §4.4
 - **Zones** match `[PublicName:]`, never `[Name:]`; use `InsideActiveZone` (`InsideZone` is true for inactive zones). → [`events_and_zones.md`](references/events_and_zones.md) §4
@@ -138,7 +139,8 @@ The scripts live in the skill, never in the mod: run them from the skill root as
 | `audit_mes_references.ps1` | Cross-file profile references, RivalAI remote setup (WARN only; vanilla remotes stay legal) (`-WarnOrphans -SkipPrefabs`) |
 | `audit_prefabs.ps1` | Prefab SubtypeId vs file name, 12+ grids, stale `.sbcB5` (`-CleanStaleB5`) |
 | `test_tag_recipes.py` | Builds every recipe and runs the audits on it; run after editing `tag_recipes.md` |
-| `wc_shootmode.py` | WeaponCore shoot mode: `list`/`classify`/`audit`, set Mouse Control |
+| `wc_shootmode.py` | WeaponCore shoot mode: `list`/`classify`/`audit`, set Mouse Control; `neutrals` lists/sets the Neutrals override |
+| `save_relations.py` | Faction and identity reputations in a save's `Sandbox.sbc` (turret vs MES relations) |
 | `Format-MesSbc.ps1`, `Add-MesProfileSnippet.ps1` | Formatting and `EntityComponent` injection that protect `<Description>` |
 | `New-MesProfile.ps1` | Scaffolds (`-Pattern -ModPrefix -Name -Faction`): `DefendedWreck`, `ConvoyLeaderEscort`, `DynamicZoneLadder`, `StoreGrid`, `DynamicStateNpc`, `PlanetaryInstallation`, `CombatDrone`, `ReinforcementNetwork`, `BossEncounter` |
 

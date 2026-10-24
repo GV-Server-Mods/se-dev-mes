@@ -22,6 +22,7 @@ Every procedure the agent writes must follow these rules:
 - **Exact commands, in order**, with where to stand, what to do, what to expect, and what each result means.
 - **Spawn the NPC with MES, never from a blueprint or a pasted prefab.** A pasted grid does not go through the spawner, so it skips the spawn conditions, manipulation, faction ownership and the NPC data the behavior relies on; whatever it does says nothing about the real encounter.
 - **One change per test cycle.** MES reads its profiles when the world loads, so after editing an `.sbc`: save, quit to the main menu, and load the world again (dedicated server: restart). After changing a prefab, delete its `.sbcB5` (`diagnostics_and_troubleshooting.md` §4.7).
+- **Confirm the change is in the game before handing over a test.** A mod built from a project (MDK2, a deploy script) only reaches the game after a build; check the deployed copy in `%AppData%\SpaceEngineers\Mods\<mod>` for the new tag or profile, or a test runs on the old files. A local MES clone used as the mod is live without a build.
 - **Clean up between runs**: `/MES.Debug.RemoveAllNpcs` removes every grid that is mostly NPC-owned and passes MES's basic cleanup checks (Keen economy stations are kept). `/MES.Debug.DeleteGrid` removes the one grid under your crosshair (within 10 km).
 
 ---
@@ -100,6 +101,8 @@ Add a debug message to the profiles under test, so the chat shows each step as i
 2. Reproduce once, then copy each buffer you turned on: `/MES.IGLSD.<Type>` (spawn) and `/MES.IGLBD.<Type>` (behavior). The `<Type>` is required, and each type has its own buffer.
 3. For long or intermittent problems, also send everything to the game log with `/MES.SpawnDebug.GameLog.true` / `/MES.BehaviorDebug.GameLog.true`, and point the agent at `%AppData%\SpaceEngineers\SpaceEngineers*.log` (dedicated server: the instance's `SpaceEngineersDedicated*.log`). Search it for the signatures in `diagnostics_and_troubleshooting.md` §4 and for `MOD SKIPPED`, `Exception`, `Could not parse tag`.
 4. Turn every debug type off again (`.false`) after the test.
+5. **Targeting logs don't name the grid doing the rating.** Each `Evaluating Target: X using profile P` line names the target and the profile; work out the rater from `P` (a faction copy of a profile, or an `-Override` profile for a forced target).
+6. **To explain a relation result, read the save.** `scripts/save_relations.py <world>\Sandbox.sbc` prints the faction-to-faction relations (what turrets use) and each faction's members' reputation with every other faction (what MES uses for NPC-vs-NPC), from `<MyObjectBuilder_FactionRelation>` and `<MyObjectBuilder_PlayerFactionRelation>`. The save only changes when the world is saved.
 
 ---
 

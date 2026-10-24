@@ -201,11 +201,14 @@ Merged in MES `fc5cb29` / `6c61bba` (PR #390, Villanor). Adds an optional flight
 - **`[MaxDistance:]`**: Default 12000 m.
 - **`[MatchAllFilters:]` / `[MatchAnyFilters:]` / `[MatchNoneFilters:]`** (`TargetFilterEnum`):
   - `Relation`: Applies `[Relations:]` (`Enemy`, `Neutral`, `Friends`, `Faction`).
-  - **[HARD] NPC-vs-NPC relation ignores faction-to-faction reputation** (`EntityEvaluator.GetRelationBetweenIdentities`, checked at MES 37455cf).
-    - When the NPC's own owner is an NPC, MES reads the *target owner identity's* reputation with the NPC's faction: below -500 is Enemy, above 500 is Friends, anything else Neutral.
-    - Unless something set that per-identity value, it is the NPC faction's `<StartingReputation>`, or the game default when the faction has none. So a faction with `StartingReputation -1500` sees every other NPC as `Enemy`.
-    - Admin faction-to-faction reputation commands (`SetReputationBetweenFactions`) therefore don't change which NPC grids MES targets. Vanilla and WeaponCore turrets may still use them.
-    - To make two NPC factions ignore each other in MES, list each one in the other's `[MatchNoneFilters:Faction]` + `[FactionTargets:]`.
+  - **[HARD] NPC-vs-NPC relation reads the target owner's own reputation, not the faction-to-faction relation** (`EntityEvaluator.GetRelationBetweenIdentities`, checked at MES 103f8d0).
+    - When the NPC's own owner is an NPC, MES reads the *target owner identity's* reputation with the NPC's faction: below -500 is Enemy, above 500 is Friends, anything else Neutral. Exactly 500 is Neutral to MES but Friends in vanilla (`TranslateReputationToRelationship` uses the economy's `ReputationFriendlyMin`, default 500, inclusive).
+    - **[HARD] With no stored value** (game `MyFactionCollection.GetRelationBetweenPlayerAndFaction`): the faction's `<StartingReputation>` if it has one, otherwise Enemies at the economy's `ReputationHostileMid` (vanilla -1000). So a faction without a `StartingReputation` already sees every other NPC as `Enemy`.
+    - **[HARD] Stored values drift in fights.** Vanilla damage reputation (`DamageFactionPlayerReputation`) lowers the attacker identity's reputation with the attacked grid's faction, NPC attackers included, unless that faction has `<StaticReputation>true</StaticReputation>`. A static faction keeps its first value, its `StartingReputation`, for everyone.
+    - The result can be one-sided. Example: faction A is static at `StartingReputation 500`, faction B at -1500. B rates A's grids Enemy; A rates B's grids Neutral.
+    - Faction-to-faction reputation commands (`SetReputationBetweenFactions`, Torch `!faction rep change`) don't change MES targeting; they decide turret fire (`third_party_integrations.md` §1H).
+    - To make an NPC faction fight another whatever the reputation, target it by name: `[MatchAllFilters:Faction]` + `[FactionTargets:<TAG>]`, or `[MatchAnyFilters:Relation]` + `[MatchAnyFilters:Faction]` to keep Enemies too. To make two NPC factions ignore each other, list each one in the other's `[MatchNoneFilters:Faction]` + `[FactionTargets:]`.
+  - **[HARD] A grid with no owner counts as Enemy** (`GetRelationsFromList` returns Enemy for an empty owner list). Powered ownerless debris passes `[Relations:Enemy]` and can pull NPCs off their real target; `[MatchAllFilters:Owner]` + `[Owners:Player]` + `[Owners:NPC]` skips it.
   - `Owner`: Applies `[Owners:]` (`Unowned`, `Player`, `NPC`).
   - `Powered`: Ignores unpowered floating wrecks.
   - `OutsideOfSafezone`: Prevents wasting ammunition against safezone shields.
@@ -214,6 +217,11 @@ Merged in MES `fc5cb29` / `6c61bba` (PR #390, Villanor). Adds an optional flight
   - `GravityThrust` (2.74.05+): passes when the target is outside gravity, or when this NPC's working **up-facing** thrusters can lift its mass in the gravity at the target's position (atmospheric thrust if air density there is ≥ 0.7, otherwise in-gravity thrust; recalculated at most every 2.5 s, `ThrustSystem.CalculateMaxGravity`). Use it to stop atmospheric craft chasing targets they cannot reach.
   - **[HARD] `AirDensity` is still inverted in 2.74.05**: it tests the **NPC's own** air density, not the target's, and the bound checks are reversed (`(Min > -1 || density >= Min) && (Max > -1 || density <= Max)`). On a planet it passes whenever `[MaxAirDensity:]` is set (any value ≥ 0) and fails whenever it is not, whatever the actual density; off-planet it passes only if both bounds are ≤ 0. Do not rely on it.
 - There are no `[UsePriorities:]`, `[TargetRules:]` or `[TargetSubsystems:]` tags; MES ignores them.
+- **[HARD] Forced targets are checked against the override profile, not `[TargetData:]`** (`TargetingSystem.cs:286`: `ForceTargetEntityId == 0 ? NormalData : OverrideData`). A target is forced by `[SwitchToReceivedTarget:true]` (a command's target, the damager or a turret's target), `[SwitchTargetToDamager:true]`, the Hunter behavior switching to its damager, and the saved target restored on world load (`CoreBehavior.cs:1359-1362`).
+  - Set it with `[OverrideTargetData:<profile>]` in the behavior. The default is `RivalAI-GenericTargetProfile-EnemyOverride`: `[Target:Override]`, 10 km, `[MatchAllFilters:OutsideOfSafezone]`, `Owner` (Player, NPC) and `Relation` with `[Relations:Enemy]`.
+  - A behavior that picks targets by faction name also needs an override profile that accepts that faction, or it drops every forced target from it: an attacker, a squadmate's target, its own target after a restart. Copy the default and replace `[MatchAllFilters:Relation]` with `[MatchAnyFilters:Relation]` + `[MatchAnyFilters:Faction]` + `[FactionTargets:<TAG>]`.
+  - The reverse: the default override ignores the `[MatchNoneFilters:Faction]` skips in `[TargetData:]`, so a grid fires back at a faction it skips once that faction shoots it. To keep a faction off-limits even then (e.g. a neutral objective faction whose turrets shoot rule-breaking grids), give the override profile the same `[MatchNoneFilters:Faction]` + `[FactionTargets:]`.
+  - The chosen profile is saved in the grid's behavior settings (`BehaviorSettings.OverrideTargetProfile`), so grids spawned before a change keep the old one. Test with fresh spawns.
 
 ---
 

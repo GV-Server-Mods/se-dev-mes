@@ -26,6 +26,11 @@ Commands:
   wc_shootmode.py audit --mods DIR [--exclude GLOB ...] PATH [PATH ...]
       Lint: warn on every FIXED gun left on Auto (exit 1). Use --exclude for prefabs MES never fires,
       e.g. static wrecks: --exclude "NW* *.sbc".
+  wc_shootmode.py neutrals PATH [PATH ...] [--set on|off] [--subtypes A,B] [--apply] [--backup-dir DIR] [--delete-b5]
+      Without --set, count per prefab how many WeaponCore blocks have the "Neutrals" target override on (field 1 of
+      the same Overrides message). With --set, switch it on or off, for every WeaponCore block or only --subtypes.
+      WeaponCore checks it against the faction-to-faction relation: a weapon with it on fires on every grid of a
+      faction Neutral to its owner. See references/third_party_integrations.md, section 1H.
 
 PATH can be files or folders (searched recursively for *.sbc). Only blocks carrying the WeaponCore storage
 key are touched; the Overrides message is located by structure (the message holding varint fields 26 and 27),
@@ -42,6 +47,7 @@ import sys
 
 KEY = "75bbb4f5-4fb9-4230-beef-bb79c9811501"
 FIELD = 28
+NEUTRALS_FIELD = 1
 MODES = {"ai": 0, "mouse": 1, "toggle": 2, "fire": 3}
 NAMES = {v: k for k, v in MODES.items()}
 
@@ -173,6 +179,42 @@ def set_mode(blob, mode):
     return build(fields) if changed else None
 
 
+def get_flag(blob, field):
+    """Return (value, error) of a varint field in the Overrides message; an absent field reads as 0."""
+    paths = find_overrides(blob)
+    if len(paths) != 1:
+        return None, "layout not recognised (%d candidate messages)" % len(paths)
+    out = []
+    _descend(parse(blob), paths[0], lambda inner: out.append(next((x[2] for x in inner if x[0] == field and x[1] == 0), 0)))
+    return out[0], None
+
+
+def set_flag(blob, field, value):
+    """Return the new blob, or None if the field already has that value. Raises ValueError if the layout is unknown.
+
+    WeaponCore writes every Overrides field explicitly, so an absent field is added in field order."""
+    paths = find_overrides(blob)
+    if len(paths) != 1:
+        raise ValueError("layout not recognised (%d candidate messages)" % len(paths))
+    fields = parse(blob)
+    changed = []
+
+    def edit(inner):
+        cur = next((x for x in inner if x[0] == field and x[1] == 0), None)
+        if (cur[2] if cur is not None else 0) == value:
+            return False
+        if cur is not None:
+            cur[2] = value
+        else:
+            idx = max((k for k, x in enumerate(inner) if x[0] < field), default=-1) + 1
+            inner.insert(idx, [field, 0, value])
+        changed.append(True)
+        return True
+
+    _descend(fields, paths[0], edit)
+    return build(fields) if changed else None
+
+
 # ---- prefab file handling -----------------------------------------------------------------------------------
 def sbc_files(paths):
     for p in paths:
@@ -181,6 +223,8 @@ def sbc_files(paths):
                 for fn in sorted(fns):
                     if fn.lower().endswith(".sbc"):
                         yield os.path.join(dp, fn)
+        elif os.path.isfile(p):
+            yield p  # before glob: a prefab name like "NKO [KOTH] Site.sbc" is not a valid glob
         else:
             yield from glob.glob(p) or [p]
 
@@ -267,6 +311,62 @@ def cmd_set(a):
                     print("  NOTE: %s exists - delete it or the game may keep spawning the cached copy" % os.path.basename(b5))
     print("\n%s %d block(s)%s." % ("Changed" if a.apply else "Would change", total, (", skipped %d" % skipped) if skipped else ""))
     if not a.apply and total:
+        print("Dry run. Re-run with --apply to write.")
+    return 0
+
+
+def _write_prefab(a, f, bom, text, edits):
+    for s, e, v in reversed(edits):
+        text = text[:s] + v + text[e:]
+    if a.backup_dir:
+        os.makedirs(a.backup_dir, exist_ok=True)
+        shutil.copy2(f, os.path.join(a.backup_dir, os.path.basename(f)))
+    open(f, "wb").write((("﻿" if bom else "") + text).encode("utf-8"))
+    b5 = f + "B5"
+    if os.path.exists(b5):
+        if a.delete_b5:
+            os.remove(b5)
+            print("  deleted stale cache " + os.path.basename(b5))
+        else:
+            print("  NOTE: %s exists - delete it or the game may keep spawning the cached copy" % os.path.basename(b5))
+
+
+def cmd_neutrals(a):
+    subs = {s.strip() for s in (a.subtypes or "").split(",") if s.strip()}
+    value = {"on": 1, "off": 0}.get(a.set)
+    blocks = on = total = skipped = 0
+    for f in sbc_files(a.paths):
+        bom, text = read_text(f)
+        edits, n, n_on = [], 0, 0
+        for st, mn, s, e, val in wc_blocks(text):
+            if subs and st not in subs:
+                continue
+            blob = base64.b64decode(val)
+            try:
+                cur, err = get_flag(blob, NEUTRALS_FIELD)
+                if err:
+                    raise ValueError(err)
+                new = set_flag(blob, NEUTRALS_FIELD, value) if value is not None else None
+            except (ValueError, IndexError) as ex:
+                print("%s: SKIP %s (%s): %s" % (os.path.basename(f), st, mn, ex))
+                skipped += 1
+                continue
+            n += 1
+            n_on += 1 if cur else 0
+            if new is not None:
+                edits.append((s, e, base64.b64encode(new).decode()))
+        if not n:
+            continue
+        blocks += n
+        on += n_on
+        total += len(edits)
+        change = (", %s %d" % ("changed" if a.apply else "would change", len(edits))) if value is not None else ""
+        print("%-50s %3d WeaponCore block(s), Neutrals on %3d%s" % (os.path.basename(f), n, n_on, change))
+        if a.apply and edits:
+            _write_prefab(a, f, bom, text, edits)
+    print("\n%d block(s), Neutrals on %d%s%s." % (blocks, on, (", %s %d" % ("changed" if a.apply else "would change", total)) if value is not None else "",
+                                                 (", skipped %d" % skipped) if skipped else ""))
+    if value is not None and not a.apply and total:
         print("Dry run. Re-run with --apply to write.")
     return 0
 
@@ -408,6 +508,14 @@ def main():
     p.add_argument("--exclude", action="append", default=[], help="prefab file-name glob to skip, e.g. 'NW* *.sbc'")
     p.add_argument("paths", nargs="+")
     p.set_defaults(fn=cmd_audit)
+    p = sub.add_parser("neutrals")
+    p.add_argument("--set", choices=["on", "off"])
+    p.add_argument("--subtypes", help="comma-separated block SubtypeNames (default: every WeaponCore block)")
+    p.add_argument("--apply", action="store_true")
+    p.add_argument("--backup-dir")
+    p.add_argument("--delete-b5", action="store_true")
+    p.add_argument("paths", nargs="+")
+    p.set_defaults(fn=cmd_neutrals)
     a = ap.parse_args()
     return a.fn(a)
 

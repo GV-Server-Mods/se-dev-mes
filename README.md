@@ -97,7 +97,8 @@ se-dev-mes/
     ├── audit_prefabs.ps1                   # Prefab SubtypeId auditor & stale .sbcB5 binary cache cleaner
     ├── audit_unknown_tags.py               # Finds tags MES silently ignores and invalid values
     ├── test_tag_recipes.py                 # Builds and audits every recipe in tag_recipes.md
-    ├── wc_shootmode.py                     # Audits/sets WeaponCore shoot mode in prefabs
+    ├── wc_shootmode.py                     # Audits/sets WeaponCore shoot mode and Neutrals override in prefabs
+    ├── save_relations.py                   # Prints faction/identity reputations from a world save
     ├── Format-MesSbc.ps1                   # Safe XML formatter protecting <Description> & comments
     ├── Add-MesProfileSnippet.ps1           # Safe profile snippet injector for SBC files
     ├── New-MesProfile.ps1                  # Scaffolding generator (9 encounter patterns)
