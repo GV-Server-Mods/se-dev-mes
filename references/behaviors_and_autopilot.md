@@ -164,9 +164,51 @@ Merged in MES `fc5cb29` / `6c61bba` (PR #390, Villanor). Adds an optional flight
 - **`[ReturnToLevelSpeedCutOff:<double>]` (m/s, default `10`)**:
   Disables `ReturnToLevelMultiplier` below this speed (default 10 m/s) so aircraft parked or landed on slopes/runways do not roll themselves over.
 - **`[MaxRotationStep:<double>]` (rad/s, default `0` = off)**:
-  Rate-of-change clamp between current physics angular velocity and the newly commanded angular velocity (`AircraftFlightModel.cs:84-98`).
-  - **The Keen Gyro Ramp Trap**: Keen's `MyGridGyroSystem` ramps gyro override acceleration based on the gap between target and current rotation. A step delta > 1.57 rad/s imposes a 120-frame ramp-up that is reset on every rewrite, severely degrading gyro authority across all axes on rapid update loops.
-  - `MaxRotationStep` clamps this single-tick delta (e.g. `0.2` to `0.4`), keeping gyro acceleration smooth and responsive.
+  Caps the gap between the grid's current angular velocity and the newly commanded one (`AircraftFlightModel.cs:84-98`). It is the fix for Keen's gyro ramp and is useful on **every** gyro-steered NPC, ground vehicles included: see §3G, which also gives the value (suggested start `0.5`).
+
+### G. Gyro Turn Authority: Keen's Override Ramp [HARD]
+Most NPCs turn far weaker than their gyros allow, and more gyros or a bigger rotation multiplier barely help. The cause is Keen's gyro ramp combined with how often MES rewrites the override. The fix is a flight model tag most modders would never put on a rover.
+
+**What MES asks for, per axis:** every 15 ticks (0.25 s, `BehaviorManager.cs:152`) the raw request is the axis's angle error in radians, or a flat `2π` (small grid) / `π` (large grid) once the error reaches `RotationSlowdownAngle` (default 70°) (`RotationSystem.cs:85-125`). `LimitSpeed` zeroes an axis already turning faster than `MaxRotationMagnitude` (default 6.28), and with `[LimitRotationSpeed:true]` also faster than the raw error (`RotationSystem.cs:272-288`): **`MaxRotationMagnitude` is a cutoff on the actual turn rate, not a cap on the request**, so the rate hovers around it. The result × `RotationMultiplier` × the axis multiplier is written to the gyros when it changed (`GyroscopeProfile.cs:72-156`).
+
+**What Keen's gyros do with it** (`MyGridGyroSystem.UpdateOverrideAccelerationRampFrames`): each write resets the ramp (`MarkDirty` → `RecomputeGyroParameters`). The ramp length comes from the **gap** (target − current angular velocity, three axes combined): `(int)(gap² × 48.23) + 1` frames, or **120 frames once the gap exceeds π/2**. Each frame asks for `gap × 60 / framesLeft` of acceleration, clamped to the gyros' torque, so an unclamped gap closes exactly when the count runs out. MES rewrites every 15 frames, so a longer ramp is cut off and restarted:
+
+| Gap (rad/s) | Ramp | Closed before the next write | Rate gained per write |
+|---|---|---|---|
+| 0.25 | 4 frames | all | 0.25 |
+| **0.5** | **13 frames** | **all** | **0.5** |
+| 1.0 | 49 frames | ~30% | ~0.31 |
+| 1.5 | 109 frames | ~14% | ~0.21 |
+| ≥ 1.57 | 120 frames | ~12.5% | ~0.12 × gap |
+
+Without a step limit the gap is the whole request whenever the grid starts from rest or reverses, usually well past 0.5. So **extra gyros change nothing** (the ramp never asks for full torque), modders **crank multipliers** to brute-force a firmer push (past 1.57 the push grows with the gap; requests near 1–1.5 rad/s are the weakest), and **pitch and roll corrections take part of the gap** yaw could use.
+
+**The fix:**
+```
+[UseAircraftFlightModel:true]
+[MaxRotationStep:0.5]
+[LimitRotationSpeed:false]
+```
+- `MaxRotationStep` is read only through the flight model (`RotationSystem.cs:346` → `AircraftFlightModel.cs:21-32, 84-98`). It clamps the command to `current ± step`. With the other flight model tags at their defaults (`MaxAngleFromVelocity:180`, `RollIntoTurnsMultiplier:0`, `ReturnToLevelMultiplier:0`) the flight model computes the normal request and adds only this clamp, so it is safe on ground vehicles.
+- **0.5** is just under the largest gap that closes in one write (~0.54): the fastest change in turn rate (≈2 rad/s²) at full gyro strength. Lower stays firm but builds the rate more slowly; **higher is strictly worse** (a weaker push, so the NPC drifts off heading). To make an NPC turn slower, lower `MaxRotationMagnitude`, not the step.
+- `LimitRotationSpeed` still runs on this path and keeps zeroing the request mid-turn; turn it off.
+- **Braking is limited the same way**: the command can only fall by the step per write, and the gyros hold that rate even if friction would stop the grid sooner. A fast top rate therefore overshoots or spins; the tuning below sizes it.
+
+**Tuning `MaxRotationMagnitude` and the multiplier [SOFT]:**
+1. **Pick the top turn rate ω** and set `MaxRotationMagnitude` to it. Rough feel: 0.5 rad/s sluggish, 1 normal, 1.5 agile, 2+ snappy.
+2. **Set the axis multiplier from the table**, which assumes braking at the step limit: stopping from ω takes θstop ≈ ω² / (8 × step) radians, and braking starts at an error of ω / multiplier, so **multiplier ≤ ω / (θstop + 0.25 × ω)** stops on the heading after the 0.25 s reaction. About 1.5× the table value still gives only a small overshoot.
+3. **Adjust by eye in game:** swings past the heading → lower the multiplier; spins in circles → lower `MaxRotationMagnitude`; stalls short of the heading on small corrections (wheel friction) → raise the multiplier.
+
+| ω (rad/s) | θstop at step 0.5 | Multiplier for no overshoot |
+|---|---|---|
+| 0.5 | 4° | 2.7 |
+| 1 | 14° | 2 |
+| 1.5 | 32° | 1.6 |
+| 2 | 57° | 1.3 |
+
+Large grids are often torque-limited (gyros too weak for their inertia): they stop more slowly than the table assumes, so start below its multiplier. Field test: a small-grid wheeled rover on `LimitRotationSpeed:true`, yaw 5–10 and no step was sluggish and gained nothing from doubling its gyros; step 2 was no better. At step 0.5 it spun in circles at `MaxRotationMagnitude:4` and yaw 10, and held heading well at 1 and yaw 3 (1.5× the table's 2).
+
+**After an SE update that changes NPC turning**, re-check `UpdateOverrideAccelerationRampFrames` first: everything above rests on its constants.
 
 ---
 
@@ -377,43 +419,50 @@ RivalAI does not drive `IMyMotorSuspension` wheel motors via the autopilot. Grou
   - If `HoverPathStepDistance <= WaypointTolerance` (e.g. Step 20m, Tolerance 25m), newly generated waypoints spawn inside the arrival radius, instantly zeroing forward thrust and deadlocking the rover.
   - Recommended: `[HoverPathStepDistance:50]` (use `< 100` for rough terrain) and `[WaypointTolerance:15]`.
 
-#### 5. Prefab Wheel Suspension Tuning [SOFT]
-- **Friction <= 12%**: Because RivalAI turns grids via gyroscopes rather than wheel steering angles, high tire friction (default 50%–100%) resists lateral skid. Set suspension friction very low (`<= 12%`) on the prefab to allow gyro yaw torque to pivot the vehicle smoothly without fighting tire grip or causing rollovers.
+#### 5. Gyro Steering & Wheel Friction [SOFT]
+- **Fix the gyro ramp first (§3G).** A rover that "can't overcome wheel friction" is usually starved by Keen's gyro ramp, not short of gyros: without `[UseAircraftFlightModel:true]` + `[MaxRotationStep:0.5]` its request is far past the 0.5 rad/s gap the gyros can close per update. Cutting friction or cranking the yaw multiplier only masks this.
+- **Friction trade-off**: RivalAI turns grids via gyroscopes rather than wheel steering angles, so tire friction resists the pivot but also resists sideways sliding in turns. With the step fixed, keep friction as high as still lets the rover pivot (start around 15–20%); go very low (`<= 12%`) only if it still stalls on turns. The terminal value is `FrictionNew × 100` in the prefab.
 
 #### 6. Golden Rover Autopilot Configuration Template [REFERENCE]
+
+Comments use `[//...]`: an XML `<!-- -->` inside `<Description>` aborts loading the mod (SKILL.md §3).
 
 ```xml
 <Description>
   [RivalAI Autopilot]
 
-  <!-- Surface Navigation (Bypasses aircraft climb logic; uses directional velocity dot product) -->
+  [//Surface Navigation (Bypasses aircraft climb logic; uses directional velocity dot product)]
   [UseSurfaceHoverThrustMode:true]
 
-  <!-- Slope Alignment & Pitch Anchoring (Do NOT use FlyLevelWithGravity with UseSurfaceHoverThrustMode) -->
+  [//Slope Alignment & Pitch Anchoring (Do NOT use FlyLevelWithGravity with UseSurfaceHoverThrustMode)]
   [FlyLevelWithGravity:false]
-  <!-- Set to exact physical height of Remote Control block above terrain (e.g., 1.5 to 2.5) -->
+  [//Set to exact physical height of Remote Control block above terrain (e.g., 1.5 to 2.5)]
   [IdealPlanetAltitude:2]
   [MinimumPlanetAltitude:1]
   [AltitudeTolerance:1]
 
-  <!-- Waypoint Projection (CRITICAL: StepDistance MUST be greater than WaypointTolerance) -->
-  <!-- Use StepDistance < 100 for rougher terrains -->
+  [//Waypoint Projection (CRITICAL: StepDistance MUST be greater than WaypointTolerance). Use StepDistance below 100 for rougher terrains]
   [HoverPathStepDistance:50]
   [WaypointTolerance:15]
 
-  <!-- Vertical Stabilization & Anti-Rocket Clamping -->
-  <!-- Caps climb rate when bouncing off dunes (default is -1 / unlimited) -->
+  [//Vertical Stabilization: caps climb rate when bouncing off dunes (default is -1 / unlimited)]
   [MaxVerticalSpeed:5]
 
-  <!-- Gyro Authority (Kills 180-deg backflips, prioritizes yaw, preserves roll self-righting) -->
+  [//Gyro Authority (Kills 180-deg backflips, prioritizes yaw, preserves roll self-righting)]
   [RotationMultiplierPitch:0.1]
   [RotationMultiplierYaw:1.5]
   [RotationMultiplierRoll:1.0]
 
-  <!-- Collision Evasion (Disable to stop rover evading ground voxels upward into space) -->
+  [//Gyro ramp fix (section 3G): the flight model only adds the step clamp while its other tags stay at defaults. Raise yaw toward 3 if turns stall on friction]
+  [UseAircraftFlightModel:true]
+  [MaxRotationStep:0.5]
+  [LimitRotationSpeed:false]
+  [MaxRotationMagnitude:1]
+
+  [//Collision Evasion (Disable to stop rover evading ground voxels upward into space)]
   [UseVelocityCollisionEvasion:false]
 
-  <!-- Speed & Braking Tolerances (Prevents hill bumps from tripping 100% reverse brake trap) -->
+  [//Speed & Braking Tolerances (Prevents hill bumps from tripping 100% reverse brake trap)]
   [MaxSpeedTolerance:5]
   [IdealMinSpeed:8]
   [IdealMaxSpeed:25]
