@@ -4,15 +4,23 @@ audit_prefab_thrust.py — Directional Thruster & Behavior Auditor for Space Eng
 
 Audits prefab SBC XML files to verify directional thruster coverage relative to the
 Primary Remote Control block orientation, detecting critical failure modes:
-1. Missing Backward (Braking) Thrusters -> 180° flip-and-burn slingshot into space.
-2. Missing Lateral / Vertical Thrusters -> Strafe dropouts & dampener suppression.
-3. Rover / Ground Vehicle Thrusters    -> Missing Down (downforce) or Up (altitude clamping).
+1. Missing Backward (Braking) Thrusters -> no braking: overshoots waypoints and swings back
+   (MES 2.75.00+; before 2.75.00 it could run away into space).
+2. Missing Lateral / Vertical Thrusters -> strafe drift, no dampener correction on that side.
+3. Rover / Ground Vehicle Thrusters    -> Missing Down (downforce), or Up when level mode is on.
 4. FighterPlane Single-Axis Validation -> Permits forward-only thrust on planets.
-5. Pitch Lockout Trap                  -> Warns if [FlyLevelWithGravity] or [LevelWithGravityWhenIdle] are set.
+5. Level Mode                         -> Notes which autopilots set [FlyLevelWithGravity] / [LevelWithGravityWhenIdle].
+
+Behaviors are resolved the way MES assigns them: spawn group <Prefab SubtypeId> -> <Behaviour>
+-> [RivalAI Behavior] profile ([BehaviorName:], [AutopilotData:] and the Secondary/Tertiary
+slots) -> [RivalAI Autopilot] profiles (level-mode flags). Legacy [BehaviorName:] in the remote
+control's Custom Data is still read. Prefabs no spawn group gives a behavior are skipped.
+Only thrusters on the remote control's grid are counted (MES ignores subgrid thrust unless
+[UseSubgridThrust:true]).
 
 Usage:
-  python audit_prefab_thrust.py
-  python audit_prefab_thrust.py --path "Data/Prefabs"
+  python audit_prefab_thrust.py --path "Data/Prefabs"          (profiles read from the parent Data folder)
+  python audit_prefab_thrust.py --path "Data/Prefabs" --data "Data"
   python audit_prefab_thrust.py --strict
   python audit_prefab_thrust.py --json
 """
@@ -93,7 +101,44 @@ def extract_custom_data_behavior(custom_data_text):
         tags.append("LevelWithGravityWhenIdle")
     return behavior, tags
 
-def audit_prefab_file(file_path):
+PROFILE_RE = re.compile(r'<SubtypeId>([^<]+)</SubtypeId>\s*</Id>\s*<Description>(.*?)</Description>', re.S)
+SPAWN_PREFAB_RE = re.compile(r'<Prefab\s+SubtypeId="([^"]+)"\s*>(.*?)</Prefab>', re.S)
+LEVEL_TAGS = ("FlyLevelWithGravity", "LevelWithGravityWhenIdle")
+
+def load_behavior_map(data_dir):
+    """Prefab SubtypeId -> list of {profile, name, level_tags}, resolved like MES does."""
+    behaviors, autopilots, prefab_behaviors = {}, {}, {}
+    for root, _, files in os.walk(data_dir):
+        for f in files:
+            if not f.endswith(".sbc"):
+                continue
+            try:
+                with open(os.path.join(root, f), encoding="utf-8-sig", errors="ignore") as h:
+                    text = h.read()
+            except OSError:
+                continue
+            for m in PROFILE_RE.finditer(text):
+                sid, desc = m.group(1).strip(), m.group(2)
+                if re.search(r'\[(RivalAI|MES AI) Behavior\]', desc):
+                    name = re.search(r'\[BehaviorName:\s*([^\]]+)\]', desc)
+                    slots = re.findall(r'\[(?:Secondary|Tertiary)?AutopilotData:\s*([^\]]+)\]', desc)
+                    behaviors[sid] = (name.group(1).strip() if name else None, [s.strip() for s in slots])
+                elif re.search(r'\[(RivalAI|MES AI) Autopilot\]', desc):
+                    autopilots[sid] = [t for t in LEVEL_TAGS if re.search(r'\[' + t + r':\s*true\]', desc, re.I)]
+            for m in SPAWN_PREFAB_RE.finditer(text):
+                b = re.search(r'<Behaviour>\s*([^<]+?)\s*</Behaviour>', m.group(2))
+                if b:
+                    prefab_behaviors.setdefault(m.group(1).strip(), set()).add(b.group(1))
+    result = {}
+    for prefab, profiles in prefab_behaviors.items():
+        for profile in sorted(profiles):
+            name, slots = behaviors.get(profile, (None, []))
+            tags = sorted({t for s in slots for t in autopilots.get(s, [])})
+            sources = ["%s (%s)" % (s, "/".join(autopilots[s])) for s in slots if autopilots.get(s)]
+            result.setdefault(prefab, []).append({"profile": profile, "name": name, "level_tags": tags, "level_sources": sources})
+    return result
+
+def audit_prefab_file(file_path, behavior_map):
     results = []
     try:
         tree = ET.parse(file_path)
@@ -109,12 +154,18 @@ def audit_prefab_file(file_path):
         prefabs = [root]
 
     for p in prefabs:
+        # Prefab files write <Id Type=".." Subtype=".." />; older ones <Id><SubtypeId>..</SubtypeId></Id>
+        id_el = p.find("Id")
         subtype_el = p.find(".//Id/SubtypeId")
-        prefab_id = subtype_el.text if subtype_el is not None and subtype_el.text else os.path.basename(file_path)
+        if subtype_el is not None and subtype_el.text:
+            prefab_id = subtype_el.text.strip()
+        elif id_el is not None and id_el.get("Subtype"):
+            prefab_id = id_el.get("Subtype").strip()
+        else:
+            prefab_id = os.path.splitext(os.path.basename(file_path))[0]
 
-        grids = p.findall(".//CubeGrids/MyObjectBuilder_CubeGrid")
-        if not grids:
-            grids = p.findall(".//MyObjectBuilder_CubeGrid")
+        # Prefab files name each grid <CubeGrid>; blueprints and saves use MyObjectBuilder_CubeGrid
+        grids = p.findall("./CubeGrids/CubeGrid") + p.findall(".//MyObjectBuilder_CubeGrid")
         if not grids:
             continue
 
@@ -148,7 +199,14 @@ def audit_prefab_file(file_path):
 
             custom_data_el = primary_remote.find("CustomData")
             custom_data = custom_data_el.text if custom_data_el is not None else ""
-            behavior, warning_tags = extract_custom_data_behavior(custom_data)
+            legacy_behavior, legacy_tags = extract_custom_data_behavior(custom_data)
+            assigned = behavior_map.get(prefab_id, [])
+            if not assigned and legacy_behavior:
+                assigned = [{"profile": "remote Custom Data", "name": legacy_behavior, "level_tags": legacy_tags,
+                             "level_sources": ["remote Custom Data (%s)" % "/".join(legacy_tags)] if legacy_tags else []}]
+            if not assigned:
+                # No spawn group gives this prefab a behavior (statics, wrecks, unused prefabs)
+                continue
 
             # Find Thrusters
             thrusters = grid.findall(".//MyObjectBuilder_CubeBlock[@xsi:type='MyObjectBuilder_Thrust']",
@@ -172,16 +230,30 @@ def audit_prefab_file(file_path):
                 effective_dir = classify_thrust_direction(t_forward, basis)
                 thrust_counts[effective_dir] += 1
 
-            results.append({
-                "file": file_path,
-                "prefab": prefab_id,
-                "grid": grid_name,
-                "remote_orientation": f"Fwd={rc_forward}, Up={rc_up}",
-                "behavior": behavior,
-                "is_wheeled": is_wheeled_grid,
-                "thrust_counts": thrust_counts,
-                "warning_tags": warning_tags
-            })
+            # One entry per distinct BehaviorName; level flags merged across the profiles using it
+            by_name = {}
+            for a in assigned:
+                entry = by_name.setdefault(a["name"], {"profiles": [], "tags": set(), "sources": []})
+                entry["profiles"].append(a["profile"])
+                entry["tags"].update(a["level_tags"])
+                entry["sources"] += [x for x in a["level_sources"] if x not in entry["sources"]]
+            for name, entry in by_name.items():
+                if name is None or name == "Passive":
+                    # Passive grids never navigate (stations, installations, wrecks); without a
+                    # BehaviorName MES finds no subclass (BehaviorManager.GetSubclassFromCustomData)
+                    continue
+                results.append({
+                    "file": file_path,
+                    "prefab": prefab_id,
+                    "grid": grid_name,
+                    "remote_orientation": f"Fwd={rc_forward}, Up={rc_up}",
+                    "behavior": name,
+                    "behavior_profiles": entry["profiles"],
+                    "is_wheeled": is_wheeled_grid,
+                    "thrust_counts": thrust_counts,
+                    "warning_tags": sorted(entry["tags"]),
+                    "level_sources": entry["sources"]
+                })
 
     return results
 
@@ -192,12 +264,13 @@ def evaluate_grid_thrust(grid_data):
     is_wheeled = grid_data.get("is_wheeled", False)
     tags = grid_data.get("warning_tags", [])
 
-    # Pitch lockout tag check
-    if "FlyLevelWithGravity" in tags or "LevelWithGravityWhenIdle" in tags:
+    # Level mode: pitch aims at level instead of the target (RotationSystem.cs:187). Intended for
+    # turret-only hovers and cargo ships; a problem for craft that must pitch at targets.
+    if tags:
         issues.append({
-            "severity": "WARNING",
-            "type": "PITCH_LOCKOUT_TRAP",
-            "message": f"Remote contains [FlyLevelWithGravity] or [LevelWithGravityWhenIdle]. In MES, this locks gyro pitch to planetary horizon, preventing nose diving or climbing (RotationSystem.cs:187)."
+            "severity": "INFO",
+            "type": "LEVEL_MODE",
+            "message": "Level mode in " + ", ".join(grid_data.get("level_sources") or tags) + ": pitch holds level there, so the nose can't dive or climb at targets (RotationSystem.cs:187). Fine for turret-only hovers and cargo ships."
         })
 
     # Behavior specific evaluation
@@ -222,11 +295,11 @@ def evaluate_grid_thrust(grid_data):
                 "type": "MISSING_DOWNFORCE_THRUST",
                 "message": "Thrust-driven rover has NO Down thrusters. Downward thrusters provide artificial downforce against suspension bounce on rough terrain."
             })
-        if counts.get("Up", 0) == 0:
+        if counts.get("Up", 0) == 0 and ("FlyLevelWithGravity" in tags or "LevelWithGravityWhenIdle" in tags):
             issues.append({
                 "severity": "WARNING",
                 "type": "MISSING_ALTITUDE_CLAMP_THRUST",
-                "message": "Thrust-driven rover has NO Up thrusters. CalculateHoverThrust() adjusts Y-axis on slopes; missing thrusters can cause dampener dropouts."
+                "message": "Rover in level mode has NO Up thrusters. CalculateHoverThrust() holds altitude with up/down thrust; without level mode MES never commands Up thrust."
             })
         if counts.get("Backward", 0) == 0:
             issues.append({
@@ -247,16 +320,16 @@ def evaluate_grid_thrust(grid_data):
         # Standard 3D Space / Hover Behaviors (Fighter, Strike, Horsefly, Sniper, Patrol, Hunter, etc.)
         if counts.get("Backward", 0) == 0:
             issues.append({
-                "severity": "CRITICAL",
-                "type": "REVERSE_INTO_SPACE_RISK",
-                "message": f"Grid has NO Backward (braking) thrusters! Under behavior '{behavior or 'Default'}', MES will exceed MaxSpeed, fail to brake (force=0), overshoot waypoints, flip 180°, and accelerate into deep space at max forward thrust."
+                "severity": "WARNING",
+                "type": "NO_BRAKING_THRUST",
+                "message": f"Grid has NO Backward (braking) thrusters. Under behavior '{behavior or 'Default'}', stopping distance is 0, so it overshoots waypoints at full speed and swings back (MES 2.75.00+). Before 2.75.00 this could run away into space."
             })
         missing_dirs = [d for d in ["Forward", "Up", "Down", "Left", "Right"] if counts.get(d, 0) == 0]
         if missing_dirs:
             issues.append({
-                "severity": "ERROR",
+                "severity": "WARNING",
                 "type": "MISSING_CARDINAL_THRUST",
-                "message": f"Grid is missing thrusters in directions: {', '.join(missing_dirs)}. Behaviors using Strafe or Hover will drop dampeners to 0.0001f and induce uncontrolled drift."
+                "message": f"Grid is missing thrusters in directions: {', '.join(missing_dirs)}. Strafing toward a missing side drifts uncontrolled, dampeners can't stop drift that way, and level mode can't hold altitude without Up/Down."
             })
 
     return issues
@@ -264,6 +337,7 @@ def evaluate_grid_thrust(grid_data):
 def main():
     parser = argparse.ArgumentParser(description="Audit Space Engineers prefabs for directional thruster coverage and behavior compatibility.")
     parser.add_argument("--path", "-p", default=".", help="Path to search for prefab .sbc files (defaults to current directory).")
+    parser.add_argument("--data", "-d", default=None, help="Mod Data folder holding spawn groups, behaviors and autopilots (defaults to the parent of a Prefabs folder, else --path).")
     parser.add_argument("--strict", "-s", action="store_true", help="Treat warnings as errors.")
     parser.add_argument("--json", "-j", action="store_true", help="Output results in JSON format.")
     args = parser.parse_args()
@@ -272,6 +346,14 @@ def main():
     if not os.path.exists(target_dir):
         print(f"[ERROR] Target path does not exist: {target_dir}")
         sys.exit(2)
+
+    if args.data:
+        data_dir = os.path.abspath(args.data)
+    elif os.path.basename(target_dir).lower() == "prefabs":
+        data_dir = os.path.dirname(target_dir)
+    else:
+        data_dir = target_dir
+    behavior_map = load_behavior_map(data_dir)
 
     prefab_files = []
     for root, _, files in os.walk(target_dir):
@@ -285,7 +367,7 @@ def main():
     total_warnings = 0
 
     for pf in prefab_files:
-        grid_audits = audit_prefab_file(pf)
+        grid_audits = audit_prefab_file(pf, behavior_map)
         for g in grid_audits:
             if "status" in g and g["status"] == "ERROR":
                 total_errors += 1
@@ -316,13 +398,17 @@ def main():
     print(" Space Engineers Prefab Thruster & Behavior Auditor")
     print("=" * 70)
     print(f"Target Directory: {target_dir}")
+    print(f"Profiles From:    {data_dir}")
     print(f"Prefabs Scanned:  {len(prefab_files)}")
+    print(f"Prefabs With AI:  {len(behavior_map)}")
     print(f"Grids Audited:    {len(all_audits)}")
     print("-" * 70)
 
     for g in all_audits:
         c = g["thrust_counts"]
-        print(f"\n[{g['prefab']}] -> {g['grid']} (Behavior: {g['behavior'] or 'Default/Unassigned'})")
+        level = f", level mode: {'/'.join(g['warning_tags'])}" if g["warning_tags"] else ""
+        print(f"\n[{g['prefab']}] -> {g['grid']} (Behavior: {g['behavior'] or 'no BehaviorName'}{level})")
+        print(f"  Behavior Profiles:  {', '.join(g['behavior_profiles'])}")
         print(f"  Remote Orientation: {g['remote_orientation']}")
         print(f"  Thrust Coverage:    Fwd={c['Forward']} | Back(Brake)={c['Backward']} | Up={c['Up']} | Down={c['Down']} | Left={c['Left']} | Right={c['Right']}")
         

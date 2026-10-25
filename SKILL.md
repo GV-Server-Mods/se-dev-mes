@@ -139,6 +139,7 @@ The scripts live in the skill, never in the mod: run them from the skill root as
 | `audit_mes_tags.ps1` | Master gates, zero-stripping, factions, dead triggers |
 | `audit_mes_references.ps1` | Cross-file profile references, RivalAI remote setup (WARN only; vanilla remotes stay legal) (`-WarnOrphans -SkipPrefabs`) |
 | `audit_prefabs.ps1` | Prefab SubtypeId vs file name, 12+ grids, stale `.sbcB5` (`-CleanStaleB5`) |
+| `audit_prefab_thrust.py` | Thruster directions per NPC prefab vs its behavior (`--path <Data>/Prefabs`) |
 | `test_tag_recipes.py` | Builds every recipe and runs the audits on it; run after editing `tag_recipes.md` |
 | `wc_shootmode.py` | WeaponCore shoot mode: `list`/`classify`/`audit`, set Mouse Control; `neutrals` lists/sets the Neutrals override |
 | `save_relations.py` | Faction and identity reputations in a save's `Sandbox.sbc` (turret vs MES relations) |

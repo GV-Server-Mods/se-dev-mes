@@ -329,31 +329,18 @@ Added in `0900b20`/`531802f` (GV PR #386). All default `false`; each one that is
 
 RivalAI completely controls grid propulsion via direct override percentage injection (`Block.ThrustOverridePercentage`) on all registered thrusters (`ThrustSystem.cs` / `ThrusterProfile.cs`). This bypasses standard player flight inputs and creates hard directional dependencies.
 
-### A. The 6-Direction Thruster Requirement [HARD]
-Unless using a subclass specifically built for single-axis thrust (`FighterPlane`), **all space and hovering NPCs must have at least one working thruster in all six cardinal directions**. Omitting opposing, lateral, or vertical thrusters causes severe flight pathologies:
+### A. Thruster Directions: What Each One Is For [HARD]
+MES 2.75.00 (MES PR #402) made `CalculateDirectForwardThrust` compare the **forward component** of velocity with the speed band (`ThrustSystem.cs:209, 241-256`); it used the unsigned `velocity.Length()` before. A grid moving backwards now gets forward thrust instead of "braking" with reverse thrust, so a grid missing some directions **no longer runs away backwards into space** (field-observed after the change). Six directions are no longer a hard requirement; each missing direction costs a specific ability:
 
-1. **The Active Braking Override Trap**:
-   - In `ThrustSystem.CalculateDirectForwardThrust()`, whenever forward speed exceeds target speed (`forwardVelocityAmt > MaxSpeed + MaxSpeedTolerance`; total speed `velocity.Length()` before MES 2.75.00), MES commands full reverse braking override:
-     ```csharp
-     _thrustToApply.SetZ(true, true, 1, _orientation); // ControlZ = true, InvertZ = true, Strength = 100%
-     ```
-   - In `ThrusterProfile.UpdateThrusterBlock()`, existing forward thrusters are forced to `0.0001f` override (killing forward thrust AND suppressing vanilla inertia dampeners).
-   - Reverse thrusters are commanded to 100% override. If the grid has **no reverse thrusters**, braking force is `0`.
-2. **Stopping Distance Blindspot**:
-   - `ThrustSystem.CalculateStoppingDistance()` computes required stopping distance using `GetEffectiveThrustInDirection(baseBrakeDir)`.
-   - **[HARD] The forward-thrust path measured the wrong thrusters until MES 2.75.00 (commit `941e8c2`, jayph).** `CalculateDirectForwardThrust` (`ThrustSystem.cs:210`) passed `Direction.Forward`, i.e. the **main forward thrusters**, as the brakes, so a forward-only aircraft got a non-zero stopping distance and coasted. It now passes `Direction.Backward`, matching the hover path (`CalculateHoverThrust`, `:427`, which already used `Backward`) and the text below. Builds before that commit behave like the forward-thruster reading; see `aircraft_behaviors_and_tuning.md` section 1.
-   - With no reverse thrusters, available braking force is `0`, acceleration is `<= 0`, and calculated stopping distance is `0`.
-   - The autopilot never throttles down when approaching waypoints and blows past them at full speed.
-3. **The 180° Flip-and-Burn Slingshot Loop**:
-   - Once past the waypoint, the waypoint is behind the craft.
-   - `RotationSystem.CalculateGyroRotation()` turns the ship 180° to face the waypoint.
-   - Because the nose now faces the waypoint while momentum carries the ship away at high speed, `velocityToTargetAngle` is ~180° (`> MaxVelocityAngleForSpeedControl`).
-   - MES commands 100% forward thrust (`SetZ(true, false, 1)`). The ship accelerates forward to cancel velocity, overshoots again in the opposite direction, and enters an infinite oscillating slingshot into deep space.
-4. **Strafing Failure (`Fighter` Subclass)**:
-   - In `Fighter.cs`, engaging a target activates `NewAutoPilotMode.Strafe`.
-   - `CalculateStrafeThrust()` randomly rolls X, Y, and Z strafe directions (`strafeRandomization = new Vector3I(Rnd.Next(-1, 2), ...)`).
-   - Commands in directions lacking thrusters set opposing thrusters to `0.0001f` without applying corrective acceleration, throwing the craft into uncontrolled lateral drift.
+| Missing | What breaks | Where |
+|---|---|---|
+| **Backward** (reverse) thrust | No braking. Over-speed braking (`Brake To Desired Speed`) uses the backward thrusters, so it has no force. With `[SlowDownOnWaypointApproach:true]` the stopping distance also comes from them (`:210`), so it is `0`; without that tag it is `-1` anyway (`:492`). Either way MES keeps full thrust until `WaypointTolerance`, then coasts through. It overshoots, turns around and comes back, oscillating around the waypoint (bounded on 2.75.00+). Dampeners can't brake either. | `CalculateStoppingDistance` (`:490-510`) |
+| **Side** thrust | Dampeners can't stop sideways sliding in turns. `Fighter` strafing (`Strafe` mode, random X/Y/Z directions in `CalculateStrafeThrust`) drifts uncontrolled in a direction with no thrusters. | `Fighter.cs`, `ThrustSystem.cs:514+` |
+| **Up / down** thrust | With level mode on (§3A), no altitude hold toward the waypoint: `CalculateHoverThrust` drives up/down thrust only. With level mode off, MES never commands them; they act only through dampeners. | `ThrustSystem.cs:70-76, 278-398` |
 
+- Forward-only aircraft: use `FighterPlane` (§6B), which never needs to brake.
+- **Before 2.75.00** the unsigned check made the missing-thruster cases far worse: past `MaxSpeed` the grid fired reverse thrust even while moving backwards and accelerated away indefinitely, and before commit `941e8c2` (jayph, also 2.75.00) stopping distance was read from the **forward** thrusters, so a forward-only grid thought it could brake. Treat six directions as required on those builds.
+- **[HARD]** While MES brakes (`SetZ(true, true, 1)`), forward thrusters get `0.0001f` override, which also stops vanilla dampeners from using them (`ThrusterProfile.UpdateThrusterBlock()`).
 ---
 
 ### B. Single Forward Thruster Architecture (`FighterPlane`) [HARD & SOFT]
@@ -376,18 +363,16 @@ Unless using a subclass specifically built for single-axis thrust (`FighterPlane
 RivalAI does not drive `IMyMotorSuspension` wheel motors via the autopilot. Ground vehicles (`FakeRoverPathing` or standard behaviors) rely entirely on **thrusters for locomotion** and **gyroscopes for steering**. Ground rovers experience severe instability, stratospheric launches, and motion deadlocks without proper thruster architecture and specialized autopilot tuning.
 
 #### 1. Locomotion & Thruster Architecture [HARD & SOFT]
-- **No Native Wheel Propulsion [HARD]**: RivalAI has zero code driving wheel suspension propulsion or steering. All wheeled rovers require internal/hidden thrusters in all 6 directions and gyroscopes.
+- **No Native Wheel Propulsion [HARD]**: RivalAI has zero code driving wheel suspension propulsion or steering. Wheeled rovers need internal/hidden forward and backward thrusters and gyroscopes; side and down thrusters are strongly recommended (§6A says what each direction does).
 - **Who fires the up, down and side thrusters depends on the level mode [HARD]** (§3A):
   - **Fly-level off (the template below):** MES commands only forward/backward thrust (`CalculateDirectForwardThrust`, `ThrustSystem.cs:190-261`) and climbs by pitching the nose at the waypoint. Up, down and side thrusters act only through vanilla inertia dampeners, so keep `[DisableInertiaDampeners:false]`. **[SOFT]** A wheeled rover with dampeners off never fired them and slid sideways; with dampeners on, an upward thruster floated it off bumps, so save upward thrusters turned off on light rovers and keep the down and side ones.
   - **Fly-level on:** `CalculateHoverThrust` drives up/down thrust toward the waypoint altitude (`ThrustSystem.cs:278-398`): up thrust when below it (`SetY`), down thrust to brake upward motion (`CalculateStoppingDistance` on the down thrusters). Missing thrusters in a direction leave that correction at zero.
-- **Forward & Backward Thrusters [HARD]**: Forward propulsion and waypoint deceleration. Reverse thrusters are mandatory; without them, `CalculateStoppingDistance()` is `0`, causing the rover to blow through waypoints at full speed.
+- **Forward & Backward Thrusters [HARD]**: Forward propulsion and waypoint deceleration. Without reverse thrusters neither over-speed braking nor the `[SlowDownOnWaypointApproach:true]` slow-down has any force, so the rover blows through waypoints at full speed and has to turn back.
 
 #### 2. The Four Ground AI Failure Modes & Deadlocks [HARD]
-1. **The Scalar Reverse Runaway Trap (`ThrustSystem.cs:250`)**:
-   - Going downhill or hitting a terrain bump causes grid speed to exceed `MaxSpeed + MaxSpeedTolerance`.
-   - In `CalculateDirectForwardThrust()`, MES commands `_thrustToApply.SetZ(true, true, 1)` (100% reverse override) and forces forward thrusters to `0.0001f` (disabling vanilla inertia dampeners).
-   - Once the rover stops forward motion and rolls backward, MES checks `velocityAmount = velocity.Length()`.
-   - Because `.Length()` is an **unsigned scalar**, reversing at 105 m/s still evaluates to `velocityAmount > MaxSpeed`. MES keeps 100% reverse thrust pinned permanently, accelerating the rover backwards into deep space.
+1. **The Scalar Reverse Runaway Trap (fixed in MES 2.75.00, MES PR #402)**:
+   - Before 2.75.00, going downhill or over a bump past `MaxSpeed + MaxSpeedTolerance` made MES fire 100% reverse thrust, and because the check used the unsigned `velocity.Length()`, it kept firing once the rover rolled backwards, accelerating it backwards into the sky.
+   - Since 2.75.00 the check uses the forward component of velocity (`ThrustSystem.cs:209, 250`): a rover rolling backwards gets forward thrust. A downhill overspeed now just brakes (needs reverse thrusters, §6A).
 2. **The Voxel Collision Sky Evasion Loop (`CollisionSystem.cs:1344`)**:
    - MES casts raycasts in cardinal directions. On a planet surface, forward and down rays immediately hit terrain voxels within meters.
    - In `CalculateEvadeCoords()`, MES iterates through available directions to find an unobstructed vector. The only clear direction with no voxels is **UP** (`UpResult`).

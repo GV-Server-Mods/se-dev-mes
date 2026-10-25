@@ -282,18 +282,13 @@ When troubleshooting encounter loading or execution failures, search `SpaceEngin
   [LevelWithGravityWhenIdle:false]
   ```
 
-### 10. NPC Reverses Into Space at Max Thrust / Endless Flip-and-Burn Slingshot
-- **Cause**: The grid lacks thrusters in all 6 cardinal directions (particularly missing backward/reverse braking thrusters), or exceeds speed tolerance triggering the unsigned scalar reverse trap (`ThrustSystem.cs:250`).
-- **Result**:
-  1. In `ThrustSystem.cs`, exceeding `MaxSpeed + MaxSpeedTolerance` commands 100% reverse thrust (`SetZ(true, true, 1)`) and drops forward thrusters to `0.0001f`. Without reverse thrusters, braking force is 0.
-  2. `CalculateStoppingDistance()` computes 0 stopping distance, causing the grid to blow past waypoints at max speed.
-  3. Once past the waypoint, `RotationSystem.cs` rotates the craft 180° to face the waypoint behind it.
-  4. Moving backwards relative to its heading at max speed, `velocityToTargetAngle` exceeds `MaxVelocityAngleForSpeedControl`, triggering 100% forward thrust override into deep space.
-  5. On rovers, reverse velocity exceeding `MaxSpeed` locks reverse thrust at 100% permanently because `velocity.Length()` is an unsigned scalar.
-  6. **Before MES 2.75.00**, with `MaxVelocityAngleForSpeedControl` above 90, the same unsigned check caught aircraft too: a grid facing its waypoint while moving away from it faster than `MaxSpeed` showed `Brake To Desired Speed` in `/MES.IGGB` and accelerated away indefinitely. Fixed in 2.75.00 (MES PR #402): `CalculateDirectForwardThrust` now brakes on the forward component of the velocity, so a grid moving backwards gets forward thrust.
-- **Fix** (item 6: `MaxVelocityAngleForSpeedControl:180` on MES 2.75.00+, at most 90 on older builds; the angle does not help items 1-5, which need the thrusters below; see [aircraft_behaviors_and_tuning.md](aircraft_behaviors_and_tuning.md) section 1):
-  1. Add at least one working thruster in all six cardinal directions.
-  2. For atmospheric aircraft with forward-only thrust, switch behavior subclass to `FighterPlane` (which uses velocity-aligned climbing breakaway without braking).
+### 10. NPC Reverses Into Space at Max Thrust / Overshoots Waypoints and Swings Back
+- **Before MES 2.75.00 (runaway into space)**: `CalculateDirectForwardThrust` compared the unsigned `velocity.Length()` with `MaxSpeed`. A grid moving backwards faster than `MaxSpeed` (a rover rolling back downhill, or an aircraft facing its waypoint while drifting away with `MaxVelocityAngleForSpeedControl` above 90) showed `Brake To Desired Speed` in `/MES.IGGB`, fired reverse thrust and accelerated away indefinitely. Fixed in 2.75.00 (MES PR #402): it now uses the forward component of velocity, so a grid moving backwards gets forward thrust. Grids missing thruster directions no longer run away (field-observed).
+- **2.75.00+ (overshoot and swing back, bounded)**: no reverse thrusters means `CalculateStoppingDistance()` is `0`, so the grid keeps full thrust until `WaypointTolerance`, coasts through the waypoint, turns around and comes back.
+- **Fix**:
+  1. `MaxVelocityAngleForSpeedControl:180` on 2.75.00+ (at most 90 on older builds); see [aircraft_behaviors_and_tuning.md](aircraft_behaviors_and_tuning.md) section 1.
+  2. Add reverse thrusters so it can brake; see [behaviors_and_autopilot.md](behaviors_and_autopilot.md) §6A for what each direction does. On builds before 2.75.00, give it all six directions.
+  3. For atmospheric aircraft with forward-only thrust, switch behavior subclass to `FighterPlane` (which uses velocity-aligned climbing breakaway without braking).
   3. For thrust-driven rovers, see [behaviors_and_autopilot.md §6.C](file:///c:/Users/blayl/source/repos/se-dev-mes/references/behaviors_and_autopilot.md#c-thrust-driven-rovers--ground-vehicles-best-practices--pitfalls-hard--soft) for the complete rover setup (`[UseSurfaceHoverThrustMode:true]`, `[FlyLevelWithGravity:false]`, and matching `[IdealPlanetAltitude]` to Remote Control height).
 
 ### 11. Rover NPC Stalls on Hills, Lifts Wheels, or Backflips Into Sky
