@@ -19,7 +19,7 @@ When testing whether triggers fire and actions execute, **never create throwaway
     ```xml
     <Description>
       [RivalAI Action]
-      [DebugMessage:TRIGGER FIRED: Health < 50% | Counter: {DamageCounter} | Faction: {Faction}]
+      [DebugMessage:TRIGGER FIRED: Health < 50% | Faction: {Faction}]
       [ChangeBehaviorSubclass:true]
       [NewBehaviorSubclass:Fighter]
     </Description>
@@ -366,6 +366,10 @@ When troubleshooting encounter loading or execution failures, search `SpaceEngin
 - **[SOFT] After a world reload** each grid reads its own copy of the NpcData from its storage, so the counter should no longer be shared for ships loaded from a save. `DespawnAttempts` is saved (`[ProtoMember(18)]`), though, so a leftover saved after a failed despawn may still start above 10. Not tested.
 - **Find affected prefabs**: count the `<CubeGrid>` elements per prefab; 12 or more is affected (`scripts/audit_prefabs.ps1` warns). Stations count too: a static base with turrets on rotors is despawned the same way.
 - **Workaround until fixed**: keep NPC prefabs at 11 grids or fewer (merge or remove subgrids, use fewer wheels). MES cannot remove the leftovers either: `/MES.Debug.DeleteGrid` goes through the same cleanup and hits the same spent counter. Delete them as an admin (Space Master, Ctrl+X).
+
+### 18. "Spawn Successful", but nothing appears anywhere
+- **[SOFT, seen once, cause unknown]** Every spawn logged `Spawn Successful` and passed `/MES.GESAP`, but no grid appeared anywhere, planetary installations included, and the cleanup log was empty. A full game restart fixed it.
+- `Spawn Successful` only means MES handed the prefab to the game's background spawner. `/MES.IGLSD.PostSpawn` should show whether the grids were created (not verified in that case).
 
 ---
 

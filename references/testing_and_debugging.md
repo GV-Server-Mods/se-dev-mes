@@ -77,7 +77,7 @@ To **change** state for a test, use `/MES.Debug.ChangeBool.<Name>.<true|false>` 
 
 Add a debug message to the profiles under test, so the chat shows each step as it happens.
 
-- **RivalAI**: `[DebugMessage:<text>]` in a `[RivalAI Action]` (grid counters as `{CounterName}` and the usual tokens resolve). A trigger runs every action in its `[Actions:]` list by default (`[ActionExecution:All]`), so a separate debug action can be added to a trigger's list without editing its real action.
+- **RivalAI**: `[DebugMessage:<text>]` in a `[RivalAI Action]`. **[HARD]** It replaces only the NPC-data tokens (`{SpawnGroupName}`, `{SpawnGroupNameTruncated}`, `{Faction}` = the spawn faction, `{EventInstance}`, `{CustomVariablesName}`, `{Position}`) and keys set with `[SetCustomCountersVariables:true]` + `[CustomCountersVariables:Key,Value]` (`ActionSystem.cs:3124-3140`). Trigger counters (`[IncreaseCounters:]`, `[SetCounters:]`) and booleans print as written. The chat sender is the grid's name, so grids of one prefab look identical: put a step label in the text. A trigger runs every action in its `[Actions:]` list by default (`[ActionExecution:All]`), so a separate debug action can be added to a trigger's list without editing its real action.
 - **Events**: `[DebugChatMessage:<text>]` or `[DebugHudMessage:<text>]` in a `[MES Event Action]`.
 - **Make the message say which step fired**: `[DebugMessage:STEP 3 patrol return | Kills {Kills}]`. One message per trigger in the chain shows where the chain stops.
 - A trigger that never prints: its type check or a condition fails, or it is on cooldown, disabled, or used up (`[MaxActions:]`). Check it in `/MES.IGGB` before turning on logs.

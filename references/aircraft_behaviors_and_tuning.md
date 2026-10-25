@@ -52,6 +52,11 @@ plane's velocity direction (`FighterPlane.cs:256`); both read their distances fr
 - **MES 2.75.00 and later: use 180.** Outside the angle MES applies full forward thrust whatever the speed, which has no use once the brake is direction-aware. At 180 the angle check never passes, so speed control always runs and the only full-thrust case left is a grid at rest (`velocity.Length() <= 0.1`). A grid moving away from its waypoint with its nose on it has a negative forward speed and gets forward thrust from speed control (`Thrust To Desired Speed`), so it still stops and turns back. **[SOFT]** Flight-tested on GVK (aircraft and escorts flew well at 180; the earlier cap to 89 was only to dodge the pre-2.75.00 reverse-thrust runaway).
 - **Before 2.75.00: keep it at 90 or less.** The brake compared `velocity.Length()`, an unsigned speed, so above 90 a grid facing its waypoint while drifting away faster than `MaxSpeed` "braked" by firing reverse thrusters, pushing itself further away and gaining speed (field-observed: an escort 8 km from its slot at 150 m/s, velocity angle 179.6°, IGGB showing `Brake To Desired Speed`). The hover path (`CalculateHoverThrust`) always used the forward component and was not affected.
 
+**After the run: a near-vertical climb [HARD code; SOFT seen].**
+- With `[AttackRunUseSafePlanetPathing:false]` the run ignores `MinimumPlanetAltitude`, so a run at a ground target often ends below it.
+- On the next waypoint, planet pathing sees the grid under `MinimumPlanetAltitude` above the highest terrain on its path. It flies to a climb point 50 m ahead at `IdealPlanetAltitude` above that terrain (`GetCoordsAboveHighestTerrain`, `AutoPilotSystem.cs:2063`) until it is within `AltitudeTolerance` of `IdealPlanetAltitude` (`CalculateSafePlanetPathWaypoint`, `:1796`). It looks like a straight climb over the target.
+- **Fix:** on the combat profile set `MinimumPlanetAltitude` below the height a run normally ends at, so it is only a terrain floor. The run itself always aims at the target or its lead point (`WaypointFromTarget`, `:549-555`); change the dive angle with the line-up altitude (`OffsetPlanetMin/MaxTargetAltitude`).
+
 ### Autopilot tags that do little or nothing for aircraft **[HARD]**
 Checked against MES `bc71965` (upstream master).
 
@@ -148,3 +153,17 @@ The usual reason "MES aims at the target but the WeaponCore guns never fire".
 - **Yaws at the target but never pitches**: `/MES.IGGB` and look for `LevelWithGravity`; see section 2 above and 6D.
 - **Speed is wrong**: `/MES.IGGB` (AutoPilot section, `Forward Thrust Mode`) shows the thrust branch ("Brake To Desired Speed", "Drifting At Desired Speed", "Thrust Angle Not Matched").
 - **A spawn never produces the aircraft**: `/MES.SpawnDebug.SpawnGroup.true` prints why each group was rejected (for example "Could Not Get Valid NPC Faction" when the group's `FactionOverride` does not exist in the world). Without it the log only says "Eligible SpawnGroup Count 0".
+
+## 7. Escort wingmen that hold their slot
+
+Applies to aircraft (and fast hover craft) flying MES's `Escort` behavior on a leader's `[EscortOffsets:]`.
+
+- **Overshoot and turnaround [mechanism HARD, SOFT seen].** An escort flies at its slot, a waypoint fixed to the leader. Once the slot is more than 90° off its nose it gets no forward thrust and turns back toward it (`ThrustSystem.cs`, forward axis). An aircraft that passes its slot by a few metres therefore swings around, falls behind and repeats, and soon loses the formation. Aircraft brake weakly (few reverse thrusters; without `[SlowDownOnWaypointApproach:true]` only over-speed braking applies), which makes the overshoot likely.
+- **Speed matching is the fix** (`Escort.cs:107-128`). Within `[EscortSpeedMatchMaxDistance:]` the speed cap scales from the leader's speed, at `[EscortSpeedMatchMinDistance:]`, up to the escort's `IdealMaxSpeed` at the max distance.
+  - With a small minimum (10 m) the escort reached the slot faster than the leader and overshot it. Shortening the max distance made it worse.
+  - **Field-tested (suggestion):** escort `IdealMaxSpeed` 150 behind a leader at 40-120 m/s, max distance 300 m, `MaxSpeedTolerance` 5, minimum raised in steps to 170 m: the escort reaches the leader's speed long before the slot and holds it.
+  - The cost: the escort settles behind its slot, roughly at the minimum distance, so put the slot ahead of where the wing should fly (negative Z, about half the minimum distance).
+  - Ground and hover escorts at 35-110 m/s did well with much smaller values: minimum 20 m, max 200 m, `MaxSpeedTolerance` 2.
+- **Slot geometry.** `EscortOffsets` are in the leader's frame (+X right, +Y up, +Z behind its Remote Control). A slot swings sideways at the leader's turn rate times its distance from the leader, so closer slots move less in turns. A slot far ahead flips behind the wing when the leader reverses and forces a turnaround.
+- **Turn rate and speed.** Give the escort at least the leader's yaw multiplier, or it falls behind in every turn. A leader slower than the escort's `IdealMaxSpeed` (30 m/s of headroom worked) leaves it room to catch up.
+- **Disrupting manoeuvres.** A barrel roll or random strafe on the leader throws the escort off its slot. If your triggers start them, block them while the grid has escorts.

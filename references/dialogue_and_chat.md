@@ -73,6 +73,7 @@ Bank file: <mod>/Data/DialogueBanks/MyBank             (XML, not an .sbc profile
 
 ## 5. Broadcast Range
 
+- **[HARD] A chat from a `[Type:PlayerFar]` trigger can reach nobody.** The trigger fires only with no player inside its `[TargetDistance:]`, so a chat with `[IgnoredAntennaRangeOverride:]` at or below that distance (and without `[SendToAllOnlinePlayers:true]`) has no one in range. Give it a radius well beyond `TargetDistance`.
 - **[HARD] With `[IgnoreAntennaRequirement:true]`, `[IgnoredAntennaRangeOverride:]` is the broadcast radius** (`BroadcastSystem.cs` sets `HighestRadius` from it, then skips players beyond it). **Fails as**: `9999999` sends the line to every player on the server. **[SOFT]** That value is a common copy-paste default in chat profiles.
 - **[HARD, 2.75.00 and master `bc71965`] `[SendToAllOnlinePlayers:true]` now skips players with no character.** The NPC-check migration turned `!SendToAll && (IsBot || Character == null)` into `!SendToAll && IsIdentityNPC(...) || Character == null`, so a dead or respawning player no longer receives it (`BroadcastSystem.cs`, recipient filter; reported as MeridiusIX/Modular-Encounters-Systems#414).
 
