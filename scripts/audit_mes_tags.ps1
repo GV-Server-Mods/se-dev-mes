@@ -10,35 +10,34 @@
     4. [CutVoxels:true] on Spawn Conditions (does not exist in MES).
     5. Missing activation flags ([UseTrigger:true], [UseSpawn:true], [UseChat:true], [UseEvent:true]).
        [UseConditions:] defaults to true, so a [RivalAI Condition] needs no gate.
-    6. Conflicting Autopilot flags (FlyLevelWithGravity + UseSurfaceHoverThrustMode).
-    7. Boolean formatting errors (True, TRUE, 1 instead of true).
-    8. RivalAI vs MES Event Action tag mismatches ([Spawner:] vs [SpawnData:]; [Chat:] is not a tag - both use [ChatData:]).
-    9. ContainerType master gates and list count mismatches in [MES Manipulation].
-    10. ContainerType master gates and list count mismatches in [RivalAI Action].
-    11. Missing boolean master gates and list count mismatches in [MES Event Action].
-    12. Missing boolean master gates and list count mismatches in [MES Event Condition].
-    13. Invalid token usage: {SpawnGroupName} anywhere in an [MES Event Action] (never
+    6. Boolean formatting errors (True, TRUE, 1 instead of true).
+    7. RivalAI vs MES Event Action tag mismatches ([Spawner:] vs [SpawnData:]; [Chat:] is not a tag - both use [ChatData:]).
+    8. ContainerType master gates and list count mismatches in [MES Manipulation].
+    9. ContainerType master gates and list count mismatches in [RivalAI Action].
+    10. Missing boolean master gates and list count mismatches in [MES Event Action].
+    11. Missing boolean master gates and list count mismatches in [MES Event Condition].
+    12. Invalid token usage: {SpawnGroupName} anywhere in an [MES Event Action] (never
         resolves, no NpcData); {Faction} in an [MES Event Action] outside of [SpawnData:]
         (never resolves), or inside [SpawnData:] without a matching [SpawnFactionTags:]
         entry (MES's Event-only bespoke {Faction} replace requires it); tokens in
         [Actions:]/[Conditions:]/[Triggers:]/[TriggerGroups:] profile name references
         (always static lookups, no substitution mechanism exists for these at all).
-    14. Faction tag internal consistency ([FactionOwner:], [FactionOverride:], [SpawnFactionTags:], [AllowedZoneFactions:], [RestrictedZoneFactions:]): a tag not declared in
+    13. Faction tag internal consistency ([FactionOwner:], [FactionOverride:], [SpawnFactionTags:], [AllowedZoneFactions:], [RestrictedZoneFactions:]): a tag not declared in
         any local Factions*.sbc is checked for consistent reuse across the mod (likely a
         faction from another mod - INFO) vs. singleton/near-duplicate spellings (likely a
         typo - WARN), since there is no single enumerable source of truth for factions
         defined in arbitrary external/workshop mods.
-    15. [Type:DespawnMES] triggers that can never fire: no [DespawnTypeFromSpawner:] (an empty
+    14. [Type:DespawnMES] triggers that can never fire: no [DespawnTypeFromSpawner:] (an empty
         type only matches an empty despawn source, which only /MES.Debug.RemoveAllNpcs leaves),
         or CleanUp / PathEnd, which never match up to MES 2.75.01 (ProcessMESDespawnTriggers
         computed a match and never read it; fixed in master 16f6a16).
         Cross-file despawn checks (delayed commands, duplicate actions) are in
         audit_mes_references.ps1.
-    16. [Type:Damage] triggers without [DamageTypes:] (the list starts empty, so the trigger
+    15. [Type:Damage] triggers without [DamageTypes:] (the list starts empty, so the trigger
         never fires; TriggerSystem.cs checks DamageTypes.Contains(type) || Contains("Any")).
-    17. Comma lists in [Triggers:] / [TriggerGroups:] (TagStringCheck reads "A,B" as one name).
-    18. [RivalAI Chat] [MinTime:] above [MaxTime:] (default 1): MES silently lowers MinTime to MaxTime.
-    19. [RivalAI Chat] paired lists shorter than [ChatMessages:]: too few [BroadcastChatType:] drops
+    16. Comma lists in [Triggers:] / [TriggerGroups:] (TagStringCheck reads "A,B" as one name).
+    17. [RivalAI Chat] [MinTime:] above [MaxTime:] (default 1): MES silently lowers MinTime to MaxTime.
+    18. [RivalAI Chat] paired lists shorter than [ChatMessages:]: too few [BroadcastChatType:] drops
         every line; too few [ChatAudio:]/[ChatAvatar:]/[ChatVolumeMultiplier:] ignores that list.
     Line checks skip XML comments, so commented-out tags are not reported.
 .PARAMETER Path
@@ -298,14 +297,6 @@ foreach ($file in $files) {
                         $issuesFound++
                     }
                 }
-            }
-        }
-
-        # Check 8: Autopilot Conflicts
-        if ($block -match '\[(RivalAI|MES AI) Autopilot\]') {
-            if ($block -match '\[FlyLevelWithGravity:true\]' -and $block -match '\[UseSurfaceHoverThrustMode:true\]') {
-                Write-Host "[ERROR] $($file.Name) - Autopilot declares both [FlyLevelWithGravity:true] and [UseSurfaceHoverThrustMode:true]! This causes severe physics oscillation." -ForegroundColor Red
-                $issuesFound++
             }
         }
 

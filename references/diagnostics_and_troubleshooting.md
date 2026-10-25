@@ -298,24 +298,28 @@ When troubleshooting encounter loading or execution failures, search `SpaceEngin
 
 ### 11. Rover NPC Stalls on Hills, Lifts Wheels, or Backflips Into Sky
 - **Cause**:
-  1. **Hill Stalling**: `HoverUpAngle` defaults to 10°. Inclines or ramps steeper than 10° trigger `_thrustToApply.SetZ(false, false, 0)`, completely cutting forward thrust.
+  1. **Hill Stalling** (fly-level on only): with `FlyLevelWithGravity` or `LevelWithGravityWhenIdle` on, MES uses its hover thrust routine, which cuts forward thrust when tilted more than `HoverUpAngle` (default 10°). With both off this check never runs.
   2. **Wheel Lifting**: `[FlyLevelWithGravity:true]` forces chassis perpendicular to planetary gravity rather than terrain slope, lifting downhill/uphill wheels off the ground.
-  3. **Backflipping on Turns**: Waypoints generated behind the rover create a 90°/90° yaw symmetry deadzone while pitch saturates to 100% override (`Math.PI * 2`).
+  3. **Backflipping on Turns**: with the waypoint behind, yaw and pitch both ask for the full rate, and a pitch multiplier anywhere near yaw makes the rover flip toward it instead of turning.
   4. **Sky Evasion**: Voxel collision raycasts detect ground in all directions except UP, commanding climb evasion into space.
 - **Fix**: Apply the golden rover autopilot profile from [behaviors_and_autopilot.md §6.C](file:///c:/Users/blayl/source/repos/se-dev-mes/references/behaviors_and_autopilot.md#c-thrust-driven-rovers--ground-vehicles-best-practices--pitfalls-hard--soft):
   ```xml
   [UseSurfaceHoverThrustMode:true]
   [FlyLevelWithGravity:false]
+  [LevelWithGravityWhenIdle:false]
   [IdealPlanetAltitude:<rc_block_height>]
   [HoverPathStepDistance:50]
   [WaypointTolerance:15]
-  [MaxVerticalSpeed:5]
   [RotationMultiplierPitch:0.1]
   [RotationMultiplierYaw:1.5]
   [RotationMultiplierRoll:1.0]
+  [UseAircraftFlightModel:true]
+  [MaxRotationStep:0.5]
+  [LimitRotationSpeed:false]
+  [MaxRotationMagnitude:1]
   [UseVelocityCollisionEvasion:false]
   ```
-  Also ensure prefab wheel suspension friction is `<= 12%` so gyro yaw torque can pivot the vehicle smoothly.
+  If it still can't pivot against wheel friction, see §6C.5 of the same file (fix the gyro ramp before lowering friction).
 
 ### 12. Spawn Group Never Spawns / Silent Rejection ("Could Not Get Valid NPC Faction")
 - **Cause**: The faction tag specified in `[FactionOwner]`, `[FactionOverride]`, or `[SpawnFactionTags]` does not exist in the world session (due to a typo, e.g. `SPTR` instead of `SPRT`, or because the mod containing `Factions.sbc` is missing or threw an XML deserialization error).

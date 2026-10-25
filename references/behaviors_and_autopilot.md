@@ -94,9 +94,10 @@ Checked against MES `37455cf` (upstream master).
 ### A. Collision Evasion & Planet Flight Rules
 - `[UseVelocityCollisionEvasion:true]`: Uses velocity projection vectors to evade asteroids and terrain before impacts occur.
 - `[CollisionEvasionWaypointCalculatedAwayFromEntity:true]`: Generates evasion waypoints away from the obstacle rather than toward target.
-- `[FlyLevelWithGravity:true]` vs `[UseSurfaceHoverThrustMode:true]`:
-  > [!CAUTION]
-  > **Hard Conflict**: Never enable both. `FlyLevelWithGravity` aligns the grid's artificial horizon with gravity, while `UseSurfaceHoverThrustMode` forces downward thrusters to maintain a fixed terrain altitude. Combining them causes violent physics oscillation and sim-speed collapse.
+- **`[UseSurfaceHoverThrustMode:true]` vs `[FlyLevelWithGravity:true]` are different switches [HARD]** (the shared word "hover" misleads: the tag does not select MES's `CalculateHoverThrust` routine):
+  - `UseSurfaceHoverThrustMode` is mainly **pathing**. In gravity with planetary pathing, the waypoint becomes a step `HoverPathStepDistance` ahead at `IdealPlanetAltitude` above the ground, with a cliff check, instead of the safe-altitude planet path (`AutoPilotSystem.cs:1216-1219, 1942-1983`); it also pulls the waypoint down to the surface when the grid is high above it (`:2032-2047`). Its only thrust effect is relaxing `MaxVerticalSpeed` inside the hover routine (`ThrustSystem.cs:321-331`).
+  - `FlyLevelWithGravity` / `LevelWithGravityWhenIdle` switch on the `LevelWithGravity` mode: pitch aims at level instead of at the waypoint (`RotationSystem.cs:187-192`), and in gravity with `ThrustForward` MES runs `CalculateHoverThrust` instead of `CalculateDirectForwardThrust` (`ThrustSystem.cs:70-76`). Only that routine holds altitude with up/down thrust, reads `MaxVerticalSpeed` and `HoverUpAngle`, and cuts thrust on tilt (§6C item 4). Without it, MES commands forward/backward thrust only (`ThrustSystem.cs:190-261`).
+  - The code does not forbid combining them. **[SOFT]** On ground vehicles keep fly-level off: it lifts wheels on slopes (§6C.3) and drove a leveled hover NPC's nose into rising ground on hills.
 - **Pitch Lockout Trap (`[FlyLevelWithGravity]` / `[LevelWithGravityWhenIdle]`) [HARD]**:
   > [!CAUTION]
   > **Pitch Lockout**: Never enable `[FlyLevelWithGravity:true]` or `[LevelWithGravityWhenIdle:true]` on craft that need to pitch their nose (aircraft, dive bombers, fixed-weapon gunships, snipers). In `RotationSystem.cs:187`, `LevelWithGravity` forces gyro pitch to align solely with the planetary horizon, completely bypassing target pitch. Furthermore, `[LevelWithGravityWhenIdle:true]` suffers from a state-bleed bug in `ActivateAutoPilot()` that permanently latches `LevelWithGravity` into combat modes across `FighterPlane`, `Strike`, `Sniper`, and `HorseFighter`. Details: §6.D.
@@ -376,8 +377,9 @@ RivalAI does not drive `IMyMotorSuspension` wheel motors via the autopilot. Grou
 
 #### 1. Locomotion & Thruster Architecture [HARD & SOFT]
 - **No Native Wheel Propulsion [HARD]**: RivalAI has zero code driving wheel suspension propulsion or steering. All wheeled rovers require internal/hidden thrusters in all 6 directions and gyroscopes.
-- **Up Thrusters (pointing DOWN) [HARD]**: When a rover is below its waypoint (`altitudeDist < 0`), MES applies vertical correction via `_thrustToApply.SetY(...)`. Without Up thrusters, `SetY` does nothing, and the rover pitches its nose up into the sky and fires main forward thrusters to climb, launching it into the air like a rocket. Up thrusters satisfy vertical delta adjustments without pitch escalation.
-- **Down Thrusters (pointing UP) [HARD & SOFT]**: When cresting dunes or bouncing over rocks, upward velocity (`upVelocityAmt > 0`) requires downward braking. In `CalculateHoverThrust()`, `CalculateStoppingDistance()` computes downward braking using down thrusters. Without Down thrusters, downward stopping distance is `0`, and the autopilot cannot arrest upward bouncing. Down thrusters provide active bounce braking and continuous artificial downforce, keeping wheels planted for steering.
+- **Who fires the up, down and side thrusters depends on the level mode [HARD]** (§3A):
+  - **Fly-level off (the template below):** MES commands only forward/backward thrust (`CalculateDirectForwardThrust`, `ThrustSystem.cs:190-261`) and climbs by pitching the nose at the waypoint. Up, down and side thrusters act only through vanilla inertia dampeners, so keep `[DisableInertiaDampeners:false]`. **[SOFT]** A wheeled rover with dampeners off never fired them and slid sideways; with dampeners on, an upward thruster floated it off bumps, so save upward thrusters turned off on light rovers and keep the down and side ones.
+  - **Fly-level on:** `CalculateHoverThrust` drives up/down thrust toward the waypoint altitude (`ThrustSystem.cs:278-398`): up thrust when below it (`SetY`), down thrust to brake upward motion (`CalculateStoppingDistance` on the down thrusters). Missing thrusters in a direction leave that correction at zero.
 - **Forward & Backward Thrusters [HARD]**: Forward propulsion and waypoint deceleration. Reverse thrusters are mandatory; without them, `CalculateStoppingDistance()` is `0`, causing the rover to blow through waypoints at full speed.
 
 #### 2. The Four Ground AI Failure Modes & Deadlocks [HARD]
@@ -391,20 +393,18 @@ RivalAI does not drive `IMyMotorSuspension` wheel motors via the autopilot. Grou
    - In `CalculateEvadeCoords()`, MES iterates through available directions to find an unobstructed vector. The only clear direction with no voxels is **UP** (`UpResult`).
    - The autopilot generates evasion waypoints high in the sky, commanding climb thrust and pitch-up evasion constantly.
    - **Fix**: Set `[UseVelocityCollisionEvasion:false]` on all ground rovers.
-3. **The 180° Backflip Bug (`RotationSystem.cs:103-120 & 179-200`)**:
-   - When a waypoint or offset is generated behind the rover (~180°):
-     - **Yaw Symmetry Deadzone**: `angleLeftToTarget` ≈ 90° and `angleRightToTarget` ≈ 90°. `YawTargetAngleResult` difference between left and right is nearly `0`, leaving yaw with almost zero directional authority.
-     - **Pitch Saturation**: Any slight elevation delta or suspension tilt causes `CalculateGyroAxisRadians()` to evaluate `totalAngle = 180 > 0`, forcing `angleDifference = 90°` (`>= RotationSlowdownAngle`). This returns **100% maximum gyro pitch override** (`Math.PI * 2`).
-     - Pitch is commanded to maximum torque while yaw is paralyzed. The rover attempts a **backflip into the sky** to turn around instead of yawing on the ground.
-   - **Fix**: Set `[RotationMultiplierPitch:0.1]` and `[RotationMultiplierYaw:1.5]`. Keep `[RotationMultiplierRoll:1.0]` to preserve gyro authority for self-righting and defending against player ramming/flipping attacks.
-4. **The 10° Hill Stall Trap (`ThrustSystem.cs:273, 409-416`)**:
-   - In `CalculateHoverThrust()`, if rover chassis tilt exceeds `HoverUpAngle` (`upAngle > HoverUpAngle`):
+3. **The 180° Backflip (`RotationSystem.cs:85-125, 179-201`)**:
+   - With the waypoint in the rear hemisphere, `CalculateGyroAxisRadians` turns the angle difference into 90° for **both** yaw and pitch (`totalAngle > 0` pads it to 180°, then halves it). That is past `RotationSlowdownAngle` (default 70°), so both axes ask for the full rate (`2π` small grid, `π` large grid). The direction comes from left vs right (yaw) and up vs down (pitch); a tie picks the negative direction.
+   - The gyros get a diagonal command and the axis multipliers decide the mix: with pitch anywhere near yaw, the grid backflips toward the waypoint instead of turning on the ground. Yaw is not paralyzed; it saturates too.
+   - **Fix**: keep the pitch multiplier far below yaw (**[SOFT]** pitch 0.05–0.1 with yaw 1.5–5 stopped it), or use `FlyLevelWithGravity`, which aims pitch at level and never at the waypoint, where its other effects are acceptable (§3A). `MaxRotationStep` and `MaxRotationMagnitude` only slow the backflip. Roll always aims at level, so keep it for self-righting and resisting flips.
+4. **The Tilt Thrust Cutoff (level mode only) (`ThrustSystem.cs:70-76, 273, 409-416`)**:
+   - Applies only while `LevelWithGravity` is active (`FlyLevelWithGravity:true` or `LevelWithGravityWhenIdle:true`), because only then does MES run `CalculateHoverThrust`. With both off, as in the template below, MES uses `CalculateDirectForwardThrust`, which never checks tilt, and `HoverUpAngle` does nothing. `UseSurfaceHoverThrustMode` does not change this.
+   - In `CalculateHoverThrust()`, tilt from gravity above `HoverUpAngle` cuts up and forward thrust (`"Not Level With Gravity Direction"`):
      ```csharp
      _thrustToApply.SetY(false, false, 0, _orientation);
      _thrustToApply.SetZ(false, false, 0, _orientation); // Shuts off ALL forward thrust!
      ```
-   - `HoverUpAngle` defaults to **`10` degrees** (`AutoPilotProfile.cs:320`). Standard SE ramps are 18.4° (3x1), 26.5° (2x1), and 45° (1x1).
-   - Driving onto even shallow slopes or ramps causes `upAngle > 10`, immediately cutting forward thrust to 0% and stalling the rover permanently in `"Not Level With Gravity Direction"`.
+   - `HoverUpAngle` defaults to **`10` degrees** (`AutoPilotProfile.cs:334`). Standard SE ramps are 18.4° (3x1), 26.5° (2x1), and 45° (1x1), so a leveled ground unit stalls on them; raise `[HoverUpAngle:]` if it must use level mode.
 
 #### 3. Slope Dynamics & The "3/4 Wheels in the Air" Conflict [HARD & SOFT]
 - **The Gravity vs Terrain Normal Conflict**: `[FlyLevelWithGravity:true]` forces the rover chassis to remain perpendicular to the planet's gravity vector (`_upDirection`). On any hill or slope, the terrain normal is tilted relative to gravity. Forcing the chassis level lifts the uphill or downhill wheels into the air (balancing on 1 or 2 wheels).
@@ -431,11 +431,13 @@ Comments use `[//...]`: an XML `<!-- -->` inside `<Description>` aborts loading 
 <Description>
   [RivalAI Autopilot]
 
-  [//Surface Navigation (Bypasses aircraft climb logic; uses directional velocity dot product)]
+  [//Ground-hugging pathing: step waypoints HoverPathStepDistance ahead at IdealPlanetAltitude above the surface (section 3A)]
   [UseSurfaceHoverThrustMode:true]
 
-  [//Slope Alignment & Pitch Anchoring (Do NOT use FlyLevelWithGravity with UseSurfaceHoverThrustMode)]
+  [//Fly-level off: suspension sits flush on slopes and pitch follows the terrain. MES then drives forward/back thrust only; dampeners handle the rest]
   [FlyLevelWithGravity:false]
+  [LevelWithGravityWhenIdle:false]
+  [DisableInertiaDampeners:false]
   [//Set to exact physical height of Remote Control block above terrain (e.g., 1.5 to 2.5)]
   [IdealPlanetAltitude:2]
   [MinimumPlanetAltitude:1]
@@ -445,10 +447,7 @@ Comments use `[//...]`: an XML `<!-- -->` inside `<Description>` aborts loading 
   [HoverPathStepDistance:50]
   [WaypointTolerance:15]
 
-  [//Vertical Stabilization: caps climb rate when bouncing off dunes (default is -1 / unlimited)]
-  [MaxVerticalSpeed:5]
-
-  [//Gyro Authority (Kills 180-deg backflips, prioritizes yaw, preserves roll self-righting)]
+  [//Gyro Authority (pitch far below yaw stops the 180-deg backflip; roll keeps self-righting)]
   [RotationMultiplierPitch:0.1]
   [RotationMultiplierYaw:1.5]
   [RotationMultiplierRoll:1.0]

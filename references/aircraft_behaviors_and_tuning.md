@@ -129,7 +129,7 @@ The usual reason "MES aims at the target but the WeaponCore guns never fire".
 
 - `Fighter` approaches with `RotateToWaypoint | ThrustForward | PlanetaryPathing | WaypointFromTarget`, then **engages with `RotateToWaypoint | Strafe | WaypointFromTarget` and no `ThrustForward`**: it strafes with lateral/up/down thrusters and needs `[AllowStrafing:true]` (`Fighter.cs`). It needs thrusters in all six directions (see 6A).
 - For hover craft, `LevelWithGravity` is the intended mode rather than a bug: in gravity with `ThrustForward` it swaps `CalculateDirectForwardThrust` for `CalculateHoverThrust` (`ThrustSystem.cs:70`), which holds altitude against the waypoint
-  (`AltitudeTolerance`, `MaxVerticalSpeed`, `HoverUpAngle`). The price is the pitch lockout: the nose stays level, so a leveled hover craft will not nose-dive at targets. Never combine it with `UseSurfaceHoverThrustMode`.
+  (`AltitudeTolerance`, `MaxVerticalSpeed`, `HoverUpAngle`). The price is the pitch lockout: the nose stays level, so a leveled hover craft will not nose-dive at targets. `UseSurfaceHoverThrustMode` is a separate pathing switch, not this routine (`behaviors_and_autopilot.md` §3A).
 - If a hover fighter must aim its nose up or down at targets, run it without `LevelWithGravity` and give it enough vertical thrust to hold altitude on its own.
 
 ---

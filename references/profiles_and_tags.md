@@ -118,7 +118,7 @@ Every profile must be defined inside an `<EntityComponent xsi:type="MyObjectBuil
   - `[IdealMinSpeed:<float>]`, `[IdealMaxSpeed:<float>]`, `[MaxSpeedTolerance:<float>]`.
   - `[MinimumPlanetAltitude:<float>]`, `[IdealPlanetAltitude:<float>]`, `[AltitudeTolerance:<float>]`.
   - `[WaypointTolerance:<float>]`, `[SlowDownOnWaypointApproach:bool]`, `[ExtraSlowDownDistance:<float>]`.
-  - `[FlyLevelWithGravity:bool]` vs `[UseSurfaceHoverThrustMode:bool]` (MUTUALLY EXCLUSIVE).
+  - `[FlyLevelWithGravity:bool]` (level mode: pitch to level, hover thrust routine) and `[UseSurfaceHoverThrustMode:bool]` (ground-hugging step pathing) are separate switches: `behaviors_and_autopilot.md` §3A.
   - `[UseVelocityCollisionEvasion:bool]`, `[CollisionEvasionWaypointCalculatedAwayFromEntity:bool]`.
   - `[AllowStrafing:bool]`, `[StrafeMinDurationMs:<int>]`, `[StrafeMaxDurationMs:<int>]`.
   - `[UseProjectileLeadPrediction:bool]`.
