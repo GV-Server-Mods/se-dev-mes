@@ -56,15 +56,15 @@
     ]
   },
   "metadata": {
-    "generated_at": "2026-10-24T16:18:36.190573+00:00",
+    "generated_at": "2026-10-28T00:52:49.949778+00:00",
     "mes_path": "C:\\Users\\blayl\\AppData\\Roaming\\SpaceEngineers\\Mods\\Modular-Encounters-Systems\\Data\\Scripts\\ModularEncountersSystems",
-    "source_hash": "84fada8a2fea10c0",
+    "source_hash": "a9b69178bd3cc96f",
     "git_commit": {
-      "sha": "5d78bb821793c1c08e057eac26b4635a13b93381",
-      "date": "2026-10-24",
-      "subject": "Merge pull request #449 from GV-Server-Mods/fix/offset-angle-per-request"
+      "sha": "67320b773e1d5c853ab03712a7317ed175cdabe2",
+      "date": "2026-10-27",
+      "subject": "Merge pull request #461 from GV-Server-Mods/fix/npc-faction-relation-327"
     },
-    "total_tags": 1866,
+    "total_tags": 1868,
     "total_profiles": 41
   },
   "tags": [
@@ -4193,7 +4193,7 @@
       "tag": "SpaceCargoShip",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 715,
+      "line": 717,
       "parser": "TagBoolCheck"
     },
     {
@@ -4201,7 +4201,7 @@
       "tag": "LunarCargoShip",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 716,
+      "line": 718,
       "parser": "TagBoolCheck"
     },
     {
@@ -4209,7 +4209,7 @@
       "tag": "AtmosphericCargoShip",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 717,
+      "line": 719,
       "parser": "TagBoolCheck"
     },
     {
@@ -4217,7 +4217,7 @@
       "tag": "PlanetaryCargoShip",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 718,
+      "line": 720,
       "parser": "TagBoolCheck"
     },
     {
@@ -4225,7 +4225,7 @@
       "tag": "GravityCargoShip",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 719,
+      "line": 721,
       "parser": "TagBoolCheck"
     },
     {
@@ -4233,7 +4233,7 @@
       "tag": "SkipAirDensityCheck",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 720,
+      "line": 722,
       "parser": "TagBoolCheck"
     },
     {
@@ -4241,7 +4241,7 @@
       "tag": "CargoShipTerrainPath",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 721,
+      "line": 723,
       "parser": "TagBoolCheck"
     },
     {
@@ -4249,7 +4249,7 @@
       "tag": "CustomPathStartAltitude",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 722,
+      "line": 724,
       "parser": "TagDoubleCheck"
     },
     {
@@ -4257,7 +4257,7 @@
       "tag": "CustomPathEndAltitude",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 723,
+      "line": 725,
       "parser": "TagDoubleCheck"
     },
     {
@@ -4265,7 +4265,7 @@
       "tag": "SpaceRandomEncounter",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 724,
+      "line": 726,
       "parser": "TagBoolCheck"
     },
     {
@@ -4273,7 +4273,7 @@
       "tag": "AlignVoxelsToSpawnMatrix",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 725,
+      "line": 727,
       "parser": "TagBoolCheck"
     },
     {
@@ -4281,7 +4281,7 @@
       "tag": "UseOptimizedVoxelSpawning",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 726,
+      "line": 728,
       "parser": "TagBoolCheck"
     },
     {
@@ -4289,7 +4289,7 @@
       "tag": "CustomVoxelMaterial",
       "type": "List<string> (comma-separated)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 727,
+      "line": 729,
       "parser": "TagStringListCheck"
     },
     {
@@ -4297,7 +4297,7 @@
       "tag": "PlanetaryInstallation",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 728,
+      "line": 730,
       "parser": "TagBoolCheck"
     },
     {
@@ -4305,7 +4305,7 @@
       "tag": "PlanetaryInstallationType",
       "type": "string",
       "file": "SpawnConditionsProfile.cs",
-      "line": 729,
+      "line": 731,
       "parser": "TagStringCheck"
     },
     {
@@ -4313,7 +4313,7 @@
       "tag": "SkipTerrainCheck",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 730,
+      "line": 732,
       "parser": "TagBoolCheck"
     },
     {
@@ -4321,7 +4321,7 @@
       "tag": "RotateInstallations",
       "type": "List<Vector3D>",
       "file": "SpawnConditionsProfile.cs",
-      "line": 731,
+      "line": 733,
       "parser": "TagVector3DListCheck"
     },
     {
@@ -4329,7 +4329,7 @@
       "tag": "RotateInstallationsMin",
       "type": "List<Vector3D>",
       "file": "SpawnConditionsProfile.cs",
-      "line": 732,
+      "line": 734,
       "parser": "TagVector3DListCheck"
     },
     {
@@ -4337,7 +4337,15 @@
       "tag": "RotateInstallationsMax",
       "type": "List<Vector3D>",
       "file": "SpawnConditionsProfile.cs",
-      "line": 733,
+      "line": 735,
+      "parser": "TagVector3DListCheck"
+    },
+    {
+      "profile": "MES Spawn Conditions",
+      "tag": "RotateInstallationsDegrees",
+      "type": "List<Vector3D>",
+      "file": "SpawnConditionsProfile.cs",
+      "line": 736,
       "parser": "TagVector3DListCheck"
     },
     {
@@ -4345,7 +4353,7 @@
       "tag": "ReverseForwardDirections",
       "type": "TagBoolListCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 734,
+      "line": 737,
       "parser": "TagBoolListCheck"
     },
     {
@@ -4353,7 +4361,7 @@
       "tag": "InstallationTerrainValidation",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 735,
+      "line": 738,
       "parser": "TagBoolCheck"
     },
     {
@@ -4361,7 +4369,7 @@
       "tag": "InstallationSpawnsOnDryLand",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 736,
+      "line": 739,
       "parser": "TagBoolCheck"
     },
     {
@@ -4369,7 +4377,7 @@
       "tag": "InstallationSpawnsUnderwater",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 737,
+      "line": 740,
       "parser": "TagBoolCheck"
     },
     {
@@ -4377,7 +4385,7 @@
       "tag": "InstallationSpawnsOnWaterSurface",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 738,
+      "line": 741,
       "parser": "TagBoolCheck"
     },
     {
@@ -4385,7 +4393,7 @@
       "tag": "CutVoxelsAtAirtightCells",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 739,
+      "line": 742,
       "parser": "TagBoolCheck"
     },
     {
@@ -4393,7 +4401,7 @@
       "tag": "CutVoxelSize",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 740,
+      "line": 743,
       "parser": "TagDoubleCheck"
     },
     {
@@ -4401,7 +4409,7 @@
       "tag": "BossEncounterSpace",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 741,
+      "line": 744,
       "parser": "TagBoolCheck"
     },
     {
@@ -4409,7 +4417,7 @@
       "tag": "BossEncounterAtmo",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 742,
+      "line": 745,
       "parser": "TagBoolCheck"
     },
     {
@@ -4417,7 +4425,7 @@
       "tag": "BossEncounterAny",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 743,
+      "line": 746,
       "parser": "TagBoolCheck"
     },
     {
@@ -4425,7 +4433,7 @@
       "tag": "RivalAiSpawn",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 744,
+      "line": 747,
       "parser": "TagBoolCheck"
     },
     {
@@ -4433,7 +4441,7 @@
       "tag": "BehaviorSpawn",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 745,
+      "line": 748,
       "parser": "TagBoolCheck"
     },
     {
@@ -4441,7 +4449,7 @@
       "tag": "RivalAiSpaceSpawn",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 746,
+      "line": 749,
       "parser": "TagBoolCheck"
     },
     {
@@ -4449,7 +4457,7 @@
       "tag": "RivalAiAtmosphericSpawn",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 747,
+      "line": 750,
       "parser": "TagBoolCheck"
     },
     {
@@ -4457,7 +4465,7 @@
       "tag": "RivalAiAnySpawn",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 748,
+      "line": 751,
       "parser": "TagBoolCheck"
     },
     {
@@ -4465,7 +4473,7 @@
       "tag": "DroneEncounter",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 749,
+      "line": 752,
       "parser": "TagBoolCheck"
     },
     {
@@ -4473,7 +4481,7 @@
       "tag": "MinimumPlayerTime",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 750,
+      "line": 753,
       "parser": "TagIntCheck"
     },
     {
@@ -4481,7 +4489,7 @@
       "tag": "MaximumPlayerTime",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 751,
+      "line": 754,
       "parser": "TagIntCheck"
     },
     {
@@ -4489,7 +4497,7 @@
       "tag": "FailedDroneSpawnResetsPlayerTime",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 752,
+      "line": 755,
       "parser": "TagBoolCheck"
     },
     {
@@ -4497,7 +4505,7 @@
       "tag": "MinDroneDistance",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 753,
+      "line": 756,
       "parser": "TagDoubleCheck"
     },
     {
@@ -4505,7 +4513,7 @@
       "tag": "MaxDroneDistance",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 754,
+      "line": 757,
       "parser": "TagDoubleCheck"
     },
     {
@@ -4513,7 +4521,7 @@
       "tag": "MinDroneAltitude",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 755,
+      "line": 758,
       "parser": "TagDoubleCheck"
     },
     {
@@ -4521,7 +4529,7 @@
       "tag": "MaxDroneAltitude",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 756,
+      "line": 759,
       "parser": "TagDoubleCheck"
     },
     {
@@ -4529,7 +4537,7 @@
       "tag": "DroneInheritsSourceAltitude",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 757,
+      "line": 760,
       "parser": "TagBoolCheck"
     },
     {
@@ -4537,7 +4545,7 @@
       "tag": "SkipVoxelSpawnChecks",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 758,
+      "line": 761,
       "parser": "TagBoolCheck"
     },
     {
@@ -4545,7 +4553,7 @@
       "tag": "SkipGridSpawnChecks",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 759,
+      "line": 762,
       "parser": "TagBoolCheck"
     },
     {
@@ -4553,7 +4561,7 @@
       "tag": "CreatureSpawn",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 760,
+      "line": 763,
       "parser": "TagBoolCheck"
     },
     {
@@ -4561,7 +4569,7 @@
       "tag": "CreatureIds",
       "type": "List<string> (comma-separated)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 761,
+      "line": 764,
       "parser": "TagStringListCheck"
     },
     {
@@ -4569,7 +4577,7 @@
       "tag": "BotProfiles",
       "type": "TagBotProfileListCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 762,
+      "line": 765,
       "parser": "TagBotProfileListCheck"
     },
     {
@@ -4577,7 +4585,7 @@
       "tag": "AiEnabledReady",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 763,
+      "line": 766,
       "parser": "TagBoolCheck"
     },
     {
@@ -4585,7 +4593,7 @@
       "tag": "AiEnabledModBots",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 764,
+      "line": 767,
       "parser": "TagBoolCheck"
     },
     {
@@ -4593,7 +4601,7 @@
       "tag": "AiEnabledRole",
       "type": "string",
       "file": "SpawnConditionsProfile.cs",
-      "line": 765,
+      "line": 768,
       "parser": "TagStringCheck"
     },
     {
@@ -4601,7 +4609,7 @@
       "tag": "MinCreatureCount",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 766,
+      "line": 769,
       "parser": "TagIntCheck"
     },
     {
@@ -4609,7 +4617,7 @@
       "tag": "MaxCreatureCount",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 767,
+      "line": 770,
       "parser": "TagIntCheck"
     },
     {
@@ -4617,7 +4625,7 @@
       "tag": "MinCreatureDistance",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 768,
+      "line": 771,
       "parser": "TagIntCheck"
     },
     {
@@ -4625,7 +4633,7 @@
       "tag": "MaxCreatureDistance",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 769,
+      "line": 772,
       "parser": "TagIntCheck"
     },
     {
@@ -4633,7 +4641,7 @@
       "tag": "RegisterCreatureToPlanetGenerators",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 770,
+      "line": 773,
       "parser": "TagBoolCheck"
     },
     {
@@ -4641,7 +4649,7 @@
       "tag": "MinDistFromOtherCreaturesInGroup",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 771,
+      "line": 774,
       "parser": "TagIntCheck"
     },
     {
@@ -4649,7 +4657,7 @@
       "tag": "CanSpawnUnderwater",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 772,
+      "line": 775,
       "parser": "TagBoolCheck"
     },
     {
@@ -4657,7 +4665,7 @@
       "tag": "MustSpawnUnderwater",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 773,
+      "line": 776,
       "parser": "TagBoolCheck"
     },
     {
@@ -4665,7 +4673,7 @@
       "tag": "MinWaterDepth",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 774,
+      "line": 777,
       "parser": "TagDoubleCheck"
     },
     {
@@ -4673,7 +4681,7 @@
       "tag": "MaxWaterDepth",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 775,
+      "line": 778,
       "parser": "TagDoubleCheck"
     },
     {
@@ -4681,7 +4689,7 @@
       "tag": "MinWaterCoverage",
       "type": "float",
       "file": "SpawnConditionsProfile.cs",
-      "line": 776,
+      "line": 779,
       "parser": "TagFloatCheck"
     },
     {
@@ -4689,7 +4697,7 @@
       "tag": "MaxWaterCoverage",
       "type": "float",
       "file": "SpawnConditionsProfile.cs",
-      "line": 777,
+      "line": 780,
       "parser": "TagFloatCheck"
     },
     {
@@ -4697,7 +4705,7 @@
       "tag": "StaticEncounter",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 778,
+      "line": 781,
       "parser": "TagBoolCheck"
     },
     {
@@ -4705,7 +4713,7 @@
       "tag": "UniqueEncounter",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 779,
+      "line": 782,
       "parser": "TagBoolCheck"
     },
     {
@@ -4713,7 +4721,7 @@
       "tag": "TriggerCoords",
       "type": "Vector3D ({X:0 Y:0 Z:0})",
       "file": "SpawnConditionsProfile.cs",
-      "line": 780,
+      "line": 783,
       "parser": "TagVector3DCheck"
     },
     {
@@ -4721,7 +4729,7 @@
       "tag": "TriggerRadius",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 781,
+      "line": 784,
       "parser": "TagDoubleCheck"
     },
     {
@@ -4729,7 +4737,7 @@
       "tag": "StaticEncounterCoords",
       "type": "Vector3D ({X:0 Y:0 Z:0})",
       "file": "SpawnConditionsProfile.cs",
-      "line": 782,
+      "line": 785,
       "parser": "TagVector3DCheck"
     },
     {
@@ -4737,7 +4745,7 @@
       "tag": "StaticEncounterForward",
       "type": "Vector3D ({X:0 Y:0 Z:0})",
       "file": "SpawnConditionsProfile.cs",
-      "line": 783,
+      "line": 786,
       "parser": "TagVector3DCheck"
     },
     {
@@ -4745,7 +4753,7 @@
       "tag": "StaticEncounterUp",
       "type": "Vector3D ({X:0 Y:0 Z:0})",
       "file": "SpawnConditionsProfile.cs",
-      "line": 784,
+      "line": 787,
       "parser": "TagVector3DCheck"
     },
     {
@@ -4753,7 +4761,7 @@
       "tag": "StaticEncounterUsePlanetDirectionAndAltitude",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 785,
+      "line": 788,
       "parser": "TagBoolCheck"
     },
     {
@@ -4761,7 +4769,7 @@
       "tag": "StaticEncounterPlanet",
       "type": "string",
       "file": "SpawnConditionsProfile.cs",
-      "line": 786,
+      "line": 789,
       "parser": "TagStringCheck"
     },
     {
@@ -4769,7 +4777,7 @@
       "tag": "StaticEncounterPlanetDirection",
       "type": "Vector3D ({X:0 Y:0 Z:0})",
       "file": "SpawnConditionsProfile.cs",
-      "line": 787,
+      "line": 790,
       "parser": "TagVector3DCheck"
     },
     {
@@ -4777,7 +4785,7 @@
       "tag": "StaticEncounterPlanetAltitude",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 788,
+      "line": 791,
       "parser": "TagDoubleCheck"
     },
     {
@@ -4785,7 +4793,7 @@
       "tag": "ForceStaticGrid",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 789,
+      "line": 792,
       "parser": "TagBoolCheck"
     },
     {
@@ -4793,7 +4801,7 @@
       "tag": "DoNotForceStaticGrid",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 790,
+      "line": 793,
       "parser": "TagBoolCheck"
     },
     {
@@ -4801,7 +4809,7 @@
       "tag": "ForceExactPositionAndOrientation",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 792,
+      "line": 795,
       "parser": "TagBoolCheck"
     },
     {
@@ -4809,7 +4817,7 @@
       "tag": "AdminSpawnOnly",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 793,
+      "line": 796,
       "parser": "TagBoolCheck"
     },
     {
@@ -4817,7 +4825,7 @@
       "tag": "MustSpawnInPlanetaryLane",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 794,
+      "line": 797,
       "parser": "TagBoolCheck"
     },
     {
@@ -4825,7 +4833,7 @@
       "tag": "PlanetaryLanePlanetNameA",
       "type": "string",
       "file": "SpawnConditionsProfile.cs",
-      "line": 795,
+      "line": 798,
       "parser": "TagStringCheck"
     },
     {
@@ -4833,7 +4841,7 @@
       "tag": "PlanetaryLanePlanetNameB",
       "type": "string",
       "file": "SpawnConditionsProfile.cs",
-      "line": 796,
+      "line": 799,
       "parser": "TagStringCheck"
     },
     {
@@ -4841,7 +4849,7 @@
       "tag": "FactionOwner",
       "type": "string",
       "file": "SpawnConditionsProfile.cs",
-      "line": 797,
+      "line": 800,
       "parser": "TagStringCheck"
     },
     {
@@ -4849,7 +4857,7 @@
       "tag": "UseRandomMinerFaction",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 798,
+      "line": 801,
       "parser": "TagBoolCheck"
     },
     {
@@ -4857,7 +4865,7 @@
       "tag": "UseRandomBuilderFaction",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 799,
+      "line": 802,
       "parser": "TagBoolCheck"
     },
     {
@@ -4865,7 +4873,7 @@
       "tag": "UseRandomTraderFaction",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 800,
+      "line": 803,
       "parser": "TagBoolCheck"
     },
     {
@@ -4873,7 +4881,7 @@
       "tag": "UseRandomMilitaryFaction",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 801,
+      "line": 804,
       "parser": "TagBoolCheck"
     },
     {
@@ -4881,7 +4889,7 @@
       "tag": "UseRandomPirateFaction",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 802,
+      "line": 805,
       "parser": "TagBoolCheck"
     },
     {
@@ -4889,7 +4897,7 @@
       "tag": "UseRandomCustomFaction",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 803,
+      "line": 806,
       "parser": "TagBoolCheck"
     },
     {
@@ -4897,7 +4905,7 @@
       "tag": "RandomNumberRoll",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 804,
+      "line": 807,
       "parser": "TagIntCheck"
     },
     {
@@ -4905,7 +4913,7 @@
       "tag": "ChanceCeiling",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 805,
+      "line": 808,
       "parser": "TagIntCheck"
     },
     {
@@ -4913,7 +4921,7 @@
       "tag": "SpaceCargoShipChance",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 806,
+      "line": 809,
       "parser": "TagIntCheck"
     },
     {
@@ -4921,7 +4929,7 @@
       "tag": "LunarCargoShipChance",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 807,
+      "line": 810,
       "parser": "TagIntCheck"
     },
     {
@@ -4929,7 +4937,7 @@
       "tag": "AtmosphericCargoShipChance",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 808,
+      "line": 811,
       "parser": "TagIntCheck"
     },
     {
@@ -4937,7 +4945,7 @@
       "tag": "GravityCargoShipChance",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 809,
+      "line": 812,
       "parser": "TagIntCheck"
     },
     {
@@ -4945,7 +4953,7 @@
       "tag": "RandomEncounterChance",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 810,
+      "line": 813,
       "parser": "TagIntCheck"
     },
     {
@@ -4953,7 +4961,7 @@
       "tag": "PlanetaryInstallationChance",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 811,
+      "line": 814,
       "parser": "TagIntCheck"
     },
     {
@@ -4961,7 +4969,7 @@
       "tag": "BossEncounterChance",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 812,
+      "line": 815,
       "parser": "TagIntCheck"
     },
     {
@@ -4969,7 +4977,7 @@
       "tag": "CreatureChance",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 813,
+      "line": 816,
       "parser": "TagIntCheck"
     },
     {
@@ -4977,7 +4985,7 @@
       "tag": "DroneEncounterChance",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 814,
+      "line": 817,
       "parser": "TagIntCheck"
     },
     {
@@ -4985,7 +4993,7 @@
       "tag": "UseSettingsCheck",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 815,
+      "line": 818,
       "parser": "TagBoolCheck"
     },
     {
@@ -4993,7 +5001,7 @@
       "tag": "SettingsAutoHeal",
       "type": "TagBoolEnumCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 816,
+      "line": 819,
       "parser": "TagBoolEnumCheck"
     },
     {
@@ -5001,7 +5009,7 @@
       "tag": "SettingsAutoRespawn",
       "type": "TagBoolEnumCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 817,
+      "line": 820,
       "parser": "TagBoolEnumCheck"
     },
     {
@@ -5009,7 +5017,7 @@
       "tag": "SettingsBountyContracts",
       "type": "TagBoolEnumCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 818,
+      "line": 821,
       "parser": "TagBoolEnumCheck"
     },
     {
@@ -5017,7 +5025,7 @@
       "tag": "SettingsDestructibleBlocks",
       "type": "TagBoolEnumCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 819,
+      "line": 822,
       "parser": "TagBoolEnumCheck"
     },
     {
@@ -5025,7 +5033,7 @@
       "tag": "SettingsCopyPaste",
       "type": "TagBoolEnumCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 820,
+      "line": 823,
       "parser": "TagBoolEnumCheck"
     },
     {
@@ -5033,7 +5041,7 @@
       "tag": "SettingsContainerDrops",
       "type": "TagBoolEnumCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 821,
+      "line": 824,
       "parser": "TagBoolEnumCheck"
     },
     {
@@ -5041,7 +5049,7 @@
       "tag": "SettingsEconomy",
       "type": "TagBoolEnumCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 822,
+      "line": 825,
       "parser": "TagBoolEnumCheck"
     },
     {
@@ -5049,7 +5057,7 @@
       "tag": "SettingsEnableDrones",
       "type": "TagBoolEnumCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 823,
+      "line": 826,
       "parser": "TagBoolEnumCheck"
     },
     {
@@ -5057,7 +5065,7 @@
       "tag": "SettingsIngameScripts",
       "type": "TagBoolEnumCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 824,
+      "line": 827,
       "parser": "TagBoolEnumCheck"
     },
     {
@@ -5065,7 +5073,7 @@
       "tag": "SettingsJetpack",
       "type": "TagBoolEnumCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 825,
+      "line": 828,
       "parser": "TagBoolEnumCheck"
     },
     {
@@ -5073,7 +5081,7 @@
       "tag": "SettingsOxygen",
       "type": "TagBoolEnumCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 826,
+      "line": 829,
       "parser": "TagBoolEnumCheck"
     },
     {
@@ -5081,7 +5089,7 @@
       "tag": "SettingsResearch",
       "type": "TagBoolEnumCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 827,
+      "line": 830,
       "parser": "TagBoolEnumCheck"
     },
     {
@@ -5089,7 +5097,7 @@
       "tag": "SettingsSpawnWithTools",
       "type": "TagBoolEnumCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 828,
+      "line": 831,
       "parser": "TagBoolEnumCheck"
     },
     {
@@ -5097,7 +5105,7 @@
       "tag": "SettingsSpiders",
       "type": "TagBoolEnumCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 829,
+      "line": 832,
       "parser": "TagBoolEnumCheck"
     },
     {
@@ -5105,7 +5113,7 @@
       "tag": "SettingsSubgridDamage",
       "type": "TagBoolEnumCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 830,
+      "line": 833,
       "parser": "TagBoolEnumCheck"
     },
     {
@@ -5113,7 +5121,7 @@
       "tag": "SettingsSunRotation",
       "type": "TagBoolEnumCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 831,
+      "line": 834,
       "parser": "TagBoolEnumCheck"
     },
     {
@@ -5121,7 +5129,7 @@
       "tag": "SettingsSupergridding",
       "type": "TagBoolEnumCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 832,
+      "line": 835,
       "parser": "TagBoolEnumCheck"
     },
     {
@@ -5129,7 +5137,7 @@
       "tag": "SettingsThrusterDamage",
       "type": "TagBoolEnumCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 833,
+      "line": 836,
       "parser": "TagBoolEnumCheck"
     },
     {
@@ -5137,7 +5145,7 @@
       "tag": "SettingsVoxelDestruction",
       "type": "TagBoolEnumCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 834,
+      "line": 837,
       "parser": "TagBoolEnumCheck"
     },
     {
@@ -5145,7 +5153,7 @@
       "tag": "SettingsWeaponsEnabled",
       "type": "TagBoolEnumCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 835,
+      "line": 838,
       "parser": "TagBoolEnumCheck"
     },
     {
@@ -5153,7 +5161,7 @@
       "tag": "SettingsWeather",
       "type": "TagBoolEnumCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 836,
+      "line": 839,
       "parser": "TagBoolEnumCheck"
     },
     {
@@ -5161,7 +5169,7 @@
       "tag": "SettingsWolves",
       "type": "TagBoolEnumCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 837,
+      "line": 840,
       "parser": "TagBoolEnumCheck"
     },
     {
@@ -5169,7 +5177,7 @@
       "tag": "UsesAerodynamicModAdvLift",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 838,
+      "line": 841,
       "parser": "TagBoolCheck"
     },
     {
@@ -5177,7 +5185,7 @@
       "tag": "UseDateTimeYearRange",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 839,
+      "line": 842,
       "parser": "TagBoolCheck"
     },
     {
@@ -5185,7 +5193,7 @@
       "tag": "MinDateTimeYear",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 840,
+      "line": 843,
       "parser": "TagIntCheck"
     },
     {
@@ -5193,7 +5201,7 @@
       "tag": "MaxDateTimeYear",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 841,
+      "line": 844,
       "parser": "TagIntCheck"
     },
     {
@@ -5201,7 +5209,7 @@
       "tag": "UseDateTimeMonthRange",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 842,
+      "line": 845,
       "parser": "TagBoolCheck"
     },
     {
@@ -5209,7 +5217,7 @@
       "tag": "MinDateTimeMonth",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 843,
+      "line": 846,
       "parser": "TagIntCheck"
     },
     {
@@ -5217,7 +5225,7 @@
       "tag": "MaxDateTimeMonth",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 844,
+      "line": 847,
       "parser": "TagIntCheck"
     },
     {
@@ -5225,7 +5233,7 @@
       "tag": "UseDateTimeDayRange",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 845,
+      "line": 848,
       "parser": "TagBoolCheck"
     },
     {
@@ -5233,7 +5241,7 @@
       "tag": "MinDateTimeDay",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 846,
+      "line": 849,
       "parser": "TagIntCheck"
     },
     {
@@ -5241,7 +5249,7 @@
       "tag": "MaxDateTimeDay",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 847,
+      "line": 850,
       "parser": "TagIntCheck"
     },
     {
@@ -5249,7 +5257,7 @@
       "tag": "UseDateTimeHourRange",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 848,
+      "line": 851,
       "parser": "TagBoolCheck"
     },
     {
@@ -5257,7 +5265,7 @@
       "tag": "MinDateTimeHour",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 849,
+      "line": 852,
       "parser": "TagIntCheck"
     },
     {
@@ -5265,7 +5273,7 @@
       "tag": "MaxDateTimeHour",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 850,
+      "line": 853,
       "parser": "TagIntCheck"
     },
     {
@@ -5273,7 +5281,7 @@
       "tag": "UseDateTimeMinuteRange",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 851,
+      "line": 854,
       "parser": "TagBoolCheck"
     },
     {
@@ -5281,7 +5289,7 @@
       "tag": "MinDateTimeMinute",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 852,
+      "line": 855,
       "parser": "TagIntCheck"
     },
     {
@@ -5289,7 +5297,7 @@
       "tag": "MaxDateTimeMinute",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 853,
+      "line": 856,
       "parser": "TagIntCheck"
     },
     {
@@ -5297,7 +5305,7 @@
       "tag": "UseDateTimeDaysOfWeek",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 854,
+      "line": 857,
       "parser": "TagBoolCheck"
     },
     {
@@ -5305,7 +5313,7 @@
       "tag": "DateTimeDaysOfWeek",
       "type": "TagDayOfWeekEnumCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 855,
+      "line": 858,
       "parser": "TagDayOfWeekEnumCheck"
     },
     {
@@ -5313,7 +5321,7 @@
       "tag": "MinSpawnFromWorldCenter",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 856,
+      "line": 859,
       "parser": "TagDoubleCheck"
     },
     {
@@ -5321,7 +5329,7 @@
       "tag": "MaxSpawnFromWorldCenter",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 857,
+      "line": 860,
       "parser": "TagDoubleCheck"
     },
     {
@@ -5329,7 +5337,7 @@
       "tag": "CustomWorldCenter",
       "type": "Vector3D ({X:0 Y:0 Z:0})",
       "file": "SpawnConditionsProfile.cs",
-      "line": 858,
+      "line": 861,
       "parser": "TagVector3DCheck"
     },
     {
@@ -5337,7 +5345,7 @@
       "tag": "DirectionFromWorldCenter",
       "type": "List<Vector3D>",
       "file": "SpawnConditionsProfile.cs",
-      "line": 859,
+      "line": 862,
       "parser": "TagVector3DListCheck"
     },
     {
@@ -5345,7 +5353,7 @@
       "tag": "MinAngleFromDirection",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 860,
+      "line": 863,
       "parser": "TagDoubleCheck"
     },
     {
@@ -5353,7 +5361,7 @@
       "tag": "MaxAngleFromDirection",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 861,
+      "line": 864,
       "parser": "TagDoubleCheck"
     },
     {
@@ -5361,7 +5369,7 @@
       "tag": "DirectionFromPlanetCenter",
       "type": "List<Vector3D>",
       "file": "SpawnConditionsProfile.cs",
-      "line": 862,
+      "line": 865,
       "parser": "TagVector3DListCheck"
     },
     {
@@ -5369,7 +5377,7 @@
       "tag": "MinAngleFromPlanetCenterDirection",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 863,
+      "line": 866,
       "parser": "TagDoubleCheck"
     },
     {
@@ -5377,7 +5385,7 @@
       "tag": "MaxAngleFromPlanetCenterDirection",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 864,
+      "line": 867,
       "parser": "TagDoubleCheck"
     },
     {
@@ -5385,7 +5393,7 @@
       "tag": "MinSpawnFromPlanetSurface",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 865,
+      "line": 868,
       "parser": "TagDoubleCheck"
     },
     {
@@ -5393,7 +5401,7 @@
       "tag": "MaxSpawnFromPlanetSurface",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 866,
+      "line": 869,
       "parser": "TagDoubleCheck"
     },
     {
@@ -5401,7 +5409,7 @@
       "tag": "UseDayOrNightOnly",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 867,
+      "line": 870,
       "parser": "TagBoolCheck"
     },
     {
@@ -5409,7 +5417,7 @@
       "tag": "SpawnOnlyAtNight",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 868,
+      "line": 871,
       "parser": "TagBoolCheck"
     },
     {
@@ -5417,7 +5425,7 @@
       "tag": "UseWeatherSpawning",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 869,
+      "line": 872,
       "parser": "TagBoolCheck"
     },
     {
@@ -5425,7 +5433,7 @@
       "tag": "AllowedWeatherSystems",
       "type": "List<string> (comma-separated)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 870,
+      "line": 873,
       "parser": "TagStringListCheck"
     },
     {
@@ -5433,7 +5441,7 @@
       "tag": "UseTerrainTypeValidation",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 871,
+      "line": 874,
       "parser": "TagBoolCheck"
     },
     {
@@ -5441,7 +5449,7 @@
       "tag": "AllowedTerrainTypes",
       "type": "List<string> (comma-separated)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 872,
+      "line": 875,
       "parser": "TagStringListCheck"
     },
     {
@@ -5449,7 +5457,7 @@
       "tag": "DisallowedTerrainTypes",
       "type": "List<string> (comma-separated)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 873,
+      "line": 876,
       "parser": "TagStringListCheck"
     },
     {
@@ -5457,7 +5465,7 @@
       "tag": "MinAirDensity",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 874,
+      "line": 877,
       "parser": "TagDoubleCheck"
     },
     {
@@ -5465,7 +5473,7 @@
       "tag": "MaxAirDensity",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 875,
+      "line": 878,
       "parser": "TagDoubleCheck"
     },
     {
@@ -5473,7 +5481,7 @@
       "tag": "MinGravity",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 876,
+      "line": 879,
       "parser": "TagDoubleCheck"
     },
     {
@@ -5481,7 +5489,7 @@
       "tag": "MaxGravity",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 877,
+      "line": 880,
       "parser": "TagDoubleCheck"
     },
     {
@@ -5489,7 +5497,7 @@
       "tag": "CheckPrefabGravityProfiles",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 878,
+      "line": 881,
       "parser": "TagBoolCheck"
     },
     {
@@ -5497,7 +5505,7 @@
       "tag": "PlanetBlacklist",
       "type": "List<string> (comma-separated)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 879,
+      "line": 882,
       "parser": "TagStringListCheck"
     },
     {
@@ -5505,7 +5513,7 @@
       "tag": "PlanetWhitelist",
       "type": "List<string> (comma-separated)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 880,
+      "line": 883,
       "parser": "TagStringListCheck"
     },
     {
@@ -5513,7 +5521,7 @@
       "tag": "PlanetRequiresVacuum",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 881,
+      "line": 884,
       "parser": "TagBoolCheck"
     },
     {
@@ -5521,7 +5529,7 @@
       "tag": "PlanetRequiresAtmo",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 882,
+      "line": 885,
       "parser": "TagBoolCheck"
     },
     {
@@ -5529,7 +5537,7 @@
       "tag": "PlanetRequiresOxygen",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 883,
+      "line": 886,
       "parser": "TagBoolCheck"
     },
     {
@@ -5537,7 +5545,7 @@
       "tag": "PlanetMinimumSize",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 884,
+      "line": 887,
       "parser": "TagDoubleCheck"
     },
     {
@@ -5545,7 +5553,7 @@
       "tag": "PlanetMaximumSize",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 885,
+      "line": 888,
       "parser": "TagDoubleCheck"
     },
     {
@@ -5553,7 +5561,7 @@
       "tag": "UsePlayerCountCheck",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 886,
+      "line": 889,
       "parser": "TagBoolCheck"
     },
     {
@@ -5561,7 +5569,7 @@
       "tag": "PlayerCountCheckRadius",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 887,
+      "line": 890,
       "parser": "TagDoubleCheck"
     },
     {
@@ -5569,7 +5577,7 @@
       "tag": "MinimumPlayers",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 888,
+      "line": 891,
       "parser": "TagIntCheck"
     },
     {
@@ -5577,7 +5585,7 @@
       "tag": "MaximumPlayers",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 889,
+      "line": 892,
       "parser": "TagIntCheck"
     },
     {
@@ -5585,7 +5593,7 @@
       "tag": "UsePlayerCondition",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 890,
+      "line": 893,
       "parser": "TagBoolCheck"
     },
     {
@@ -5593,7 +5601,7 @@
       "tag": "PlayerConditionCheckRadius",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 891,
+      "line": 894,
       "parser": "TagDoubleCheck"
     },
     {
@@ -5601,7 +5609,7 @@
       "tag": "PlayerConditionIds",
       "type": "List<string> (comma-separated)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 892,
+      "line": 895,
       "parser": "TagStringListCheck"
     },
     {
@@ -5609,7 +5617,7 @@
       "tag": "UseThreatLevelCheck",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 893,
+      "line": 896,
       "parser": "TagBoolCheck"
     },
     {
@@ -5617,7 +5625,7 @@
       "tag": "ThreatLevelCheckRange",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 894,
+      "line": 897,
       "parser": "TagDoubleCheck"
     },
     {
@@ -5625,7 +5633,7 @@
       "tag": "ThreatIncludeOtherNpcOwners",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 895,
+      "line": 898,
       "parser": "TagBoolCheck"
     },
     {
@@ -5633,7 +5641,7 @@
       "tag": "ThreatScoreMinimum",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 896,
+      "line": 899,
       "parser": "TagIntCheck"
     },
     {
@@ -5641,7 +5649,7 @@
       "tag": "ThreatScoreMaximum",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 897,
+      "line": 900,
       "parser": "TagIntCheck"
     },
     {
@@ -5649,7 +5657,7 @@
       "tag": "ThreatScorePlanetaryHandicap",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 898,
+      "line": 901,
       "parser": "TagIntCheck"
     },
     {
@@ -5657,7 +5665,7 @@
       "tag": "ThreatScoreGridConfiguration",
       "type": "TagGridConfigurationCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 899,
+      "line": 902,
       "parser": "TagGridConfigurationCheck"
     },
     {
@@ -5665,7 +5673,7 @@
       "tag": "UsePCUCheck",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 901,
+      "line": 904,
       "parser": "TagBoolCheck"
     },
     {
@@ -5673,7 +5681,7 @@
       "tag": "PCUCheckRadius",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 902,
+      "line": 905,
       "parser": "TagDoubleCheck"
     },
     {
@@ -5681,7 +5689,7 @@
       "tag": "PCUMinimum",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 903,
+      "line": 906,
       "parser": "TagIntCheck"
     },
     {
@@ -5689,7 +5697,7 @@
       "tag": "PCUMaximum",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 904,
+      "line": 907,
       "parser": "TagIntCheck"
     },
     {
@@ -5697,7 +5705,7 @@
       "tag": "UseDifficulty",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 905,
+      "line": 908,
       "parser": "TagBoolCheck"
     },
     {
@@ -5705,7 +5713,7 @@
       "tag": "MinDifficulty",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 906,
+      "line": 909,
       "parser": "TagIntCheck"
     },
     {
@@ -5713,7 +5721,7 @@
       "tag": "MaxDifficulty",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 907,
+      "line": 910,
       "parser": "TagIntCheck"
     },
     {
@@ -5721,7 +5729,7 @@
       "tag": "UseCombatPhase",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 908,
+      "line": 911,
       "parser": "TagBoolCheck"
     },
     {
@@ -5729,7 +5737,7 @@
       "tag": "IgnoreCombatPhase",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 909,
+      "line": 912,
       "parser": "TagBoolCheck"
     },
     {
@@ -5737,7 +5745,7 @@
       "tag": "CombatPhaseChecksInPersistentCondition",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 910,
+      "line": 913,
       "parser": "TagBoolCheck"
     },
     {
@@ -5745,7 +5753,7 @@
       "tag": "UsePlayerCredits",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 911,
+      "line": 914,
       "parser": "TagBoolCheck"
     },
     {
@@ -5753,7 +5761,7 @@
       "tag": "IncludeAllPlayersInRadius",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 912,
+      "line": 915,
       "parser": "TagBoolCheck"
     },
     {
@@ -5761,7 +5769,7 @@
       "tag": "IncludeFactionBalance",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 913,
+      "line": 916,
       "parser": "TagBoolCheck"
     },
     {
@@ -5769,7 +5777,7 @@
       "tag": "PlayerCreditsCheckRadius",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 914,
+      "line": 917,
       "parser": "TagDoubleCheck"
     },
     {
@@ -5777,7 +5785,7 @@
       "tag": "MinimumPlayerCredits",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 915,
+      "line": 918,
       "parser": "TagIntCheck"
     },
     {
@@ -5785,7 +5793,7 @@
       "tag": "MaximumPlayerCredits",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 916,
+      "line": 919,
       "parser": "TagIntCheck"
     },
     {
@@ -5793,7 +5801,7 @@
       "tag": "UsePlayerFactionReputation",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 917,
+      "line": 920,
       "parser": "TagBoolCheck"
     },
     {
@@ -5801,7 +5809,7 @@
       "tag": "PlayerReputationCheckRadius",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 918,
+      "line": 921,
       "parser": "TagDoubleCheck"
     },
     {
@@ -5809,7 +5817,7 @@
       "tag": "CheckReputationAgainstOtherNPCFaction",
       "type": "string",
       "file": "SpawnConditionsProfile.cs",
-      "line": 919,
+      "line": 922,
       "parser": "TagStringCheck"
     },
     {
@@ -5817,7 +5825,7 @@
       "tag": "MinimumReputation",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 920,
+      "line": 923,
       "parser": "TagIntCheck"
     },
     {
@@ -5825,7 +5833,7 @@
       "tag": "MaximumReputation",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 921,
+      "line": 924,
       "parser": "TagIntCheck"
     },
     {
@@ -5833,7 +5841,7 @@
       "tag": "UseSignalRequirement",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 922,
+      "line": 925,
       "parser": "TagBoolCheck"
     },
     {
@@ -5841,7 +5849,7 @@
       "tag": "MinSignalRadius",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 923,
+      "line": 926,
       "parser": "TagDoubleCheck"
     },
     {
@@ -5849,7 +5857,7 @@
       "tag": "MaxSignalRadius",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 924,
+      "line": 927,
       "parser": "TagDoubleCheck"
     },
     {
@@ -5857,7 +5865,7 @@
       "tag": "AllowNpcSignals",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 925,
+      "line": 928,
       "parser": "TagBoolCheck"
     },
     {
@@ -5865,7 +5873,7 @@
       "tag": "UseOnlySelfOwnedSignals",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 926,
+      "line": 929,
       "parser": "TagBoolCheck"
     },
     {
@@ -5873,7 +5881,7 @@
       "tag": "MatchSignalName",
       "type": "string",
       "file": "SpawnConditionsProfile.cs",
-      "line": 927,
+      "line": 930,
       "parser": "TagStringCheck"
     },
     {
@@ -5881,7 +5889,7 @@
       "tag": "ChargeNpcFactionForSpawn",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 928,
+      "line": 931,
       "parser": "TagBoolCheck"
     },
     {
@@ -5889,7 +5897,7 @@
       "tag": "ChargeForSpawning",
       "type": "TagLongCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 929,
+      "line": 932,
       "parser": "TagLongCheck"
     },
     {
@@ -5897,7 +5905,7 @@
       "tag": "UseSandboxCounterCosts",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 930,
+      "line": 933,
       "parser": "TagBoolCheck"
     },
     {
@@ -5905,7 +5913,7 @@
       "tag": "SandboxCounterCostNames",
       "type": "List<string> (comma-separated)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 931,
+      "line": 934,
       "parser": "TagStringListCheck"
     },
     {
@@ -5913,7 +5921,7 @@
       "tag": "SandboxCounterCostAmounts",
       "type": "List<int> (comma-separated)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 932,
+      "line": 935,
       "parser": "TagIntListCheck"
     },
     {
@@ -5921,7 +5929,7 @@
       "tag": "SandboxVariables",
       "type": "List<string> (comma-separated)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 933,
+      "line": 936,
       "parser": "TagStringListCheck"
     },
     {
@@ -5929,7 +5937,7 @@
       "tag": "FalseSandboxVariables",
       "type": "List<string> (comma-separated)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 934,
+      "line": 937,
       "parser": "TagStringListCheck"
     },
     {
@@ -5937,7 +5945,7 @@
       "tag": "UseRemoteControlCodeRestrictions",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 935,
+      "line": 938,
       "parser": "TagBoolCheck"
     },
     {
@@ -5945,7 +5953,7 @@
       "tag": "RemoteControlCode",
       "type": "string",
       "file": "SpawnConditionsProfile.cs",
-      "line": 936,
+      "line": 939,
       "parser": "TagStringCheck"
     },
     {
@@ -5953,7 +5961,7 @@
       "tag": "RemoteControlCodeMinDistance",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 937,
+      "line": 940,
       "parser": "TagDoubleCheck"
     },
     {
@@ -5961,7 +5969,7 @@
       "tag": "RemoteControlCodeMaxDistance",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 938,
+      "line": 941,
       "parser": "TagDoubleCheck"
     },
     {
@@ -5969,7 +5977,7 @@
       "tag": "RequireAllMods",
       "type": "TagUlongListCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 939,
+      "line": 942,
       "parser": "TagUlongListCheck"
     },
     {
@@ -5977,7 +5985,7 @@
       "tag": "RequireAnyMods",
       "type": "TagUlongListCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 940,
+      "line": 943,
       "parser": "TagUlongListCheck"
     },
     {
@@ -5985,7 +5993,7 @@
       "tag": "ExcludeAllMods",
       "type": "TagUlongListCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 941,
+      "line": 944,
       "parser": "TagUlongListCheck"
     },
     {
@@ -5993,7 +6001,7 @@
       "tag": "ExcludeAnyMods",
       "type": "TagUlongListCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 942,
+      "line": 945,
       "parser": "TagUlongListCheck"
     },
     {
@@ -6001,7 +6009,7 @@
       "tag": "ModBlockExists",
       "type": "List<string> (comma-separated)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 943,
+      "line": 946,
       "parser": "TagStringListCheck"
     },
     {
@@ -6009,7 +6017,7 @@
       "tag": "RequiredPlayersOnline",
       "type": "TagUlongListCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 944,
+      "line": 947,
       "parser": "TagUlongListCheck"
     },
     {
@@ -6017,7 +6025,7 @@
       "tag": "RequiredAnyPlayersOnline",
       "type": "TagUlongListCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 945,
+      "line": 948,
       "parser": "TagUlongListCheck"
     },
     {
@@ -6025,7 +6033,7 @@
       "tag": "UseKnownPlayerLocations",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 946,
+      "line": 949,
       "parser": "TagBoolCheck"
     },
     {
@@ -6033,7 +6041,7 @@
       "tag": "KnownPlayerLocationMustBeInside",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 947,
+      "line": 950,
       "parser": "TagBoolCheck"
     },
     {
@@ -6041,7 +6049,7 @@
       "tag": "KnownPlayerLocationMustMatchFaction",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 948,
+      "line": 951,
       "parser": "TagBoolCheck"
     },
     {
@@ -6049,7 +6057,7 @@
       "tag": "KnownPlayerLocationMinSpawnedEncounters",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 949,
+      "line": 952,
       "parser": "TagIntCheck"
     },
     {
@@ -6057,7 +6065,7 @@
       "tag": "KnownPlayerLocationMaxSpawnedEncounters",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 950,
+      "line": 953,
       "parser": "TagIntCheck"
     },
     {
@@ -6065,7 +6073,7 @@
       "tag": "ZoneConditions",
       "type": "TagZoneConditionsProfileCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 951,
+      "line": 954,
       "parser": "TagZoneConditionsProfileCheck"
     },
     {
@@ -6073,7 +6081,7 @@
       "tag": "CustomApiConditions",
       "type": "List<string> (comma-separated)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 952,
+      "line": 955,
       "parser": "TagStringListCheck"
     },
     {
@@ -6081,7 +6089,7 @@
       "tag": "BossCustomAnnounceEnable",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 953,
+      "line": 956,
       "parser": "TagBoolCheck"
     },
     {
@@ -6089,7 +6097,7 @@
       "tag": "BossCustomAnnounceAuthor",
       "type": "string",
       "file": "SpawnConditionsProfile.cs",
-      "line": 954,
+      "line": 957,
       "parser": "TagStringCheck"
     },
     {
@@ -6097,7 +6105,7 @@
       "tag": "BossCustomAnnounceMessage",
       "type": "string",
       "file": "SpawnConditionsProfile.cs",
-      "line": 955,
+      "line": 958,
       "parser": "TagStringCheck"
     },
     {
@@ -6105,7 +6113,7 @@
       "tag": "BossCustomGPSLabel",
       "type": "string",
       "file": "SpawnConditionsProfile.cs",
-      "line": 956,
+      "line": 959,
       "parser": "TagStringCheck"
     },
     {
@@ -6113,7 +6121,7 @@
       "tag": "BossCustomGPSColor",
       "type": "Vector3D ({X:0 Y:0 Z:0})",
       "file": "SpawnConditionsProfile.cs",
-      "line": 957,
+      "line": 960,
       "parser": "TagVector3DCheck"
     },
     {
@@ -6121,7 +6129,7 @@
       "tag": "BossMusicId",
       "type": "string",
       "file": "SpawnConditionsProfile.cs",
-      "line": 958,
+      "line": 961,
       "parser": "TagStringCheck"
     },
     {
@@ -6129,7 +6137,7 @@
       "tag": "PlaySoundAtSpawnTriggerPosition",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 959,
+      "line": 962,
       "parser": "TagBoolCheck"
     },
     {
@@ -6137,7 +6145,7 @@
       "tag": "SpawnTriggerPositionSoundId",
       "type": "string",
       "file": "SpawnConditionsProfile.cs",
-      "line": 960,
+      "line": 963,
       "parser": "TagStringCheck"
     },
     {
@@ -6145,7 +6153,7 @@
       "tag": "RotateFirstCockpitToForward",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 961,
+      "line": 964,
       "parser": "TagBoolCheck"
     },
     {
@@ -6153,7 +6161,7 @@
       "tag": "PositionAtFirstCockpit",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 962,
+      "line": 965,
       "parser": "TagBoolCheck"
     },
     {
@@ -6161,7 +6169,7 @@
       "tag": "SpawnRandomCargo",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 963,
+      "line": 966,
       "parser": "TagBoolCheck"
     },
     {
@@ -6169,7 +6177,7 @@
       "tag": "DisableDampeners",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 964,
+      "line": 967,
       "parser": "TagBoolCheck"
     },
     {
@@ -6177,7 +6185,7 @@
       "tag": "ReactorsOn",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 965,
+      "line": 968,
       "parser": "TagBoolCheck"
     },
     {
@@ -6185,7 +6193,7 @@
       "tag": "UseBoundingBoxCheck",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 966,
+      "line": 969,
       "parser": "TagBoolCheck"
     },
     {
@@ -6193,7 +6201,7 @@
       "tag": "RemoveVoxelsIfGridRemoved",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 967,
+      "line": 970,
       "parser": "TagBoolCheck"
     },
     {
@@ -6201,7 +6209,7 @@
       "tag": "UseGridOrigin",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 968,
+      "line": 971,
       "parser": "TagBoolCheck"
     },
     {
@@ -6209,7 +6217,7 @@
       "tag": "AlignToSurface",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 969,
+      "line": 972,
       "parser": "TagBoolCheck"
     },
     {
@@ -6217,7 +6225,7 @@
       "tag": "PrefabSpawningMode",
       "type": "TagPrefabSpawnModeEnumCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 970,
+      "line": 973,
       "parser": "TagPrefabSpawnModeEnumCheck"
     },
     {
@@ -6225,7 +6233,7 @@
       "tag": "AllowPrefabIndexReuse",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 971,
+      "line": 974,
       "parser": "TagBoolCheck"
     },
     {
@@ -6233,7 +6241,7 @@
       "tag": "PrefabIndexes",
       "type": "List<int> (comma-separated)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 972,
+      "line": 975,
       "parser": "TagIntListCheck"
     },
     {
@@ -6241,7 +6249,7 @@
       "tag": "PrefabIndexGroupNames",
       "type": "List<string> (comma-separated)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 973,
+      "line": 976,
       "parser": "TagStringListCheck"
     },
     {
@@ -6249,7 +6257,7 @@
       "tag": "PrefabIndexGroupValues",
       "type": "List<int> (comma-separated)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 974,
+      "line": 977,
       "parser": "TagIntListCheck"
     },
     {
@@ -6257,7 +6265,7 @@
       "tag": "PrefabFixedCount",
       "type": "int",
       "file": "SpawnConditionsProfile.cs",
-      "line": 975,
+      "line": 978,
       "parser": "TagIntCheck"
     },
     {
@@ -6265,7 +6273,7 @@
       "tag": "PrefabOffsetOverrides",
       "type": "List<Vector3D>",
       "file": "SpawnConditionsProfile.cs",
-      "line": 976,
+      "line": 979,
       "parser": "TagVector3DListCheck"
     },
     {
@@ -6273,7 +6281,7 @@
       "tag": "UseSpawnGroupPrefabSpawningMode",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 977,
+      "line": 980,
       "parser": "TagBoolCheck"
     },
     {
@@ -6281,7 +6289,7 @@
       "tag": "UseEventController",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 978,
+      "line": 981,
       "parser": "TagBoolCheck"
     },
     {
@@ -6289,7 +6297,7 @@
       "tag": "EventControllerId",
       "type": "List<string> (comma-separated)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 979,
+      "line": 982,
       "parser": "TagStringListCheck"
     },
     {
@@ -6297,7 +6305,7 @@
       "tag": "CheckCustomSandboxCounters",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 980,
+      "line": 983,
       "parser": "TagBoolCheck"
     },
     {
@@ -6305,7 +6313,7 @@
       "tag": "CustomSandboxCounters",
       "type": "List<string> (comma-separated)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 981,
+      "line": 984,
       "parser": "TagStringListCheck"
     },
     {
@@ -6313,7 +6321,7 @@
       "tag": "CustomSandboxCountersTargets",
       "type": "List<int> (comma-separated)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 982,
+      "line": 985,
       "parser": "TagIntListCheck"
     },
     {
@@ -6321,7 +6329,7 @@
       "tag": "SandboxCounterCompareTypes",
       "type": "TagCounterCompareEnumCheck",
       "file": "SpawnConditionsProfile.cs",
-      "line": 983,
+      "line": 986,
       "parser": "TagCounterCompareEnumCheck"
     },
     {
@@ -6329,7 +6337,7 @@
       "tag": "CheckRequiredBlocks",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 984,
+      "line": 987,
       "parser": "TagBoolCheck"
     },
     {
@@ -6337,7 +6345,7 @@
       "tag": "RequiredBlockSubtypeIds",
       "type": "List<string> (comma-separated)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 985,
+      "line": 988,
       "parser": "TagStringListCheck"
     },
     {
@@ -6345,7 +6353,7 @@
       "tag": "RequiredBlockAnySubtypeId",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 986,
+      "line": 989,
       "parser": "TagBoolCheck"
     },
     {
@@ -6353,7 +6361,7 @@
       "tag": "RequiredBlockCheckRange",
       "type": "double",
       "file": "SpawnConditionsProfile.cs",
-      "line": 987,
+      "line": 990,
       "parser": "TagDoubleCheck"
     },
     {
@@ -6361,7 +6369,7 @@
       "tag": "RequiredBlockIncludeNPCGrids",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 988,
+      "line": 991,
       "parser": "TagBoolCheck"
     },
     {
@@ -6369,7 +6377,7 @@
       "tag": "EnableItemTriggeredContracts",
       "type": "bool (true/false)",
       "file": "SpawnConditionsProfile.cs",
-      "line": 989,
+      "line": 992,
       "parser": "TagBoolCheck"
     },
     {
@@ -10457,7 +10465,7 @@
       "tag": "DisableInertiaDampeners",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 385,
+      "line": 387,
       "parser": "TagBoolCheck"
     },
     {
@@ -10465,7 +10473,7 @@
       "tag": "ForceDampenersEnabled",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 392,
+      "line": 394,
       "parser": "TagBoolCheck"
     },
     {
@@ -10473,7 +10481,7 @@
       "tag": "IdealMaxSpeed",
       "type": "float",
       "file": "AutoPilotProfile.cs",
-      "line": 399,
+      "line": 401,
       "parser": "TagFloatCheck"
     },
     {
@@ -10481,7 +10489,7 @@
       "tag": "IdealMinSpeed",
       "type": "float",
       "file": "AutoPilotProfile.cs",
-      "line": 406,
+      "line": 408,
       "parser": "TagFloatCheck"
     },
     {
@@ -10489,7 +10497,7 @@
       "tag": "SlowDownOnWaypointApproach",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 413,
+      "line": 415,
       "parser": "TagBoolCheck"
     },
     {
@@ -10497,7 +10505,7 @@
       "tag": "ExtraSlowDownDistance",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 420,
+      "line": 422,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10505,7 +10513,7 @@
       "tag": "MaxSpeedTolerance",
       "type": "float",
       "file": "AutoPilotProfile.cs",
-      "line": 427,
+      "line": 429,
       "parser": "TagFloatCheck"
     },
     {
@@ -10513,7 +10521,7 @@
       "tag": "FlyLevelWithGravity",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 434,
+      "line": 436,
       "parser": "TagBoolCheck"
     },
     {
@@ -10521,7 +10529,7 @@
       "tag": "LevelWithGravityWhenIdle",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 441,
+      "line": 443,
       "parser": "TagBoolCheck"
     },
     {
@@ -10529,7 +10537,7 @@
       "tag": "MaxPlanetPathCheckDistance",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 448,
+      "line": 450,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10537,7 +10545,7 @@
       "tag": "IdealPlanetAltitude",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 455,
+      "line": 457,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10545,7 +10553,7 @@
       "tag": "MinimumPlanetAltitude",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 462,
+      "line": 464,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10553,7 +10561,7 @@
       "tag": "AltitudeTolerance",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 469,
+      "line": 471,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10561,7 +10569,7 @@
       "tag": "WaypointTolerance",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 476,
+      "line": 478,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10569,7 +10577,7 @@
       "tag": "OffsetSpaceMinDistFromTarget",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 483,
+      "line": 485,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10577,7 +10585,7 @@
       "tag": "OffsetSpaceMaxDistFromTarget",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 490,
+      "line": 492,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10585,7 +10593,7 @@
       "tag": "OffsetPlanetMinDistFromTarget",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 497,
+      "line": 499,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10593,7 +10601,7 @@
       "tag": "OffsetPlanetMaxDistFromTarget",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 504,
+      "line": 506,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10601,7 +10609,7 @@
       "tag": "OffsetPlanetMinTargetAltitude",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 511,
+      "line": 513,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10609,7 +10617,7 @@
       "tag": "OffsetPlanetMaxTargetAltitude",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 518,
+      "line": 520,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10617,7 +10625,7 @@
       "tag": "ReverseOffsetDistAltAboveHeight",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 525,
+      "line": 527,
       "parser": "TagBoolCheck"
     },
     {
@@ -10625,7 +10633,7 @@
       "tag": "ReverseOffsetHeight",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 532,
+      "line": 534,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10633,7 +10641,7 @@
       "tag": "CircleTargetClockwise",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 539,
+      "line": 541,
       "parser": "TagBoolCheck"
     },
     {
@@ -10641,7 +10649,7 @@
       "tag": "CircleTargetRadiusConstriction",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 546,
+      "line": 548,
       "parser": "TagBoolCheck"
     },
     {
@@ -10649,7 +10657,7 @@
       "tag": "CircleTargetRadiusConstrictionAmount",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 553,
+      "line": 555,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10657,7 +10665,7 @@
       "tag": "CircleTargetAltitudeConstriction",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 560,
+      "line": 562,
       "parser": "TagBoolCheck"
     },
     {
@@ -10665,7 +10673,7 @@
       "tag": "CircleTargetAltitudeConstrictionAmount",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 567,
+      "line": 569,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10673,7 +10681,7 @@
       "tag": "CircleTargetUpAngleLimit",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 574,
+      "line": 576,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10681,7 +10689,7 @@
       "tag": "CircleTargetDriftExemption",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 581,
+      "line": 583,
       "parser": "TagBoolCheck"
     },
     {
@@ -10689,7 +10697,7 @@
       "tag": "Unused",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 588,
+      "line": 590,
       "parser": "TagBoolCheck"
     },
     {
@@ -10697,7 +10705,7 @@
       "tag": "CollisionEvasionWaypointDistance",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 595,
+      "line": 597,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10705,7 +10713,7 @@
       "tag": "CollisionFallEvasionWaypointDistance",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 602,
+      "line": 604,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10713,7 +10721,7 @@
       "tag": "CollisionEvasionResumeDistance",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 609,
+      "line": 611,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10721,7 +10729,7 @@
       "tag": "CollisionEvasionResumeTime",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 616,
+      "line": 618,
       "parser": "TagIntCheck"
     },
     {
@@ -10729,7 +10737,7 @@
       "tag": "CollisionEvasionWaypointCalculatedAwayFromEntity",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 623,
+      "line": 625,
       "parser": "TagBoolCheck"
     },
     {
@@ -10737,7 +10745,7 @@
       "tag": "CollisionEvasionWaypointFromEntityMaxAngle",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 630,
+      "line": 632,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10745,7 +10753,7 @@
       "tag": "UseProjectileLeadPrediction",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 637,
+      "line": 639,
       "parser": "TagBoolCheck"
     },
     {
@@ -10753,7 +10761,7 @@
       "tag": "UseCollisionLeadPrediction",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 644,
+      "line": 646,
       "parser": "TagBoolCheck"
     },
     {
@@ -10761,7 +10769,7 @@
       "tag": "RotationMultiplier",
       "type": "float",
       "file": "AutoPilotProfile.cs",
-      "line": 655,
+      "line": 657,
       "parser": "TagFloatCheck"
     },
     {
@@ -10769,7 +10777,7 @@
       "tag": "RotationMultiplierPitch",
       "type": "float",
       "file": "AutoPilotProfile.cs",
-      "line": 662,
+      "line": 664,
       "parser": "TagFloatCheck"
     },
     {
@@ -10777,7 +10785,7 @@
       "tag": "RotationMultiplierYaw",
       "type": "float",
       "file": "AutoPilotProfile.cs",
-      "line": 669,
+      "line": 671,
       "parser": "TagFloatCheck"
     },
     {
@@ -10785,7 +10793,7 @@
       "tag": "RotationMultiplierRoll",
       "type": "float",
       "file": "AutoPilotProfile.cs",
-      "line": 676,
+      "line": 678,
       "parser": "TagFloatCheck"
     },
     {
@@ -10793,7 +10801,7 @@
       "tag": "RotationSlowdownAngle",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 683,
+      "line": 685,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10801,7 +10809,7 @@
       "tag": "UseForcedRotationDampening",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 690,
+      "line": 692,
       "parser": "TagBoolCheck"
     },
     {
@@ -10809,7 +10817,7 @@
       "tag": "ForcedRotationDampeningAmount",
       "type": "float",
       "file": "AutoPilotProfile.cs",
-      "line": 697,
+      "line": 699,
       "parser": "TagFloatCheck"
     },
     {
@@ -10817,7 +10825,7 @@
       "tag": "UseRotationBoostUp",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 704,
+      "line": 706,
       "parser": "TagBoolCheck"
     },
     {
@@ -10825,7 +10833,7 @@
       "tag": "RotationBoostUpAmount",
       "type": "float",
       "file": "AutoPilotProfile.cs",
-      "line": 711,
+      "line": 713,
       "parser": "TagFloatCheck"
     },
     {
@@ -10833,7 +10841,7 @@
       "tag": "AngleAllowedForForwardThrust",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 718,
+      "line": 720,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10841,7 +10849,7 @@
       "tag": "MaxVelocityAngleForSpeedControl",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 725,
+      "line": 727,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10849,7 +10857,7 @@
       "tag": "AllowStrafing",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 732,
+      "line": 734,
       "parser": "TagBoolCheck"
     },
     {
@@ -10857,7 +10865,7 @@
       "tag": "StrafeMinDurationMs",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 739,
+      "line": 741,
       "parser": "TagIntCheck"
     },
     {
@@ -10865,7 +10873,7 @@
       "tag": "StrafeMaxDurationMs",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 746,
+      "line": 748,
       "parser": "TagIntCheck"
     },
     {
@@ -10873,7 +10881,7 @@
       "tag": "StrafeMinCooldownMs",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 753,
+      "line": 755,
       "parser": "TagIntCheck"
     },
     {
@@ -10881,7 +10889,7 @@
       "tag": "StrafeMaxCooldownMs",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 760,
+      "line": 762,
       "parser": "TagIntCheck"
     },
     {
@@ -10889,7 +10897,7 @@
       "tag": "StrafeSpeedCutOff",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 767,
+      "line": 769,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10897,7 +10905,7 @@
       "tag": "StrafeDistanceCutOff",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 774,
+      "line": 776,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10905,7 +10913,7 @@
       "tag": "StrafeMinimumTargetDistance",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 781,
+      "line": 783,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10913,7 +10921,7 @@
       "tag": "StrafeMinimumSafeAngleFromTarget",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 788,
+      "line": 790,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10921,7 +10929,7 @@
       "tag": "PadDistanceFromTarget",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 799,
+      "line": 801,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10929,7 +10937,7 @@
       "tag": "TryToLevelWithTarget",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 805,
+      "line": 807,
       "parser": "TagBoolCheck"
     },
     {
@@ -10937,7 +10945,7 @@
       "tag": "BarrelRollMinDurationMs",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 815,
+      "line": 817,
       "parser": "TagIntCheck"
     },
     {
@@ -10945,7 +10953,7 @@
       "tag": "BarrelRollMaxDurationMs",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 822,
+      "line": 824,
       "parser": "TagIntCheck"
     },
     {
@@ -10953,7 +10961,7 @@
       "tag": "RamMinDurationMs",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 829,
+      "line": 831,
       "parser": "TagIntCheck"
     },
     {
@@ -10961,7 +10969,7 @@
       "tag": "RamMaxDurationMs",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 836,
+      "line": 838,
       "parser": "TagIntCheck"
     },
     {
@@ -10969,7 +10977,7 @@
       "tag": "EngageDistanceSpace",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 843,
+      "line": 845,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10977,7 +10985,7 @@
       "tag": "EngageDistancePlanet",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 850,
+      "line": 852,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10985,7 +10993,7 @@
       "tag": "DisengageDistanceSpace",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 857,
+      "line": 859,
       "parser": "TagDoubleCheck"
     },
     {
@@ -10993,7 +11001,7 @@
       "tag": "DisengageDistancePlanet",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 864,
+      "line": 866,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11001,7 +11009,7 @@
       "tag": "WaypointWaitTimeTrigger",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 871,
+      "line": 873,
       "parser": "TagIntCheck"
     },
     {
@@ -11009,7 +11017,7 @@
       "tag": "TargetApproachTimer",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 878,
+      "line": 880,
       "parser": "TagIntCheck"
     },
     {
@@ -11017,7 +11025,7 @@
       "tag": "TargetEngageTimer",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 885,
+      "line": 887,
       "parser": "TagIntCheck"
     },
     {
@@ -11025,7 +11033,7 @@
       "tag": "TimeBetweenNewTargetChecks",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 892,
+      "line": 894,
       "parser": "TagIntCheck"
     },
     {
@@ -11033,7 +11041,7 @@
       "tag": "LostTargetTimerTrigger",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 899,
+      "line": 901,
       "parser": "TagIntCheck"
     },
     {
@@ -11041,7 +11049,7 @@
       "tag": "DistanceToCheckEngagableTarget",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 906,
+      "line": 908,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11049,7 +11057,7 @@
       "tag": "EngageOnCameraDetection",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 913,
+      "line": 915,
       "parser": "TagBoolCheck"
     },
     {
@@ -11057,7 +11065,7 @@
       "tag": "EngageOnWeaponActivation",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 920,
+      "line": 922,
       "parser": "TagBoolCheck"
     },
     {
@@ -11065,7 +11073,7 @@
       "tag": "EngageOnTargetLineOfSight",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 927,
+      "line": 929,
       "parser": "TagBoolCheck"
     },
     {
@@ -11073,7 +11081,7 @@
       "tag": "CameraDetectionMaxRange",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 934,
+      "line": 936,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11081,7 +11089,7 @@
       "tag": "WaypointAbandonTimeTrigger",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 941,
+      "line": 943,
       "parser": "TagIntCheck"
     },
     {
@@ -11089,7 +11097,7 @@
       "tag": "OffsetMaxAngleFromTarget",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 949,
+      "line": 951,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11097,7 +11105,7 @@
       "tag": "RotateTowardsTargetWhileAtPosition",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 958,
+      "line": 960,
       "parser": "TagBoolCheck"
     },
     {
@@ -11105,7 +11113,7 @@
       "tag": "AttackRunDistanceSpace",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 965,
+      "line": 967,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11113,7 +11121,7 @@
       "tag": "AttackRunDistancePlanet",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 972,
+      "line": 974,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11121,7 +11129,7 @@
       "tag": "AttackRunBreakawayDistance",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 979,
+      "line": 981,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11129,7 +11137,7 @@
       "tag": "OffsetRecalculationTime",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 986,
+      "line": 988,
       "parser": "TagIntCheck"
     },
     {
@@ -11137,7 +11145,7 @@
       "tag": "AttackRunUseSafePlanetPathing",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 993,
+      "line": 995,
       "parser": "TagBoolCheck"
     },
     {
@@ -11145,7 +11153,7 @@
       "tag": "AttackRunUseCollisionEvasionSpace",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 1000,
+      "line": 1002,
       "parser": "TagBoolCheck"
     },
     {
@@ -11153,7 +11161,7 @@
       "tag": "AttackRunUseCollisionEvasionPlanet",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 1007,
+      "line": 1009,
       "parser": "TagBoolCheck"
     },
     {
@@ -11161,7 +11169,7 @@
       "tag": "AttackRunOverrideWithDistanceAndTimer",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 1014,
+      "line": 1016,
       "parser": "TagBoolCheck"
     },
     {
@@ -11169,7 +11177,7 @@
       "tag": "AttackRunOverrideTimerTrigger",
       "type": "int",
       "file": "AutoPilotProfile.cs",
-      "line": 1021,
+      "line": 1023,
       "parser": "TagIntCheck"
     },
     {
@@ -11177,7 +11185,7 @@
       "tag": "AttackRunOverrideDistance",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1028,
+      "line": 1030,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11185,7 +11193,7 @@
       "tag": "DespawnCoordsMinDistance",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1035,
+      "line": 1037,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11193,7 +11201,7 @@
       "tag": "DespawnCoordsMaxDistance",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1042,
+      "line": 1044,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11201,7 +11209,7 @@
       "tag": "DespawnCoordsMinAltitude",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1049,
+      "line": 1051,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11209,7 +11217,7 @@
       "tag": "DespawnCoordsMaxAltitude",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1056,
+      "line": 1058,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11217,7 +11225,7 @@
       "tag": "MinAngleForLeveledDescent",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1063,
+      "line": 1065,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11225,7 +11233,7 @@
       "tag": "MaxAngleForLeveledAscent",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1070,
+      "line": 1072,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11233,7 +11241,7 @@
       "tag": "LimitRotationSpeed",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 1077,
+      "line": 1079,
       "parser": "TagBoolCheck"
     },
     {
@@ -11241,15 +11249,23 @@
       "tag": "MaxRotationMagnitude",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1084,
+      "line": 1086,
       "parser": "TagDoubleCheck"
+    },
+    {
+      "profile": "RivalAI Autopilot",
+      "tag": "LimitPitchTurning",
+      "type": "bool (true/false)",
+      "file": "AutoPilotProfile.cs",
+      "line": 1093,
+      "parser": "TagBoolCheck"
     },
     {
       "profile": "RivalAI Autopilot",
       "tag": "UseAircraftFlightModel",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 1091,
+      "line": 1100,
       "parser": "TagBoolCheck"
     },
     {
@@ -11257,7 +11273,7 @@
       "tag": "MaxAngleFromVelocity",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1098,
+      "line": 1107,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11265,7 +11281,7 @@
       "tag": "RollIntoTurnsMultiplier",
       "type": "float",
       "file": "AutoPilotProfile.cs",
-      "line": 1105,
+      "line": 1114,
       "parser": "TagFloatCheck"
     },
     {
@@ -11273,7 +11289,7 @@
       "tag": "MaxBankAngle",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1112,
+      "line": 1121,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11281,7 +11297,7 @@
       "tag": "ReturnToLevelMultiplier",
       "type": "float",
       "file": "AutoPilotProfile.cs",
-      "line": 1119,
+      "line": 1128,
       "parser": "TagFloatCheck"
     },
     {
@@ -11289,7 +11305,7 @@
       "tag": "ReturnToLevelSpeedCutOff",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1126,
+      "line": 1135,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11297,7 +11313,7 @@
       "tag": "MaxRotationStep",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1133,
+      "line": 1142,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11305,7 +11321,7 @@
       "tag": "MinGravity",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1140,
+      "line": 1149,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11313,7 +11329,7 @@
       "tag": "MaxGravity",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1147,
+      "line": 1156,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11321,7 +11337,7 @@
       "tag": "AvoidPlayerCollisions",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 1154,
+      "line": 1163,
       "parser": "TagBoolCheck"
     },
     {
@@ -11329,7 +11345,7 @@
       "tag": "UseSurfaceHoverThrustMode",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 1161,
+      "line": 1170,
       "parser": "TagBoolCheck"
     },
     {
@@ -11337,7 +11353,7 @@
       "tag": "MaxVerticalSpeed",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1168,
+      "line": 1177,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11345,7 +11361,7 @@
       "tag": "HoverPathStepDistance",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1175,
+      "line": 1184,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11353,7 +11369,7 @@
       "tag": "HoverCliffAngle",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1181,
+      "line": 1190,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11361,7 +11377,7 @@
       "tag": "HoverUpAngle",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1188,
+      "line": 1197,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11369,7 +11385,7 @@
       "tag": "UseVelocityCollisionEvasion",
       "type": "TagBoolEnumCheck",
       "file": "AutoPilotProfile.cs",
-      "line": 1196,
+      "line": 1205,
       "parser": "TagBoolEnumCheck"
     },
     {
@@ -11377,7 +11393,7 @@
       "tag": "UseVerticalRetreat",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 1203,
+      "line": 1212,
       "parser": "TagBoolCheck"
     },
     {
@@ -11385,7 +11401,7 @@
       "tag": "UseWaterPatrolMode",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 1210,
+      "line": 1219,
       "parser": "TagBoolCheck"
     },
     {
@@ -11393,7 +11409,7 @@
       "tag": "UseSubgridThrust",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 1217,
+      "line": 1226,
       "parser": "TagBoolCheck"
     },
     {
@@ -11401,7 +11417,7 @@
       "tag": "MaxSubgridThrustAngle",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1224,
+      "line": 1233,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11409,7 +11425,7 @@
       "tag": "EscortUsesRelativeDampening",
       "type": "bool (true/false)",
       "file": "AutoPilotProfile.cs",
-      "line": 1230,
+      "line": 1239,
       "parser": "TagBoolCheck"
     },
     {
@@ -11417,7 +11433,7 @@
       "tag": "EscortSpeedMatchMinDistance",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1236,
+      "line": 1245,
       "parser": "TagDoubleCheck"
     },
     {
@@ -11425,7 +11441,7 @@
       "tag": "EscortSpeedMatchMaxDistance",
       "type": "double",
       "file": "AutoPilotProfile.cs",
-      "line": 1242,
+      "line": 1251,
       "parser": "TagDoubleCheck"
     },
     {

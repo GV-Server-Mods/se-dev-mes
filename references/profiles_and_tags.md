@@ -122,6 +122,7 @@ Every profile must be defined inside an `<EntityComponent xsi:type="MyObjectBuil
   - `[UseVelocityCollisionEvasion:bool]`, `[CollisionEvasionWaypointCalculatedAwayFromEntity:bool]`.
   - `[AllowStrafing:bool]`, `[StrafeMinDurationMs:<int>]`, `[StrafeMaxDurationMs:<int>]`.
   - `[UseProjectileLeadPrediction:bool]`.
+  - `[LimitPitchTurning:bool]` (master after 2.75.02; `behaviors_and_autopilot.md` §3).
   - `[AttackRunDistancePlanet:<float>]`, `[AttackRunBreakawayDistance:<float>]`, `[OffsetPlanetMinDistFromTarget:<float>]` (the `Strike*` names are behavior-level tags that an attached autopilot profile overrides; `AttackRunMaxTimeTrigger` has no parser).
   - `[BarrelRollMinDurationMs:<int>]`, `[RamMinDurationMs:<int>]`.
   - **Aircraft Flight Model** (`[UseAircraftFlightModel:true]` master gate; ignored when false): `[MaxAngleFromVelocity:<double>]` (nose-to-velocity limit, 0–180°, default 180), `[RollIntoTurnsMultiplier:<float>]` (banks into turns in gravity, default 0), `[MaxBankAngle:<double>]` (bank angle cap, 0–89°, default 45), `[ReturnToLevelMultiplier:<float>]` (rolls wings level when idle, 0–1, default 0), `[ReturnToLevelSpeedCutOff:<double>]` (speed threshold for level return, default 10 m/s), `[MaxRotationStep:<double>]` (caps the gap between commanded and current angular velocity, default 0; suggested 0.5 on any gyro-steered NPC, ground vehicles included: §3G). Details: `behaviors_and_autopilot.md` §3F.

@@ -2,8 +2,8 @@
 """
 save_relations.py - show the faction relations and reputations stored in a world save.
 
-Why: MES and turrets read different data. Turrets (vanilla and WeaponCore) use the faction-to-faction relation
-between two NPC factions; MES rates an NPC-vs-NPC target from the target owner identity's own reputation with
+Why: up to MES 2.75.02, MES and turrets read different data. Turrets (vanilla and WeaponCore) use the faction-to-faction relation
+between two NPC factions; MES (up to 2.75.02) rated an NPC-vs-NPC target from the target owner identity's own reputation with
 the rating NPC's faction. See references/behaviors_and_autopilot.md (target profiles) and
 references/third_party_integrations.md section 1H.
 
@@ -14,7 +14,7 @@ Prints:
   1. Faction <-> faction relations (<MyObjectBuilder_FactionRelation>): what turrets use. Pairs not listed count
      as Enemies for turrets.
   2. Identity -> faction reputation (<MyObjectBuilder_PlayerFactionRelation>), grouped by the identity's own
-     faction: what MES uses. An identity with no entry reads the faction's StartingReputation, or Enemies at the
+     faction: what MES used for NPC-vs-NPC up to 2.75.02, and still uses to rate a player. An identity with no entry reads the faction's StartingReputation, or Enemies at the
      economy's ReputationHostileMid (vanilla -1000) if it has none.
 The save only changes when the world is saved.
 """
@@ -54,7 +54,7 @@ def main():
             rep = re.search(r"<Reputation>(-?\d+)", b)
             print("  %-12s %-12s %-9s %s" % (f1, f2, rel.group(1) if rel else "?", rep.group(1) if rep else "?"))
 
-    print("\nIdentity (grouped by its faction) -> faction reputation (MES; count of identities per value):")
+    print("\nIdentity (grouped by its faction) -> faction reputation (MES for NPC-vs-player, and for NPC-vs-NPC up to 2.75.02; count of identities per value):")
     agg = collections.defaultdict(collections.Counter)
     for m in re.finditer(r"(?s)<MyObjectBuilder_PlayerFactionRelation>(.*?)</MyObjectBuilder_PlayerFactionRelation>", t):
         b = m.group(1)

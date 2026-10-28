@@ -4,7 +4,7 @@ description: >-
   Use this skill when creating, editing, testing in game, diagnosing, or troubleshooting Space Engineers
   Modular Encounters Systems (MES) and RivalAI encounters, spawn groups, behaviors,
   autopilot profiles, triggers, or SBC XML profiles. Authoritative guide covering MES
-  Events vs RivalAI Grid Triggers, 1,866 source-extracted tags, boolean master gates,
+  Events vs RivalAI Grid Triggers, 1,868 source-extracted tags, boolean master gates,
   XML deserialization quirks, zero-stripping bugs, spawner setups, sandbox variable persistence,
   economy store grid sales, and verified engine workarounds.
 license: MIT
@@ -24,7 +24,7 @@ allowed-tools: Read, run_command
 ## 1. Source of Truth & Reference Library
 
 > [!IMPORTANT]
-> **The MES C# source is the sole source of truth.** Online wikis and guides are often outdated or wrong. This skill (1,866 tags across 41 profile types, checked against that source) overrides generic MES overviews: never use Godimas101's `se-frameworks/references/mes.md`.
+> **The MES C# source is the sole source of truth.** Online wikis and guides are often outdated or wrong. This skill (1,868 tags across 41 profile types, checked against that source) overrides generic MES overviews: never use Godimas101's `se-frameworks/references/mes.md`.
 
 ### A. Companion Skills
 C# ModAPI, decompiled engine code, Torch and PB scripts: [CometWorks skills](https://github.com/CometWorks/skills) (`se-dev-game-code`, `se-dev-server-code`, `se-dev-mod`, `se-dev-torch`); `.mwm` models and TextSurfaceScripts: [Godimas101's se-claude-skill](https://github.com/Godimas101/se-claude-skill) (`se-assets`, `se-tss`; not its `mes.md`).
@@ -105,7 +105,7 @@ Gate tables: [`events_and_zones.md`](references/events_and_zones.md) §2; RivalA
 Each is **[HARD]** unless marked; detail behind the arrow.
 
 - **Weapons**: turret ranges clamp to 800 m on spawn (`[SetWeaponsToMaxRange:true]`); WeaponCore fixed guns on "Auto (AI Controlled)" ignore MES, so save them on **Mouse Control** (`wc_shootmode.py`); `[UseAntiSmartWeapons]` sees only WC1 `AntiSmart` flares. → [`third_party_integrations.md`](references/third_party_integrations.md) §1
-- **Relations**: MES rates NPC-vs-NPC from the target owner's own reputation (none stored: `StartingReputation`, else Enemy), and 500 is Neutral to MES, Friendly in vanilla; turrets use the faction-to-faction relation (unset = Enemies). Forced targets use `[OverrideTargetData:]` (default Enemy-only). → [`behaviors_and_autopilot.md`](references/behaviors_and_autopilot.md) target profiles, [`third_party_integrations.md`](references/third_party_integrations.md) §1H
+- **Relations**: from master after 2.75.02, MES rates NPC-vs-NPC from the faction-to-faction relation, the same as turrets (unset = Enemies), and 500 is Friends, as in vanilla; up to 2.75.02 it used the target owner's own reputation and 500 was Neutral. Forced targets use `[OverrideTargetData:]` (default Enemy-only). → [`behaviors_and_autopilot.md`](references/behaviors_and_autopilot.md) target profiles, [`third_party_integrations.md`](references/third_party_integrations.md) §1H
 - **Stores** sell prefabs from the MES store-items file (quantity 1); `GridsForSale` is only for Keen stations. → [`economy_and_stores.md`](references/economy_and_stores.md)
 - **`[Type:WaypointNear]`/`WaypointFar` off a CargoShip stalls every NPC's AI**; use `BehaviorTriggerA` or `Position`. → [`diagnostics_and_troubleshooting.md`](references/diagnostics_and_troubleshooting.md) §4.4
 - **Zones** match `[PublicName:]`, never `[Name:]`; use `InsideActiveZone` (`InsideZone` is true for inactive zones). → [`events_and_zones.md`](references/events_and_zones.md) §4
