@@ -56,13 +56,13 @@
     ]
   },
   "metadata": {
-    "generated_at": "2026-10-28T00:52:49.949778+00:00",
+    "generated_at": "2026-10-31T15:35:08.290844+00:00",
     "mes_path": "C:\\Users\\blayl\\AppData\\Roaming\\SpaceEngineers\\Mods\\Modular-Encounters-Systems\\Data\\Scripts\\ModularEncountersSystems",
-    "source_hash": "a9b69178bd3cc96f",
+    "source_hash": "e3a9dfb4efcb29ff",
     "git_commit": {
-      "sha": "67320b773e1d5c853ab03712a7317ed175cdabe2",
-      "date": "2026-10-27",
-      "subject": "Merge pull request #461 from GV-Server-Mods/fix/npc-faction-relation-327"
+      "sha": "49b33806dc26e1bc2db6d283933f4dc61ce1dd77",
+      "date": "2026-10-31",
+      "subject": "Merge pull request #463 from GV-Server-Mods/fix/npc-owner-reputation-checks-462"
     },
     "total_tags": 1868,
     "total_profiles": 41
