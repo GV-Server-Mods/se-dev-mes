@@ -410,6 +410,9 @@ RivalAI does not drive `IMyMotorSuspension` wheel motors via the autopilot. Grou
 - **Rule**: `HoverPathStepDistance` **MUST ALWAYS BE GREATER** than `WaypointTolerance`!
   - If `HoverPathStepDistance <= WaypointTolerance` (e.g. Step 20m, Tolerance 25m), newly generated waypoints spawn inside the arrival radius, instantly zeroing forward thrust and deadlocking the rover.
   - Recommended: `[HoverPathStepDistance:50]` (use `< 100` for rough terrain) and `[WaypointTolerance:15]`.
+- **Tilt margin [HARD]**: the step is taken along the 3D line to the pending waypoint, then dropped to the surface and raised to `IdealPlanetAltitude` (`AutoPilotSystem.cs:1946-1957`). When that waypoint sits high above the grid (for example an offset around an aircraft target), only `HoverPathStepDistance × cos(angle up to the waypoint)` is left between the grid and the step. At or above `IdealPlanetAltitude`, offset arrival is the plain distance to the step against `WaypointTolerance` (`:2153-2176`), so a step only just above the tolerance arrives the moment it's placed. With a zero waypoint wait, that becomes a new offset every tick, and the grid sits still re-picking offsets.
+  - Keep `WaypointTolerance` at or below step × cos(the steepest angle you expect): 101/100 fails past about 8°, 111/90 holds to about 36°, 150/100 to about 48°.
+  - A long step tilts small hover grids toward ground they haven't reached, so for ground units also filter out air targets (target profile `[MatchAllFilters:Altitude]` + `[MaxAltitude:]`, which is height above the surface).
 
 #### 5. Gyro Steering & Wheel Friction [SOFT]
 - **Fix the gyro ramp first (§3G).** A rover that "can't overcome wheel friction" is usually starved by Keen's gyro ramp, not short of gyros: without `[UseAircraftFlightModel:true]` + `[MaxRotationStep:0.5]` its request is far past the 0.5 rad/s gap the gyros can close per update. Cutting friction or cranking the yaw multiplier only masks this.
