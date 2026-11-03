@@ -80,7 +80,7 @@ Tags that do work and are easy to miss:
 - **`UseForcedRotationDampening` + `ForcedRotationDampeningAmount` (default off, 0.15):** after each gyro update MES cuts the grid's existing spin by the amount, directly through `Physics.SetSpeeds` (`RotationSystem.cs:47-80`). Less overshoot and wobble, slower turns. **[SOFT]** not flight-tested.
 - **`RotationSlowdownAngle` (default 70):** above this error the gyro runs at full rate; below it the rate is the error in radians (`RotationSystem.cs:118`). It changes big turns only; small-angle wobble is already in the proportional range.
 - **`MaxPlanetPathCheckDistance` (default 1000 m):** how far ahead planetary pathing scans terrain (`AutoPilotSystem.cs:2068`). At 130 m/s that is under 8 s of warning. The approach always uses planetary pathing; the run only with `AttackRunUseSafePlanetPathing:true`.
-- **In gravity, a predicted terrain hit does not trigger collision evasion.** Voxel evasion runs only out of gravity; in gravity the only voxel case is the "fall" evade while moving within 15° of straight up (`AutoPilotSystem.cs:1037-1058`). Planetary pathing is what keeps planes off the ground.
+- **In gravity, a predicted terrain hit does not trigger collision evasion.** Voxel evasion runs only out of gravity; in gravity the only voxel case is the "fall" evade while moving within 15° of straight up (despite its name, it fires on climbs, not falls) (`AutoPilotSystem.cs:1037-1058`). Planetary pathing is what keeps planes off the ground.
 
 ---
 
