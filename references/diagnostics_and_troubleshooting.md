@@ -371,6 +371,11 @@ When troubleshooting encounter loading or execution failures, search `SpaceEngin
 - **[SOFT, seen once, cause unknown]** Every spawn logged `Spawn Successful` and passed `/MES.GESAP`, but no grid appeared anywhere, planetary installations included, and the cleanup log was empty. A full game restart fixed it.
 - `Spawn Successful` only means MES handed the prefab to the game's background spawner. `/MES.IGLSD.PostSpawn` should show whether the grids were created (not verified in that case).
 
+### 19. NPC stops dead after a reload (`NPC Owned: False`, every heartbeat 0)
+- **Cause [HARD]**: MES runs a behavior only while `Owner.NpcOwned` is true (`CoreBehavior.cs:318`). `OwnerSystem.CheckIfNpcOwned` sets it false when the remote control's owner has no faction, the wrong required faction tag, or a faction with a named human member (MES `49b3380`). It runs only at behavior setup and when the remote control changes owner, so a player who joins an NPC faction mid-session leaves that faction's running NPCs alone; after the next reload every one of them stops.
+- **Result**: the grid stops flying and fighting where it is. `/MES.IGGB` shows `NPC Owned: False`, `Behavior Run Count: 0` and every heartbeat at 0, with its profiles, booleans and counters intact.
+- **Fix**: take the player out of the faction (the members are in the save's `Sandbox.sbc`), then reload. To set NPC-to-NPC relations, use an admin tool instead of joining the faction; a faction-to-faction relation stays after the player leaves. **[SOFT]** Seen in game: a tester joined an NPC faction to declare war on another, and both of its fighters froze at the next reload.
+
 ---
 
 ## 5. Sim-Speed Health & Anti-Clang Physics Mitigations
