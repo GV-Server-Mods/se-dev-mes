@@ -26,7 +26,7 @@ plane's velocity direction (`FighterPlane.cs:256`); both read their distances fr
    `AttackRunOverrideTimerTrigger` s (stops a plane circling the offset forever). `AttackRunDistancePlanet` should exceed the turn radius (`speed / rotation rate`) or the plane can orbit the offset without
    getting inside. **[SOFT]**
 3. **Run.** The waypoint becomes the target. `AttackRunUseSafePlanetPathing` keeps the terrain climb active; `AttackRunUseCollisionEvasionPlanet` (default false) leaves collision evasion off because the target itself would count as the obstacle.
-4. **Run end.** The run ends when the distance to the target is `<= AttackRunBreakawayDistance` (default 450) or on `BehaviorActionA`. Then the next offset is picked.
+4. **Run end.** The run ends when the distance to the target is `<= AttackRunBreakawayDistance` (default 450) or, for `FighterPlane` only, on `BehaviorActionA` (table below). Then the next offset is picked.
    **`[AttackRunMaxTimeTrigger:]` does nothing.** The engage code checks `Data.AttackRunMaxTimeTrigger > 0` (`Strike.cs:239`, `FighterPlane.cs:239`) but `AutoPilotProfile.cs` has no parser for the tag, so it is always -1 (off).
 5. **Distances that must agree.**
    - Offset distance = turn-around space. A longer offset gives a longer straight approach to line up, and a shallower dive (`atan(offset altitude / offset distance)`), which matters for targets on the ground.
@@ -70,7 +70,7 @@ Checked against MES `bc71965` (upstream master).
 | `DesiredAngleToTarget` | No parser; always 0. |
 | `MinAngleForLeveledDescent`, `MaxAngleForLeveledAscent` | Only in `CalculateHoverThrust` (`ThrustSystem.cs:355-372`); planes on direct forward thrust never use them. |
 | `TryToLevelWithTarget` | Only for a static target below ground within 1200 m (`AutoPilotSystem.cs:1115`). |
-| `BehaviorActionA` / `B` | Read by `Strike`/`FighterPlane`, but no action tag sets them from SBC. |
+| `BehaviorActionA` / `B` | `[BehaviorSpecificEventA:true]` sets A; `FighterPlane` (ends the run), `Hunter` and `Nautical` read it, `Strike` doesn't. `BehaviorSpecificEventB` to `H` have no parser (only A is in `ActionReferenceProfile.cs:1211`), so the forced run start (B, `Strike.cs`/`FighterPlane.cs:181`) can't be set from SBC. To give a `Strike` plane a new line-up point, switch the subclass away and back in one trigger (two `[Actions:]`, each `[ChangeBehaviorSubclass:true]`, run in order): a changed subclass restarts in Init, which picks a new offset. **[HARD]** code, not yet flown. |
 | `UseCollisionLeadPrediction` | Aims at a collision course (no projectile travel time) and is checked before `UseProjectileLeadPrediction`, so it replaces gun leading (`AutoPilotSystem.cs:1277`). For rams, not guns. |
 | `ReverseOffsetDistAltAboveHeight` + `ReverseOffsetHeight` | When the target is more than `ReverseOffsetHeight` above the surface, the offset distance and altitude ranges swap (`AutoPilotSystem.cs:1495-1511`): the line-up point goes offset-distance **above** the target. That is the upward cascade in item 5 above; avoid it for air-to-air. |
 

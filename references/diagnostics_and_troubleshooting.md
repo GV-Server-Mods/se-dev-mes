@@ -376,6 +376,13 @@ When troubleshooting encounter loading or execution failures, search `SpaceEngin
 - **Result**: the grid stops flying and fighting where it is. `/MES.IGGB` shows `NPC Owned: False`, `Behavior Run Count: 0` and every heartbeat at 0, with its profiles, booleans and counters intact.
 - **Fix**: take the player out of the faction (the members are in the save's `Sandbox.sbc`), then reload. To set NPC-to-NPC relations, use an admin tool instead of joining the faction; a faction-to-faction relation stays after the player leaves. **[SOFT]** Seen in game: a tester joined an NPC faction to declare war on another, and both of its fighters froze at the next reload.
 
+### 20. Jetpack inhibitor does nothing to players on a dedicated server
+**[HARD]** code (MES `49b3380` `BlockLogic/JetpackInhibitor.cs`; game `MyCharacter.SetNetState`); **[SOFT]** seen on a live dedicated server.
+- `[UseJetpackInhibitorEffect:true]` (RivalAI action) and MES's jetpack suppressor blocks both use `JetpackInhibitor`, which runs on the server only (`:34-39`). Without an antenna the ranges are fixed: dampeners off within 800 m, jetpack off within about 267 m (`:53-55`); no tag changes them.
+- Every tick it calls `SwitchDamping()` / `SwitchThrusts()` on the server's copy of the character. Those only change local state. Each client sends its own jetpack and dampener state every frame and the server applies it (`MyCharacter.SetNetState`), so the player's next packet undoes the change, and the player's HUD never shows it.
+- Result: it works on the host in single player or a listen server, and does nothing to joined or dedicated-server players. The red "Disabled Jetpack" notifications still appear, because the server sends them.
+- No profile setting fixes it. A working version has to switch the jetpack off on the player's own machine (a client-side mod script, or an MES change that messages the client).
+
 ---
 
 ## 5. Sim-Speed Health & Anti-Clang Physics Mitigations
