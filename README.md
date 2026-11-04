@@ -49,7 +49,7 @@ To eliminate the guesswork and silent failures that plague Space Engineers moddi
 | **Scaffolding & XML** | [`scripts/New-MesProfile.ps1`](scripts/New-MesProfile.ps1)<br>[`scripts/Format-MesSbc.ps1`](scripts/Format-MesSbc.ps1)<br>[`scripts/Add-MesProfileSnippet.ps1`](scripts/Add-MesProfileSnippet.ps1) | 9 boilerplate encounter patterns, safe `[//]` XML comment formatter, and snippet injector |
 | **Linter Suite** | [`scripts/audit_sbc.ps1`](scripts/audit_sbc.ps1)<br>[`scripts/audit_mes_tags.ps1`](scripts/audit_mes_tags.ps1)<br>[`scripts/audit_prefabs.ps1`](scripts/audit_prefabs.ps1)<br>[`scripts/wc_shootmode.py`](scripts/wc_shootmode.py) | Catches Keen deserializer traps, missing master gates, zero-stripping bugs, unchecked `WaypointNear` crashes, and stale `.sbcB5` binary caches |
 | **Domain Guides** | [`references/`](references/) *(11 guides)* | Code-verified documentation: spawning, aircraft 90° speed-control braking, store sales, dereliction, and admin diagnostics |
-| **Workshop Examples** | [`examples/`](examples/) *(5 profiles)* | Production implementations: convoy escorts, role/combat state machines, courier networks, and automated stores |
+| **Workshop Examples** | [`examples/`](examples/) *(5 profiles, 1 store-items file)* | Production implementations: convoy escorts, role/combat state machines, courier networks, and automated stores |
 | **Eval Benchmark** | [`evals/evals.json`](evals/evals.json) | 14 verified challenge scenarios and 55 quantitative assertions (+60.0% net advantage) |
 
 <details>
@@ -95,7 +95,7 @@ se-dev-mes/
     ├── audit_mes_tags.ps1                  # Semantic tag linter (master gates, zero-stripping)
     ├── audit_mes_references.ps1            # Cross-file reference validator, RivalAI remote setup
     ├── audit_prefabs.ps1                   # Prefab SubtypeId auditor & stale .sbcB5 binary cache cleaner
-    ├── audit_unknown_tags.py               # Finds tags MES silently ignores and invalid values
+    ├── audit_unknown_tags.py               # Finds tags MES silently ignores, invalid values and repeated single-value tags
     ├── test_tag_recipes.py                 # Builds and audits every recipe in tag_recipes.md
     ├── wc_shootmode.py                     # Audits/sets WeaponCore shoot mode and Neutrals override in prefabs
     ├── save_relations.py                   # Prints faction/identity reputations from a world save
@@ -172,6 +172,7 @@ Checks all `.sbc` files for fatal Keen deserializer traps:
 - Duplicate `<Id>` attributes inside `<Prefab>`.
 - XML comments inside `<Description>` tags.
 - Empty or whitespace-only `.sbc` files, prefabs included (`Root element is missing` stops the world loading).
+- MES store-items files (`StoreItems\*.xml`): a single-value element written twice (only the first copy is read), values that make `XmlSerializer` drop the whole file (out-of-range numbers, wrong-case `ItemType`, `True` for a bool), `ItemType` `Gas`, a missing `<StoreItems>`; warnings for unknown elements, repeated `StoreItemId`s and the shared `<StoreItemLimits>`.
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/audit_sbc.ps1 -Path ".\Content\Data"
 ```

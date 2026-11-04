@@ -72,7 +72,7 @@ foreach ($pattern in 'DefendedWreck','ConvoyLeaderEscort','DynamicZoneLadder','S
 }
 & python "$PSScriptRoot/audit_unknown_tags.py" "$repoRoot/examples" "$repoRoot/references" $scaffoldDir --all
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "[ERROR] Skill content uses tags, headers or trigger types that the installed MES does not parse!" -ForegroundColor Red
+    Write-Host "[ERROR] Skill content uses tags, headers or trigger types that the installed MES does not parse, invalid tag values, or a single-value tag set twice with different values!" -ForegroundColor Red
     exit 1
 }
 

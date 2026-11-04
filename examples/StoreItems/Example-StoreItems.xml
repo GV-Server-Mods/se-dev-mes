@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MES store-items file, loaded by name from a [MES Store] profile's [FileSource:Example-StoreItems.xml].
+  Lives in the mod at Data\StoreItems\. audit_sbc.ps1 check 7 audits it (Update-MesSkill.ps1 runs it on examples).
+  Rules that fail silently (economy_and_stores.md, "Store-items file traps"):
+  - one <StoreItems> block; write each value once (a repeated value keeps its FIRST copy, a repeated block its LAST);
+  - element names and ItemType are case-sensitive; booleans are lowercase true/false;
+  - no comments inside a value; one bad value drops the whole file;
+  - ItemType Hydrogen/Oxygen for gas, never Gas.
+-->
+<StoreItemsContainer xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <StoreItems>
+    <StoreItem>
+      <StoreItemId>RoverHeavy</StoreItemId>
+      <ItemType>Prefab</ItemType>
+      <ItemSubtypeId>Example-Prefab-RoverHeavy</ItemSubtypeId>
+      <PCU>4500</PCU>
+      <Offer>
+        <CustomPrice>7500000</CustomPrice>
+        <MinPriceMultiplier>100</MinPriceMultiplier>
+        <MaxPriceMultiplier>100</MaxPriceMultiplier>
+      </Offer>
+    </StoreItem>
+    <StoreItem>
+      <StoreItemId>Gas_HydrogenOffer</StoreItemId>
+      <ItemType>Hydrogen</ItemType>
+      <ItemSubtypeId>Hydrogen</ItemSubtypeId>
+      <Offer>
+        <MinPriceMultiplier>100</MinPriceMultiplier>
+        <MaxPriceMultiplier>120</MaxPriceMultiplier>
+        <MinAmount>15000</MinAmount>
+        <MaxAmount>60000</MaxAmount>
+      </Offer>
+    </StoreItem>
+    <StoreItem>
+      <!-- One entry per <ItemSubtypeId>, each with the StoreItemId "Component/<subtype>" -->
+      <StoreItemId>Components_Basic</StoreItemId>
+      <ItemType>Component</ItemType>
+      <ItemSubtypeId>SteelPlate</ItemSubtypeId>
+      <ItemSubtypeIds>
+        <ItemSubtypeId>InteriorPlate</ItemSubtypeId>
+        <ItemSubtypeId>Girder</ItemSubtypeId>
+      </ItemSubtypeIds>
+      <IsCustomItem>false</IsCustomItem>
+      <Offer>
+        <MinAmount>50</MinAmount>
+        <MaxAmount>200</MaxAmount>
+      </Offer>
+      <Order>
+        <MinAmount>20</MinAmount>
+        <MaxAmount>100</MaxAmount>
+      </Order>
+    </StoreItem>
+  </StoreItems>
+</StoreItemsContainer>

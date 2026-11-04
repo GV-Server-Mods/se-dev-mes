@@ -229,6 +229,15 @@ Every profile must be defined inside an `<EntityComponent xsi:type="MyObjectBuil
 
 **[HARD]** Every `TagParse` value parser except `TagCheckEnumCheck` (logs since 2.74.04) fails silently: a value it can't parse leaves the field at its default (or `None` for `TagBoolEnumCheck`), with no log line. `TagModifierEnumCheck` (`[ZoneRadiusChangeType(s):]`, `[ZoneCustomCounterChangeType:]`) accepts only `Set`, `Add`, `Subtract`, `Multiply`, `Divide`. `scripts/audit_unknown_tags.py` checks bool, Yes/No/Ignore, BoolEnum, ModifierEnum, int, long, float, double and int-or-Day values against the parser each tag actually uses (the cache records it as `parser`).
 
+**[HARD] Repeating a tag in one profile.** MES runs the setter once per Description line, in order.
+- A **single-value** tag (bool, int, double, string, Vector3D, most enums) overwrites the same field each time, so only one copy takes effect: the last that parses. A later copy that does not parse is skipped and the earlier value stays, except a True/False/None (`TagBoolEnumCheck`) tag, which resets to `None`, and a string tag, which takes any text. A copy-pasted `[UsePlayerDistanceTimer:true]` ... `[UsePlayerDistanceTimer:false]` silently ends up `false`.
+- **Aliases** set the same field: `[WeaponSystem:A]` + `[WeaponsSystem:B]` uses B only, and so do `[Strict:]`/`[StrictTerritory:]` and `[UseZoneAnnounce:]`/`[AnnounceArriveDepart:]` (MES Zone). `[DecreaseAntennaThoughtBubblePercentage:]` sets the *Increase* flag (a parser bug up to at least 49b3380), so it acts as an alias of `[IncreaseAntennaThoughtBubblePercentage:]`.
+- **List** tags (`TagStringListCheck` and the other `List` parsers, e.g. `[RequiredOffers:]`, `[Triggers:]`) append every copy. **Flag** tags OR the copies together, so a copy can add a flag but never remove one: `[Owners:]`, `[Relations:]` (RivalAI Target), `[AllowedActions:]` (MES SafeZone), `[Relation:]` (RivalAI Command), `[CommandRelation:]` (RivalAI Condition).
+- **Dictionary** tags add each copy with `Dictionary.Add`: the same key twice throws `ArgumentException`, and an entry without its comma throws `IndexOutOfRangeException`. Either one throws while MES loads the profile, so write each key once.
+- `[BehaviorName:]` is not read per line: `BehaviorManager` checks the whole text for each `[BehaviorName:X]` in a fixed code order (`CoreBehavior`, `CargoShip`, `Escort`, `Fighter`, `HorseFighter` ...), so with two copies the type earlier in that order wins, whatever the order in the file.
+
+`audit_unknown_tags.py` reports single-value tags and aliases set twice from the cache's `repeatable` and `field` keys; copies with the same value are notes that do not fail the audit. The 14 tags parsed by custom code have no `repeatable` value and are not checked. XML files MES deserializes (store items, world `Config-*.xml`) follow other rules: the FIRST copy of a repeated value wins and the LAST copy of a repeated list wrapper ([`sbc_xml_editing_guide.md`](sbc_xml_editing_guide.md) §C).
+
 ---
 
 ## 4. Built-in MES Core Profiles

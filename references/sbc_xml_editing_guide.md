@@ -105,7 +105,7 @@ Keen's XML deserializer strictly accepts **only one** `<SubtypeId>` per `<Id>` b
 ```
 
 ### B. Strict Single `<Id>` per `<Prefab>` Block
-Duplicate `<Id>` elements inside a `<Prefab>` cause Keen to read the first one and discard subsequent ones:
+Duplicate `<Id>` elements inside a `<Prefab>` cause Keen to read the first one and discard subsequent ones. Prefab headers are read by hand (`MyDefinitionManager.ReadPrefabHeader`), not by the serializer: only the first `<Id>` counts; if it has a `Type` attribute its attributes win, otherwise the LAST `<SubtypeId>` element inside it wins:
 ```xml
 <!-- INVALID: Deserializer reads the first Id, registering prefab under wrong Subtype -->
 <Prefab xsi:type="MyObjectBuilder_PrefabDefinition">
@@ -115,4 +115,15 @@ Duplicate `<Id>` elements inside a `<Prefab>` cause Keen to read the first one a
 </Prefab>
 ```
 Both are enforced by `audit_sbc.ps1` (Check 3, XML DOM duplicate detection).
+
+### C. The General Rule: Repeats Are Dropped Silently [HARD]
+Keen's definition loader (`MyObjectBuilderSerializerKeen`, pre-generated serializers) and MES's own XML files (`MyAPIGateway.Utilities.SerializeFromXML`) both use `XmlSerializer`. Nothing in SE hooks its `UnknownElement` event, so none of the cases below logs anything. Tested on .NET Framework 4.8.
+- **A repeated list block keeps the LAST copy.** Two `<EntityComponents>` blocks in one `.sbc` (or two `<CubeBlocks>`, `<SpawnGroups>`, MES `<StoreItems>`): each copy is read and replaces the one before, so every definition in the earlier blocks silently never loads. Merge them into one block (`audit_sbc.ps1` check 8). The flat lists append instead: bare `<Definition>` and `<Environment>` entries under `<Definitions>`, `<Icon>` on a definition.
+- **A repeated single value keeps the FIRST copy.** The reader marks each member as read the first time; a later element with the same name is skipped unread. `<MinAmount>1</MinAmount><MinAmount>2</MinAmount>` reads 1, and A (one `<SubtypeId>` per `<Id>`) is a case of this rule.
+- **An attribute and an element for the same field**: the element wins (`<Id Subtype="A"><SubtypeId>B</SubtypeId></Id>` gives B), because attributes are read first. Prefab headers are the exception (B above).
+- **A value that does not parse** (text in a number, `True` for a bool, a wrong-case enum, a comment inside the value) throws, and the whole file is dropped, not just that field. Keen logs `MOD SKIPPED, Cannot load definition file`, but only that file is lost; the rest of the mod loads.
+- **Unknown element names** are ignored the same silent way, and names are case-sensitive, so a misspelled element keeps the field's default.
+- **MES world configs (`Config-*.xml` in world storage)**: a value that does not parse makes MES use the default configuration (`Could Not Load Settings From Config-X.xml. Using Default Configuration.`, always logged), and its next save writes the defaults back over the file, so the hand edits are lost.
+
+`<Description>` tags follow their own rule (the last copy of a single-value tag wins), see [`profiles_and_tags.md`](profiles_and_tags.md) §3. MES store-items files are audited by `audit_sbc.ps1` check 7 ([`economy_and_stores.md`](economy_and_stores.md) §1 Part 1).
 

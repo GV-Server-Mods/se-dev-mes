@@ -21,13 +21,23 @@ The classic trap is a Yes/No/Ignore tag (`[GridDestructible:]`, `[GridEditable:]
 `true`/`false`: MES's CheckEnum parse is case-sensitive and only knows Yes/No/Ignore, so the action does
 nothing. Values containing a `{token}` are skipped (they are only known after substitution).
 
+It also reports a single-value tag written twice in one profile (`[MaxGravity:1]` ... `[MaxGravity:2]`), and
+aliases that set the same field (`[WeaponSystem:]` + `[WeaponsSystem:]`). MES parses every line in order and each
+copy overwrites the field, so the last copy that parses wins (a True/False/None BoolEnum tag or a string tag: the
+last copy, whatever its value) and the earlier ones are dead text. Copies with the same value are harmless and
+are listed as notes that do not affect the exit code. List tags (`[RequiredOffers:]`, `[Triggers:]` ...) append,
+and flag tags (`[Owners:]`, `[AllowedActions:]` ...) OR together, so both may repeat. The cache's `repeatable`
+and `field` keys say which is which; tags it cannot classify are not checked.
+
 Usage:
   python audit_unknown_tags.py <folder-or-file.sbc> [more paths ...]
   python audit_unknown_tags.py path --profile "RivalAI Trigger"       (check only this type; repeatable)
   python audit_unknown_tags.py path --show-ok                         (also list files with no findings)
   (--all is accepted for compatibility; every type is checked by default.)
 
-Exit code: 0 = nothing found, 1 = unknown tags or invalid values found, 2 = usage / cache error.
+Exit code: 0 = nothing found (or only identical duplicates), 1 = unknown tags, invalid values or
+conflicting single-value tags found,
+2 = usage / cache error.
 Only profiles whose `<Description>` starts with a recognised `[Profile Type]` header are checked.
 Markdown files are scanned too: the fenced code blocks of the skill's own references/*.md.
 """
@@ -89,6 +99,8 @@ KNOWN_HEADERS = {
 }
 TRIGGER_TYPES = set()
 PARSERS = {}
+SINGLE = set()
+FIELD_KEY = {}
 CACHE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mes_tag_cache.json")
 TAG_RE = re.compile(r"\[([A-Za-z0-9_]+):([^\]]*)\]")
 HEADER_RE = re.compile(r"^\s*\[([A-Za-z][A-Za-z0-9 ]*)\]", re.M)
@@ -99,20 +111,41 @@ def load_cache():
         data = json.load(f)
     valid = defaultdict(set)
     parsers = {}
+    repeatable = {}
     for t in data["tags"]:
         valid[t["profile"]].add(t["tag"])
         if t.get("parser"):
             parsers[(t["profile"], t["tag"])] = t["parser"]
-    global TRIGGER_TYPES, PARSERS
+        repeatable[(t["profile"], t["tag"])] = t.get("repeatable")
+        # Aliases ([WeaponsSystem:] / [WeaponSystem:]) share the cache's `field`, so they are grouped together.
+        FIELD_KEY[(t["profile"], t["tag"])] = (t["profile"], t.get("field") or t["tag"])
+    global TRIGGER_TYPES, PARSERS, SINGLE
     TRIGGER_TYPES = set(data.get("values", {}).get("RivalAI Trigger.Type", []))
     # A SpawnGroup's own Description is also parsed as its first Spawn Conditions and Manipulation profile.
+    sources = ("MES Manipulation", "MES Spawn Conditions", "Modular Encounters SpawnGroup")
     valid["Modular Encounters SpawnGroup"] |= valid["MES Spawn Conditions"] | valid["MES Manipulation"]
-    for src in ("MES Manipulation", "MES Spawn Conditions", "Modular Encounters SpawnGroup"):
+    for src in sources:
         for (p, tag), fn in list(parsers.items()):
             if p == src:
                 parsers.setdefault(("Modular Encounters SpawnGroup", tag), fn)
     PARSERS = parsers
+    # Tags that set one field (cache "repeatable": false): a second copy in the same profile overwrites
+    # the first. For a SpawnGroup every profile type that parses the tag must agree.
+    SINGLE = {k for k, v in repeatable.items() if v is False and k[0] != "Modular Encounters SpawnGroup"}
+    for tag in valid["Modular Encounters SpawnGroup"]:
+        kinds = [repeatable[(p, tag)] for p in sources if (p, tag) in repeatable]
+        if kinds and all(k is False for k in kinds):
+            SINGLE.add(("Modular Encounters SpawnGroup", tag))
+            src = next(p for p in sources if (p, tag) in repeatable)
+            FIELD_KEY[("Modular Encounters SpawnGroup", tag)] = FIELD_KEY[(src, tag)]
     return valid
+
+
+def takes_effect(header, tag, value):
+    """True if this copy of a single-value tag would overwrite the field (see VALUE_RULES)."""
+    parser = PARSERS.get((header, tag))
+    rule = VALUE_RULES.get(parser)
+    return rule is None or parser == "TagBoolEnumCheck" or "{" in value or bool(rule[0](value))
 
 
 def normalize_header(header):
@@ -189,6 +222,8 @@ def main():
     wanted = set(a.profile) if a.profile else set(valid)
     total = 0
     bad_values = 0
+    repeated = 0
+    harmless = 0
     for f in files_under(a.paths):
         hits = []
         checked = 0
@@ -199,6 +234,26 @@ def main():
             if header not in valid or header not in wanted:
                 continue
             checked += 1
+            seen = defaultdict(list)
+            for m in TAG_RE.finditer(desc):
+                key = (header, m.group(1))
+                if key in SINGLE:
+                    seen[FIELD_KEY[key]].append((m.group(1), m.group(2).strip()))
+            for copies in seen.values():
+                if len(copies) < 2:
+                    continue
+                shown = " ".join("[%s:%s]" % c for c in copies)
+                if len({v for _, v in copies}) == 1:
+                    hits.append("  %s [%s] note: %s repeated with the same value - harmless, delete the extra "
+                                "copies" % (sid, header, shown))
+                    harmless += 1
+                    continue
+                live = [c for c in copies if takes_effect(header, c[0], c[1])]
+                win = "[%s:%s] wins" % live[-1] if live else "no copy parses, the field keeps its default"
+                hits.append("  %s [%s] %s set the same single-value field - %s, the others are ignored; keep one "
+                            "(to apply several values, use a list tag or a second profile)" % (
+                                sid, header, shown, win))
+                repeated += 1
             for m in TAG_RE.finditer(desc):
                 tag = m.group(1)
                 if header == "RivalAI Trigger" and tag == "Type" and TRIGGER_TYPES:
@@ -232,8 +287,9 @@ def main():
             total += len(hits)
         elif a.show_ok and checked:
             print("%s: OK (%d profiles)" % (f, checked))
-    print("\n%d unknown tag(s) and %d invalid value(s) found." % (total - bad_values, bad_values))
-    return 1 if total else 0
+    print("\n%d unknown tag(s), %d invalid value(s), %d conflicting single-value tag(s) and %d harmless "
+          "duplicate(s) found." % (total - bad_values - repeated - harmless, bad_values, repeated, harmless))
+    return 1 if total - harmless else 0
 
 
 if __name__ == "__main__":

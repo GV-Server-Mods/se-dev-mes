@@ -18,6 +18,7 @@ import json
 import hashlib
 import argparse
 import subprocess
+from collections import defaultdict
 from datetime import datetime, timezone
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -156,28 +157,138 @@ BLOCK_TAG_RE = re.compile(r'\.(?:StartsWith|Contains)\("\[?[a-zA-Z0-9_]+[:"]')
 TAGPARSE_RE = re.compile(r'TagParse\.(\w+)\(')
 
 
+def block_lines(lines, idx):
+    """Source lines of the `if (tag.Contains("[X:"))` block that starts on line idx (1-based): up to the
+    next tag test, at most 11 lines."""
+    out = []
+    for j in range(idx - 1, min(idx + 11, len(lines))):
+        if j > idx - 1 and BLOCK_TAG_RE.search(lines[j]):
+            break
+        out.append(lines[j])
+    return out
+
+
 def block_parser(lines, idx):
     """TagParse function used by the `if (tag.Contains("[X:"))` block that starts on line idx (1-based):
     the first TagParse.* call before the next tag test, within a few lines. None if the block parses
     the value some other way."""
-    for j in range(idx - 1, min(idx + 11, len(lines))):
-        if j > idx - 1 and BLOCK_TAG_RE.search(lines[j]):
-            return None
-        m = TAGPARSE_RE.search(lines[j])
+    for line in block_lines(lines, idx):
+        m = TAGPARSE_RE.search(line)
         if m:
             return m.group(1)
     return None
 
 
-def parse_tags_from_file(file_path):
-    """Yield (tag_name, data_type, line_no, parser_fn) for every tag the file parses. parser_fn is the
-    TagParse.* function that reads the value (None when it can't be determined)."""
+def block_region(lines, idx):
+    """Whole `if (tag.Contains("[X:"))` block that starts on line idx (1-based), matched by braces
+    (a brace-less if ends at its first `;`). Used to see everything the block does with the value."""
+    out, depth, opened = [], 0, False
+    for j in range(idx - 1, min(idx + 200, len(lines))):
+        line = lines[j]
+        for k, ch in enumerate(line):  # char by char, so `} else if (...) {` ends this block
+            if ch == '{':
+                depth, opened = depth + 1, True
+            elif ch == '}':
+                depth -= 1
+                if opened and depth <= 0:
+                    out.append(line[:k + 1])
+                    return out
+        out.append(line)
+        if not opened and j > idx - 1 and line.rstrip().endswith(';'):
+            break
+    return out
+
+
+# A class field declaration: optional [Attributes], access modifier, optional static/readonly, type, name, then ; or =.
+FIELD_RE = re.compile(r'^\s*(?:\[[^\]]*\]\s*)*(?:public|private|protected|internal)\s+(?:static\s+)?(?:readonly\s+)?'
+                      r'([\w.]+(?:<[^;=()]*>)?(?:\[\])?)\s+(\w+)\s*(?:;|=)')
+REF_RE = re.compile(r'TagParse\.\w+\(\s*\w+\s*,\s*(?:(?:true|false)\s*,\s*)?ref\s+([\w.]+)\s*[,)]')
+COLLECTION_TYPE_RE = re.compile(r'^(?:[\w.]*\.)?(?:List|Dictionary|HashSet|IList|ICollection)<|\[\]$')
+
+
+def field_kinds_of(lines):
+    """Field name -> set of 'multi' (List, Dictionary, array ...) / 'single' for the given source lines."""
+    kinds = defaultdict(set)
+    for line in lines:
+        m = FIELD_RE.match(line)
+        if m:
+            kinds[m.group(2)].add('multi' if COLLECTION_TYPE_RE.search(m.group(1)) else 'single')
+    return kinds
+
+
+def collect_field_kinds(mes_path):
+    """field_kinds_of() over every MES .cs file (fallback when the parsing file does not declare the field)."""
+    kinds = defaultdict(set)
+    for root, _, files in os.walk(mes_path):
+        for f in files:
+            if not f.endswith('.cs'):
+                continue
+            with open(os.path.join(root, f), 'r', encoding='utf-8', errors='ignore') as fp:
+                for name, k in field_kinds_of(fp).items():
+                    kinds[name] |= k
+    return kinds
+
+
+def combining_parsers(mes_path):
+    """TagParse functions that merge each copy into the field instead of replacing it: flag enums
+    (`original |= result`, e.g. [Owners:], [Relations:], [AllowedActions:]) or code that .Add()s."""
+    names = set()
+    for root, _, files in os.walk(mes_path):
+        if 'TagParse.cs' not in files:
+            continue
+        with open(os.path.join(root, 'TagParse.cs'), 'r', encoding='utf-8', errors='ignore') as fp:
+            src = fp.read()
+        for m in re.finditer(r'public static void (Tag\w+)\(([^)]*)\)\s*\{', src):
+            if re.search(r'ref\s+(?:List|Dictionary)<', m.group(2)):
+                continue  # collection overloads are already repeatable by field type
+            depth, i = 1, m.end()
+            while depth and i < len(src):
+                depth += (src[i] == '{') - (src[i] == '}')
+                i += 1
+            if re.search(r'\|=|\.Add\(', src[m.end():i]):
+                names.add(m.group(1))
+    return names
+
+
+def repeat_kind(region, parser_fn, field_kinds, combining=(), local_kinds=None):
+    """(repeatable, field). repeatable is True when repeating the tag in one profile adds values (list,
+    dictionary, flag enum, or code that .Add()s), False when each copy overwrites one field (the last
+    copy wins), None when unknown; field is the overwritten field's name when False. Only a ref to a
+    declared class field counts as single: a block that parses into a local (`string FileSource = "";
+    ... ref FileSource`) usually does more with it afterwards. The parsing file's own declaration of the
+    field is used first, then any MES file's."""
+    if parser_fn and (re.search(r'List|Dict', parser_fn) or parser_fn in combining):
+        return True, None
+    text = '\n'.join(region)
+    if re.search(r'\.(?:Add|AddRange|Insert)\(', text):
+        return True, None
+    m = REF_RE.search(text)
+    if not m:
+        return None, None
+    name = m.group(1).split('.')[-1]
+    if '.' not in m.group(1) and re.search(r'(?<![\w.])(?:var|[A-Za-z_][\w.]*(?:<[^;=()]*>)?(?:\[\])?)\s+%s\s*[=;]'
+                                           % re.escape(name), text):
+        return None, None  # declared as a local inside the block
+    kinds = (local_kinds or {}).get(name) or field_kinds.get(name, set())
+    if kinds == {'multi'}:
+        return True, None
+    if kinds == {'single'}:
+        return False, name
+    return None, None
+
+
+def parse_tags_from_file(file_path, field_kinds=None, combining=()):
+    """Yield (tag_name, data_type, line_no, parser_fn, (repeatable, field)) for every tag the file parses.
+    parser_fn is the TagParse.* function that reads the value (None when it can't be determined);
+    the last item is repeat_kind()'s answer ((None, None) without field_kinds)."""
+    field_kinds = field_kinds or {}
     tags = []
     if not os.path.exists(file_path):
         return tags
 
     with open(file_path, 'r', encoding='utf-8', errors='ignore') as fp:
         lines = fp.read().splitlines()
+    local_kinds = field_kinds_of(lines)
 
     for idx, line in enumerate(lines, 1):
         # Pattern 1: Dictionary entry: {"TagName", (s, o) => TagParse.TagTypeCheck(s, ref Var) }
@@ -189,7 +300,7 @@ def parse_tags_from_file(file_path):
             # TagStringListCheck(s, false, ref x) is the overload that keeps commas: one entry per tag line.
             if parser_fn == 'TagStringListCheck' and re.search(r'TagStringListCheck\(\s*\w+\s*,\s*false\s*,', line):
                 data_type = 'List<string> (one per tag line, commas kept)'
-            tags.append((tag_name, data_type, idx, parser_fn))
+            tags.append((tag_name, data_type, idx, parser_fn, repeat_kind([line], parser_fn, field_kinds, combining, local_kinds)))
             continue
 
         # Pattern 2: Dictionary entry with direct assignment or other helper
@@ -205,7 +316,7 @@ def parse_tags_from_file(file_path):
                 dtype = 'numeric / enum'
             else:
                 dtype = 'custom parse'
-            tags.append((tag_name, dtype, idx, None))
+            tags.append((tag_name, dtype, idx, None, (None, None)))
             continue
 
         # Pattern 3: tag.StartsWith("[TagName:") or tag.Contains("[TagName:")
@@ -218,8 +329,10 @@ def parse_tags_from_file(file_path):
         if names:
             parser_fn = block_parser(lines, idx)
             dtype = TYPE_MAP.get(parser_fn, parser_fn) if parser_fn else 'custom / block parse'
+            repeatable = (repeat_kind(block_region(lines, idx), parser_fn, field_kinds, combining, local_kinds)
+                          if parser_fn else (None, None))
         for tag_name in names:
-            tags.append((tag_name, dtype, idx, parser_fn))
+            tags.append((tag_name, dtype, idx, parser_fn, repeatable))
 
     return tags
 
@@ -252,13 +365,15 @@ def get_git_commit(path):
 def build_cache(mes_path):
     print(f"Scanning MES source at: {mes_path}")
     file_map = find_mes_files(mes_path)
+    field_kinds = collect_field_kinds(mes_path)
+    combining = combining_parsers(mes_path)
     all_tags = []
     seen = set()
 
     for ptype, fpaths in sorted(file_map.items()):
         for fpath in fpaths:
-            parsed = parse_tags_from_file(fpath)
-            for tag_name, dtype, line_no, parser_fn in parsed:
+            parsed = parse_tags_from_file(fpath, field_kinds, combining)
+            for tag_name, dtype, line_no, parser_fn, repeatable in parsed:
                 key = (ptype, tag_name.lower())
                 if key in seen:
                     continue
@@ -272,6 +387,13 @@ def build_cache(mes_path):
                 }
                 if parser_fn:
                     entry['parser'] = parser_fn
+                repeatable, field = repeatable
+                if repeatable is not None:
+                    # false: one field, a second copy in the same profile overwrites the first
+                    entry['repeatable'] = repeatable
+                if field:
+                    # tags of one profile with the same field are aliases ([WeaponSystem:]/[WeaponsSystem:])
+                    entry['field'] = field
                 all_tags.append(entry)
 
     # Trigger types are string compares (trigger.Type == "Timer"), not an enum, so collect them here.

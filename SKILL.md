@@ -13,24 +13,24 @@ allowed-tools: Read, run_command
 
 # SE Dev MES & RivalAI Modding Guide
 
-**Applies to Space Engineers version 1 with Modular Encounters Systems (MES) and RivalAI.** MES/RivalAI architecture, SBC pitfalls, and engineering standards for encounter designers and AI coding agents.
+**Applies to Space Engineers version 1 with Modular Encounters Systems (MES) and RivalAI.**
 
 **Claim classification**:
 - **[HARD]** = verified in the local MES C# source or enforced by the SE engine. Violations fail deterministically (crash, silent no-op, profile load failure).
-- **[SOFT]** = field-tested on a live server, not pinned to a code path. An MES or SE update can invalidate it; re-validate if behavior changes.
+- **[SOFT]** = field-tested on a live server, not pinned to a code path. Re-check after an MES or SE update.
 
 ---
 
 ## 1. Source of Truth & Reference Library
 
 > [!IMPORTANT]
-> **The MES C# source is the sole source of truth.** Online wikis and guides are often outdated or wrong. This skill (1,868 tags across 41 profile types, checked against that source) overrides generic MES overviews: never use Godimas101's `se-frameworks/references/mes.md`.
+> **The MES C# source is the sole source of truth.** Online wikis are often outdated. This skill (1,868 tags across 41 profile types, checked against that source) overrides generic MES overviews: never use Godimas101's `se-frameworks/references/mes.md`.
 
 ### A. Companion Skills
 C# ModAPI, decompiled engine code, Torch and PB scripts: [CometWorks skills](https://github.com/CometWorks/skills) (`se-dev-game-code`, `se-dev-server-code`, `se-dev-mod`, `se-dev-torch`); `.mwm` models and TextSurfaceScripts: [Godimas101's se-claude-skill](https://github.com/Godimas101/se-claude-skill) (`se-assets`, `se-tss`; not its `mes.md`).
 
 ### B. Reference Library (Progressive Disclosure)
-Detail lives in `references/`; open the file for the topic at hand. Keep this file a lean router: harnesses cap SKILL.md at **5,000 tokens** and silently truncate past it (`Update-MesSkill.ps1` checks).
+Detail lives in `references/`. Keep this file a lean router: harnesses silently truncate SKILL.md past **5,000 tokens** (`Update-MesSkill.ps1` checks).
 
 | Reference Document | Key Topics Covered |
 | :--- | :--- |
@@ -49,7 +49,7 @@ Detail lives in `references/`; open the file for the topic at hand. Keep this fi
 | [sbc_xml_editing_guide.md](references/sbc_xml_editing_guide.md) | IDE setup (`*.sbc -> xml`), `<Description>` protection, encoding rules, safe formatting. |
 
 ### C. Production-Tested Examples
-Annotated `.sbc` implementations based on real workshop mods:
+Annotated `.sbc` examples from real workshop mods:
 - [role_combattype_state_machine.sbc](examples/role_combattype_state_machine.sbc): Role + CombatType state machine.
 - [courier_logistics_network.sbc](examples/courier_logistics_network.sbc): Parent-child courier logistics network.
 - [planetary_convoy_escort.sbc](examples/planetary_convoy_escort.sbc): Planetary convoy with event spawning and escorts.
@@ -74,6 +74,8 @@ Annotated `.sbc` implementations based on real workshop mods:
 > 3. **`[//Comment]` inside `<Description>`, never `<!-- -->`**: an XML comment there aborts loading the whole mod.
 > 4. **UTF-8 only**: UTF-16 or legacy-codepage files fail the deserializer.
 > 5. **No empty `.sbc` files**: `Root element is missing` stops the whole world loading.
+>
+> **[HARD]** XML (SBC, store items) silently keeps the FIRST copy of a repeated value and the LAST of a repeated block (two `<EntityComponents>`: only the last loads); one bad value drops the file. Description tags keep the LAST copy.
 
 Formatting rules and snippet tooling: [`sbc_xml_editing_guide.md`](references/sbc_xml_editing_guide.md).
 
@@ -105,21 +107,21 @@ Gate tables: [`events_and_zones.md`](references/events_and_zones.md) §2; RivalA
 Each is **[HARD]** unless marked; detail behind the arrow.
 
 - **Weapons**: turret ranges clamp to 800 m on spawn (`[SetWeaponsToMaxRange:true]`); WeaponCore fixed guns on "Auto (AI Controlled)" ignore MES, so save them on **Mouse Control** (`wc_shootmode.py`); `[UseAntiSmartWeapons]` sees only WC1 `AntiSmart` flares. → [`third_party_integrations.md`](references/third_party_integrations.md) §1
-- **Relations**: from master after 2.75.02, MES rates NPC-vs-NPC from the faction-to-faction relation, the same as turrets (unset = Enemies), fixed-gun line of fire and `IsAttacker*` conditions follow the same rules (`49b3380`, PR #463), and 500 is Friends, as in vanilla; up to 2.75.02 it used the target owner's own reputation and 500 was Neutral. Forced targets use `[OverrideTargetData:]` (default Enemy-only). → [`behaviors_and_autopilot.md`](references/behaviors_and_autopilot.md) target profiles, [`third_party_integrations.md`](references/third_party_integrations.md) §1H
+- **Relations**: after 2.75.02 (`49b3380`, PR #463) MES rates NPC-vs-NPC, fixed-gun line of fire and `IsAttacker*` from the faction-to-faction relation like turrets (unset = Enemies, 500 = Friends); up to 2.75.02 it used the target owner's own reputation (500 = Neutral). Forced targets use `[OverrideTargetData:]` (default Enemy-only). → [`behaviors_and_autopilot.md`](references/behaviors_and_autopilot.md) target profiles, [`third_party_integrations.md`](references/third_party_integrations.md) §1H
 - **Stores** sell prefabs from the MES store-items file (quantity 1); `GridsForSale` is only for Keen stations. → [`economy_and_stores.md`](references/economy_and_stores.md)
 - **`[Type:WaypointNear]`/`WaypointFar` off a CargoShip stalls every NPC's AI**; use `BehaviorTriggerA` or `Position`. → [`diagnostics_and_troubleshooting.md`](references/diagnostics_and_troubleshooting.md) §4.4
 - **Zones** match `[PublicName:]`, never `[Name:]`; use `InsideActiveZone` (`InsideZone` is true for inactive zones). → [`events_and_zones.md`](references/events_and_zones.md) §4
 - **Manipulation**: dereliction needs `[UseGridDereliction:true]` + a `[Blocks:]` list, and its percentages `[UseSeparatePercentages:true]`; the weapon randomizer skips definitions without `<Public>true</Public>`. → [`manipulation_and_dereliction.md`](references/manipulation_and_dereliction.md) §2-3
 - **A misspelled faction tag** drops the spawn group to 0% (`Could Not Get Valid NPC Faction`). → [`spawning_and_conditions.md`](references/spawning_and_conditions.md) §6
 - **Waypoints, commands, timers**: `RelativeRandom` follows the grid (use `EntityRandom`); random waypoints ignore water; replies beat `EnableTriggers`; `CommandFromParent` matches only the real parent from 2.75.00; cooldowns re-roll and persist. → [`behaviors_and_autopilot.md`](references/behaviors_and_autopilot.md) §5, §7, §8
-- **Weak gyro turning (rovers included)**: Keen's gyro ramp cuts the push to ~1/8 when a request is far from the current rate, and MES rewrites it every 0.25 s, so more gyros or bigger multipliers barely help. Put `[UseAircraftFlightModel:true]` + `[MaxRotationStep:0.5]` + `[LimitRotationSpeed:false]` on any gyro-steered NPC and set `MaxRotationMagnitude` to a rate it can stop from. → [`behaviors_and_autopilot.md`](references/behaviors_and_autopilot.md) §3G
+- **Weak gyro turning (rovers included)**: Keen's gyro ramp cuts the push to ~1/8 for a request far from the current rate and MES rewrites it every 0.25 s, so more gyros or multipliers barely help. Put `[UseAircraftFlightModel:true]` + `[MaxRotationStep:0.5]` + `[LimitRotationSpeed:false]` on any gyro-steered NPC and set `MaxRotationMagnitude` to a rate it can stop from. → [`behaviors_and_autopilot.md`](references/behaviors_and_autopilot.md) §3G
 - **`MaxVelocityAngleForSpeedControl`**: the default 5 overshoots moving waypoints. **180** on MES 2.75.00+ (field-tested); 90 at most before. → [`aircraft_behaviors_and_tuning.md`](references/aircraft_behaviors_and_tuning.md) §1
 - **Target triggers** (2.75.02+): `TargetFar` + `[AllowTargetFarWithoutTarget:true]` fires once the target is gone, and every `LostTarget` trigger sees the edge; on older builds use a `NoTarget` timer. → [`aircraft_behaviors_and_tuning.md`](references/aircraft_behaviors_and_tuning.md) §2
 - **Escorts**: up to 2.75.01 a slot is never freed while the escort lives (2.75.02+: dead escorts are cleaned up, `[LeaveEscortSlot:true]` frees one); a refused request gets no reply; Escort Retreat is one-way. → [`behaviors_and_autopilot.md`](references/behaviors_and_autopilot.md) §3D
 - **Dialogue banks**: a bank's chat profile is ONE object shared by every grid on it (grids set up at the same moment can get their own copy), chosen per behavior, never per `{Faction}`. → [`dialogue_and_chat.md`](references/dialogue_and_chat.md)
 - **Despawn**: `[Type:DespawnMES]` needs `[DespawnTypeFromSpawner:Any]`; ships of 12+ grids only partly despawn (MES #412). → [`behaviors_and_autopilot.md`](references/behaviors_and_autopilot.md) §9, [`diagnostics_and_troubleshooting.md`](references/diagnostics_and_troubleshooting.md) §4.17
 - **Contracts**: `[ContractBlocks:]`/`[ContractBlockProfiles:]` pair by index; template event instances are never removed automatically. → [`events_and_zones.md`](references/events_and_zones.md) §5D-F
-- **Silently ignored**: a spawn group without the `[Modular Encounters SpawnGroup]` header; `[RivalAI Target]` without `[UseCustomTargeting:true]`; inline spawn conditions next to `[SpawnConditionsProfiles:]` (and the reverse for statics: a Description with `[StaticEncounter:true]` hides the referenced profile); `[Type:Damage]` without `[DamageTypes:Any]`; `[Triggers:A,B]` (one name per tag). `[Type:HealthPercentage]` fires at or *above* the threshold. → [`spawning_and_conditions.md`](references/spawning_and_conditions.md) §2, [`behaviors_and_autopilot.md`](references/behaviors_and_autopilot.md) §4
+- **Silently ignored**: a spawn group without the `[Modular Encounters SpawnGroup]` header; `[RivalAI Target]` without `[UseCustomTargeting:true]`; inline spawn conditions next to `[SpawnConditionsProfiles:]` (and the reverse for statics: a Description with `[StaticEncounter:true]` hides the referenced profile); `[Type:Damage]` without `[DamageTypes:Any]`; `[Triggers:A,B]` (one name per tag); all but one copy of a repeated single-value tag. `[Type:HealthPercentage]` fires at or *above* the threshold. → [`spawning_and_conditions.md`](references/spawning_and_conditions.md) §2, [`behaviors_and_autopilot.md`](references/behaviors_and_autopilot.md) §4
 - **[SOFT]** Force-despawn disabled aircraft to avoid falling-airframe Havok loops. → [`diagnostics_and_troubleshooting.md`](references/diagnostics_and_troubleshooting.md) §5
 
 ---
@@ -134,14 +136,14 @@ The scripts live in the skill, never in the mod: run them from the skill root as
 | Tool | Purpose |
 | :--- | :--- |
 | `query_mes_tags.py` | Tag, data type and master-gate lookup (`--tag Zone`) |
-| `audit_unknown_tags.py` | Tags, headers and trigger types MES does not parse |
-| `audit_sbc.ps1` | Deserializer hazards (§3) |
+| `audit_unknown_tags.py` | Tags, headers and trigger types MES does not parse; single-value tags written twice |
+| `audit_sbc.ps1` | Deserializer hazards (§3), MES store-items XML |
 | `audit_mes_tags.ps1` | Master gates, zero-stripping, factions, dead triggers |
 | `audit_mes_references.ps1` | Cross-file profile references, RivalAI remote setup (WARN only; vanilla remotes stay legal) (`-WarnOrphans -SkipPrefabs`) |
 | `audit_prefabs.ps1` | Prefab SubtypeId vs file name, 12+ grids, stale `.sbcB5` (`-CleanStaleB5`) |
 | `audit_prefab_thrust.py` | Thruster directions per NPC prefab vs its behavior (`--path <Data>/Prefabs`) |
 | `test_tag_recipes.py` | Builds every recipe and runs the audits on it; run after editing `tag_recipes.md` |
-| `wc_shootmode.py` | WeaponCore shoot mode: `list`/`classify`/`audit`, set Mouse Control; `neutrals` lists/sets the Neutrals override |
+| `wc_shootmode.py` | WeaponCore shoot mode (`list`/`classify`/`audit`, set Mouse Control); `neutrals` override |
 | `save_relations.py` | Faction and identity reputations in a save's `Sandbox.sbc` (turret vs MES relations) |
 | `Format-MesSbc.ps1`, `Add-MesProfileSnippet.ps1` | Formatting and `EntityComponent` injection that protect `<Description>` |
 | `New-MesProfile.ps1` | Scaffolds (`-Pattern -ModPrefix -Name -Faction`): `DefendedWreck`, `ConvoyLeaderEscort`, `DynamicZoneLadder`, `StoreGrid`, `DynamicStateNpc`, `PlanetaryInstallation`, `CombatDrone`, `ReinforcementNetwork`, `BossEncounter` |

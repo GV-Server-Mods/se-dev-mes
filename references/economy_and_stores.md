@@ -41,6 +41,22 @@ flowchart TD
 - **[HARD] Price**: `CustomPrice` if set (> -1), otherwise MES's minimum-value table or `EconomyHelper.CalculatePrefabCost`, then the price multipliers. Set `CustomPrice` for a fixed price.
 - `<PCU>` on the item is what the game checks against the buyer's PCU limit (`MyStoreBlock.BuyPrefabInternal`); the world block limits are checked against the real prefab as well.
 
+#### Store-items file traps (`audit_sbc.ps1` check 7)
+MES reads the file with `MyAPIGateway.Utilities.SerializeFromXML<StoreItemsContainer>`, a plain `XmlSerializer` (`ProfileManager.GetStoreItemContainer`). It searches the loaded mods in load order for `Data\StoreItems\<FileSource>` (exact file name) and uses the first copy that parses. Tested on .NET Framework 4.8, the game's runtime.
+- **[HARD] A repeated single-value element keeps its FIRST copy.** In `<Offer><MinAmount>1000</MinAmount>...<MinAmount>15</MinAmount></Offer>` only 1000 is read; the second copy is skipped unread, with no error or log. Edit the first copy, or the change does nothing. Description tags are the opposite: a repeated single-value tag keeps the LAST copy that parses (see [`profiles_and_tags.md`](profiles_and_tags.md) §3).
+- **[HARD] A repeated list wrapper keeps its LAST copy.** Two `<StoreItems>` blocks (or two `<ItemSubtypeIds>`, two `<StoreItemLimits>`): every copy is read, then the last replaces the others, so the items in the earlier blocks vanish. Put all items in one block. Inside a block, `<StoreItem>`, `<ItemSubtypeId>` and `<ItemLimits>` repeat normally; `<StoreItemsList>` entries are added to the store too. A second bare `<ItemSubtypeId>` directly under `<StoreItem>` is a single value, so it is ignored.
+- **[HARD] One bad value drops the whole file**, and MES logs `Could Not Serialize From XML` only when the Error debug flag is on, so every `[MES Store]` profile using the file just stocks nothing. `XmlSerializer` throws on:
+  - a non-number or a number out of range (`MinPriceMultiplier`/`MaxPriceMultiplier` are `short`, max 32767; `5.0` and an empty value fail too);
+  - a sign on `RequiredMod` (`+5`, `-1`);
+  - a wrong-case or padded `ItemType` (`hydrogen`, ` Hydrogen `);
+  - `True` for `IsCustomItem` (only `true`/`false`/`1`/`0`);
+  - a `<!-- comment -->` or child element inside a value, a `<!DOCTYPE>`, or an `xmlns` on the root.
+- **[HARD] Unknown element names are ignored silently**, and names are case-sensitive (`<Price>` for `<CustomPrice>`, `<pcu>` for `<PCU>`).
+- **[HARD] `ItemType` `Gas` breaks the stocking action**: `StoreProfile.CreateStoreItem` returns null for it and `AddItemToStore` throws, so the `ApplyStoreProfiles` action stops part-way (the rest of that store and the rest of the action are skipped; log `Error while executing action: 'ApplyStoreProfiles'`). Use `Hydrogen` or `Oxygen`. An item with no `ItemType` (`None`) is skipped.
+- **[HARD] A missing `<StoreItems>` list** (or `xsi:nil="true"`) makes `StoreProfile.Setup` throw on `StoreItems.Length` for every profile using the file (read in code, not tested in game: it may stop the world loading).
+- **[HARD] Store limits are shared.** `StoreProfile._storeLimits` is `static`: every `[MES Store]` profile uses the `<ItemLimits>` of the last-loaded profile whose file has them, whichever file it reads itself. Only the first `<ItemLimits>` entry is used.
+- A `StoreItemId` used twice (including the `<ItemType>/<subtype>` ids MES makes for `<ItemSubtypeIds>` entries) is stocked from every match: its draw chance multiplies, items merge into one listing with the amounts added, and a prefab is listed twice.
+
 ### Part 2: MES Store Profile (`[MES Store]`)
 ```xml
 <EntityComponent xsi:type="MyObjectBuilder_InventoryComponentDefinition">
