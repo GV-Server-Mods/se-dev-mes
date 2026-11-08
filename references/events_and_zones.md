@@ -77,6 +77,7 @@ if (!preserveZero)
   - `CustomSandboxCountersTargets` in `SpawnConditionsProfile.cs`
   - `CustomZoneCounterValue` in `ZoneConditionsProfile.cs`
   - `IncreaseCountersAmount` / `DecreaseCountersAmount` in `EventActionReference.cs`
+  - `MinPlayerReputation` / `MaxPlayerReputation` in `PlayerConditionProfile.cs` (`[MES Player Condition]`) and `ConditionReferenceProfile.cs` (`[RivalAI Condition]`). `[MaxPlayerReputation:0]` leaves the lists uneven, so the reputation check always fails (logged only as `do not match in count`); use `-1` as the cap. A `[RivalAI Trigger]` reads these tags as single integers, so `0` is safe there.
 - **Symptom**: Using `[CustomCountersTargets:0]` strips the `0`, resulting in an empty list. Evaluation fails with `Counter Names and Targets List Counts Don't Match`.
 - **Workaround**:
   - To test `< 0` (e.g. floor clamp): Use `[CustomCountersTargets:-1]` with `[CounterCompareTypes:LessOrEqual]`.

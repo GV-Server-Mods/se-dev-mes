@@ -141,9 +141,17 @@ foreach ($file in $files) {
     $lines = $scan -split "`r?`n"
 
     # Line-by-line checks
+    $profileHeader = ''
     for ($i = 0; $i -lt $lines.Count; $i++) {
         $line = $lines[$i]
         $lineNum = $i + 1
+        if ($line -match '^\s*\[((MES|RivalAI) [^\]:]+)\]\s*$') { $profileHeader = $Matches[1] }
+
+        # Check 1b: player reputation bounds are integer lists in player conditions and RivalAI conditions (single ints in triggers)
+        if ($profileHeader -in @('MES Player Condition', 'RivalAI Condition') -and $line -match '\[(Min|Max)PlayerReputation:(.*,)?\s*0\s*(,|\])') {
+            Write-Host "[ERROR] $($file.Name):$lineNum - Zero will be stripped by TagIntListCheck in a [$profileHeader]: the reputation lists no longer match in count and the condition never passes. Use -1 or 1." -ForegroundColor Red
+            $issuesFound++
+        }
 
         # Check 1: Zero-stripping in all affected integer list tags
         if ($line -match '\[Custom(Sandbox)?CountersTargets:0\]' -or $line -match '\[Custom(Sandbox)?CountersTargets:.*,0(,|\])' -or
