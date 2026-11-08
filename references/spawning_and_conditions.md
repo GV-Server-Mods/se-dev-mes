@@ -156,6 +156,7 @@ Used inside Action profiles (`[Spawner:<SubtypeId>]`) to deploy escorts, defense
 - `[MinDistance:<double>]` & `[MaxDistance:<double>]`: Radial distance from parent.
 - `[InheritNpcAltitude:bool]`: Aligns drone altitude to parent grid's altitude.
 - `[FirstSpawnTimeMs:<int>]`, `[SpawnMinCooldown:<int>]` / `[SpawnMaxCooldown:<int>]`, `[MaxSpawns:<int>]`: Timing and cap. `[StartsReady:true]` *(parsed since MES 2.74.04; ignored before)* lets the **first** spawn skip the cooldown; later spawns still wait for it (`SpawnProfile.IsReadyToSpawn`).
+- **One spot per spawn [HARD]**: the spawner picks one random point between `MinDistance` and `MaxDistance`. It re-rolls only while a player stands within 100 m of it (up to 15 tries), then checks the spawn group's conditions at that one point (`BehaviorSpawnHelper.cs`, `SpawnRequest.CalculateSpawn(_spawnMatrix.Translation, ...)`). A condition that fails there drops the spawn with no retry and no message. **Fails as:** a ring of grids spaced with `[RemoteControlCodeMinDistance:]` near the ring's size mostly fails to place. With 600 m spacing on a 300-500 m ring, a second grid fits about half the time and a fourth almost never **[SOFT: rate from geometry, failures seen in game]**. Keep the spacing well under the ring radius, and if the spawn is paid for, start the cooldown only when the spawned grid reports in.
 
 ---
 
