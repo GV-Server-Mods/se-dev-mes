@@ -29,15 +29,19 @@ plane's velocity direction (`FighterPlane.cs:256`); both read their distances fr
 4. **Run end.** The run ends when the distance to the target is `<= AttackRunBreakawayDistance` (default 450) or on `BehaviorActionA` (table below). Then the next offset is picked. `Strike` raises `BehaviorTriggerB` when a run starts (`Strike.cs:194`) and `BehaviorTriggerA` when it ends (`:257`).
    **`[AttackRunMaxTimeTrigger:]` does nothing.** The engage code checks `Data.AttackRunMaxTimeTrigger > 0` (`Strike.cs:239`, `FighterPlane.cs:239`) but `AutoPilotProfile.cs` has no parser for the tag, so it is always -1 (off).
    **[SOFT] Against an aircraft a run can last forever.** Two planes on runs at each other at the same speed never get inside the breakaway distance, so neither run ends; with `[LimitPitchTurning:true]` they circled and climbed past 7 km (MES d500922).
-   **Run time limit from triggers** (**[HARD]** code; **[SOFT]** not yet flown):
+   **Run time limit from triggers** (**[HARD]** code; **[SOFT]** flown, field result below):
    - A `[Type:BehaviorTriggerB]` trigger sets a boolean and restarts a Timer trigger with `[ResetCooldownTimeOfTriggers:true]` + `[ResetTriggerCooldownNames:]`.
    - The Timer trigger has `[StartsReady:false]` and the limit as its cooldown. Its conditions need the boolean and `[BehaviorModeCheck:true]` + `[CurrentBehaviorMode:EngageTarget]`. Its action sets `[BehaviorSpecificEventA:true]` and clears the boolean.
    - A `[Type:BehaviorTriggerA]` trigger clears the boolean too, as does any action that changes the subclass (a restart abandons the run without `BehaviorTriggerA`).
    - Why the boolean: MES checks every trigger (`ProcessTriggerWatchers`) before it runs any trigger's actions (`ProcessActivatedTriggers`), so without it the Timer can fire in the tick the run starts, before the reset lands. Why `StartsReady:false`: a trigger with `StartsReady:true` skips its cooldown until it first fires (`TriggerProfile.cs:397`), and the reset only moves `LastTriggerTime`.
-   **Swapping a profile by altitude** (**[HARD]** code; **[SOFT]** not yet flown):
+   **Swapping a profile by altitude** (**[HARD]** code; **[SOFT]** flown, field result below):
    - `[OverwriteAutopilotProfile:true]` only replaces the slot's profile object (`AutoPilotSystem.AssignAutoPilotDataMode`), so a swap in the middle of a run keeps the run going with the new values.
    - To change one setting with height (for example `[LimitPitchTurning:false]` up high), load a copy of the profile from two Timer triggers with `[AltitudeCheck:true]`, a gap between their two heights, and a boolean for which copy is loaded. `MinAltitude`/`MaxAltitude` are above the surface, compared with a strict `>`/`<`, and the check fails off-planet (`ConditionProfile.cs:1204`).
    - MES runs the actions of every fired trigger in the order the triggers were added (`ProcessActivatedTriggers`, trigger-group list order), so when two triggers write one slot in the same tick the later one wins. List the altitude swaps before the triggers that load profiles for other reasons, and have those clear the boolean.
+   **[SOFT] Field result, NPC against NPC** (MES d500922; suggested values, tune per server): three changes together kept the dogfight under about 1 km, with varied dives and climbs. They were a 10 s run limit, line-up points 50-200 m below the target, and `LimitPitchTurning` off above 1000 m (back on under 900 m). Short of all three, the fight still climbed:
+   - With only the run limit, the endless spiral was gone but the pair slowly drifted up.
+   - Line-up points 150-300 m below the target slowed the drift but didn't stop it, and they sometimes flew planes into the ground.
+   - A `[MaxAltitude:]` gate on the trigger that starts a break turn did nothing for the climb (see the LimitPitchTurning entry in `behaviors_and_autopilot.md`).
 5. **Distances that must agree.**
    - Offset distance = turn-around space. A longer offset gives a longer straight approach to line up, and a shallower dive (`atan(offset altitude / offset distance)`), which matters for targets on the ground.
    - The plane has to stay inside the target's acquisition range: compare the offset distance (plus turn-around overshoot) with the targeting profile's `MaxDistance` / `NonBroadcastVisualRange` and any `TargetFar` trigger distance (section 2).
