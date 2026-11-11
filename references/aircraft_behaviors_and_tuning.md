@@ -165,6 +165,7 @@ The usual reason "MES aims at the target but the WeaponCore guns never fire".
    Typical findings: wings add little yaw authority, high nose rates bleed speed, path radius grows with speed squared. **[SOFT]**
 3. **Read what MES actually loaded**: `/MES.Info.GetGridBehavior` (`/MES.IGGB`) prints the live autopilot flags, including `LevelWithGravity`.
 4. **Find silent no-ops**: run `scripts/audit_unknown_tags.py` over your behavior folder; MES never reads a tag its parser does not know (a typo, or a tag from another profile type).
+5. **Judge thrust after manipulation.** The prefab's thruster blocks are not its real thrust when its spawn group's manipulation profile sets `[ConfigureSpecialNpcThrusters:true]` with `[NpcHydroThrustForceMultiply:]` (or the Ion and Atmo versions): that multiplies every thruster of the type on the grid, lift and brakes included. MES also drives forward thrust only at a full override, never a partial one (`ThrustSystem.cs`, `SetZ` with strength 1), so a ship whose forward thrust far outweighs its brakes jumps its speed on every correction. No autopilot tag softens that: use fewer or smaller forward thrusters in the prefab, or the multiplier if lift and brakes can lose the same share. **[HARD]**
 
 ## 6. Debugging aircraft (commands are in `diagnostics_and_troubleshooting.md`, section B)
 
