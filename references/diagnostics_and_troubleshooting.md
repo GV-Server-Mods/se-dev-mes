@@ -296,7 +296,7 @@ When troubleshooting encounter loading or execution failures, search `SpaceEngin
   1. **Hill Stalling** (fly-level on only): with `FlyLevelWithGravity` or `LevelWithGravityWhenIdle` on, MES uses its hover thrust routine, which cuts forward thrust when tilted more than `HoverUpAngle` (default 10°). With both off this check never runs.
   2. **Wheel Lifting**: `[FlyLevelWithGravity:true]` forces chassis perpendicular to planetary gravity rather than terrain slope, lifting downhill/uphill wheels off the ground.
   3. **Backflipping on Turns**: with the waypoint behind, yaw and pitch both ask for the full rate, and a pitch multiplier anywhere near yaw makes the rover flip toward it instead of turning.
-  4. **Sky Evasion**: Voxel collision raycasts detect ground in all directions except UP, commanding climb evasion into space.
+  4. **Sky Evasion** **[SOFT]**: terrain never triggers velocity evasion in gravity; a grid, safe zone, shield or player in the path does, and its evade point can be straight up (`behaviors_and_autopilot.md` §3A, §6C item 2).
 - **Fix**: Apply the golden rover autopilot profile from [behaviors_and_autopilot.md §6.C](file:///c:/Users/blayl/source/repos/se-dev-mes/references/behaviors_and_autopilot.md#c-thrust-driven-rovers--ground-vehicles-best-practices--pitfalls-hard--soft):
   ```xml
   [UseSurfaceHoverThrustMode:true]

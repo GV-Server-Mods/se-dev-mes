@@ -56,13 +56,13 @@
     ]
   },
   "metadata": {
-    "generated_at": "2026-10-31T15:35:08.290844+00:00",
+    "generated_at": "2026-11-13T06:35:08.810156+00:00",
     "mes_path": "C:\\Users\\blayl\\AppData\\Roaming\\SpaceEngineers\\Mods\\Modular-Encounters-Systems\\Data\\Scripts\\ModularEncountersSystems",
-    "source_hash": "e3a9dfb4efcb29ff",
+    "source_hash": "040b55fb96332a8b",
     "git_commit": {
-      "sha": "49b33806dc26e1bc2db6d283933f4dc61ce1dd77",
-      "date": "2026-10-31",
-      "subject": "Merge pull request #463 from GV-Server-Mods/fix/npc-owner-reputation-checks-462"
+      "sha": "d5009223d38453c5790746b9ba83e71500b16566",
+      "date": "2026-11-03",
+      "subject": "Set vanilla turret ranges on subgrids in SetAutomatedWeaponRanges"
     },
     "total_tags": 1868,
     "total_profiles": 41
@@ -14405,7 +14405,7 @@
       "tag": "AutopilotData",
       "type": "string",
       "file": "AutoPilotSystem.cs",
-      "line": 401,
+      "line": 404,
       "parser": "TagStringCheck"
     },
     {
@@ -14413,7 +14413,7 @@
       "tag": "SecondaryAutopilotData",
       "type": "string",
       "file": "AutoPilotSystem.cs",
-      "line": 421,
+      "line": 424,
       "parser": "TagStringCheck"
     },
     {
@@ -14421,7 +14421,7 @@
       "tag": "TertiaryAutopilotData",
       "type": "string",
       "file": "AutoPilotSystem.cs",
-      "line": 441,
+      "line": 444,
       "parser": "TagStringCheck"
     },
     {
@@ -14429,7 +14429,7 @@
       "tag": "MinimumSpeedForVelocityChecks",
       "type": "double",
       "file": "AutoPilotSystem.cs",
-      "line": 462,
+      "line": 465,
       "parser": "TagDoubleCheck",
       "repeatable": false,
       "field": "MinimumSpeedForVelocityChecks"
@@ -14439,7 +14439,7 @@
       "tag": "CollisionAsteroidUsesBoundingBoxForVelocity",
       "type": "bool (true/false)",
       "file": "AutoPilotSystem.cs",
-      "line": 469,
+      "line": 472,
       "parser": "TagBoolCheck",
       "repeatable": false,
       "field": "CollisionAsteroidUsesBoundingBoxForVelocity"
@@ -14449,7 +14449,7 @@
       "tag": "CollisionTimeTrigger",
       "type": "int",
       "file": "AutoPilotSystem.cs",
-      "line": 476,
+      "line": 479,
       "parser": "TagIntCheck",
       "repeatable": false,
       "field": "CollisionTimeTrigger"

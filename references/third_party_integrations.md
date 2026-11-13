@@ -12,19 +12,20 @@ MES contains built-in hooks for WeaponCore grids, but deep architectural mismatc
 - **[HARD] Default Clamp**: On grid spawn and weapon randomization, MES executes `SetAutomatedWeaponRanges(useMax: false)` (`GridEntity.cs:1736`), clamping all automated weapon ranges to **800m**.
 - **The Fix**: Any combat encounter with long-range or capital weapons must execute `[SetWeaponsToMaxRange:true]` in an early trigger action (e.g. on spawn, on player proximity, or on damage) to allow WC turrets to engage past 800m.
 
-### B. The Dynamic Replacement Range Desync (The MES vs. WC Conflict)
-- **[HARD] The Bug**: When weapons are dynamically swapped via `[RandomizeWeapons:true]` or a block replacer profile (`[BlockReplacerProfileNames:]`), `SetWeaponsToMaxRange:true` frequently **fails to unclamp the weapons**.
-  - In `WeaponRandomizer.cs:1321`, MES queries `APIs.WeaponCore.GetMaxWeaponRange(termBlock, 0)`.
-  - Because WeaponCore registers newly spawned blocks asynchronously, the API call often returns `0` or default range before WC finishes registration.
-  - Furthermore, `GetMaxWeaponRange` in WC returns the current slider range (`MaxTargetDistance`) rather than the true maximum range, so clamping to 800m causes WC to report 800m as the maximum.
-  - MES permanently caches this stale value in `DefaultRangeWC` (`WeaponRandomizer.cs:1322`), locking the replaced weapon at 800m or 0m permanently.
-  - Dynamically replaced blocks also lose any WeaponCore terminal/GUI settings saved in the original prefab blueprint.
-- **[HARD] The Engine Fix**:
-  - **Startup Pre-Caching**: In `AddonManager.WeaponCoreCallback()`, pre-populate `DefaultRangeWC` from `APIs.WeaponCore.WeaponDefinitions` at world startup to eliminate runtime spawn race conditions entirely.
-  - **Definition Fallback**: In `WeaponRandomizer.cs`, compute max range directly from `APIs.WeaponCore.WeaponDefinitions` (`GetWeaponCoreDefinitionMaxRange`) without entity dependencies.
-  - **Fail-Safe Unclamping**: Pass `float.MaxValue` when `useMax` is `true` if range is unresolvable, forcing WeaponCore's internal clamp to set the true maximum range and preventing 0m locking.
-  - **Cache Guard**: Never cache `<= 0` in `DefaultRangeWC`.
-- **Production Rule**: When designing high-stakes combat encounters on vanilla/unpatched MES builds, **do not dynamically replace primary WeaponCore weapons**. Bake the exact WeaponCore weapon blocks directly into the prefab blueprint with their ranges, targeting modes, and fire rates pre-configured.
+### B. SetWeaponsToMaxRange Bugs: 0 m Weapons and Skipped Subgrid Turrets (MES #332)
+Checked against MES upstream master `20d6092` and WeaponCore workshop `3154371364` (`Api/ApiBackend.cs`).
+
+- **[HARD] The Bug (MES issue #332, open)**: `SetWeaponsToMaxRange` / `SetWeaponsToMinRange` can set every WeaponCore weapon of one block type to **0 m** until the server restarts. Most likely on blocks a weapon randomizer or block replacer has just swapped in.
+  - `SetWeaponCoreRandomRanges` reads `GetMaxWeaponRange(block, 0)` once per block **type** and keeps it in the static `DefaultRangeWC` (`WeaponRandomizer.cs:50, 1319-1322`); every later weapon of that type reuses it.
+  - WeaponCore's `GetMaxWeaponRange` returns `0` until the weapon's platform is `Ready` (`ApiBackend.cs:1177-1183`). An early first read stores 0 for that type.
+  - When ready it returns the weapon's current `MaxTargetDistance`, not the definition's max, so a weapon already clamped to 800 m reports 800.
+- **[HARD] More range bugs in the same code**:
+  - `SetWeaponCoreRandomRanges` loops over `grid.LinkedGrids` and collects the whole grid's weapons each pass (`GetBlocksOfType` already walks linked grids), so each weapon is set once per subgrid. A closed subgrid `return`s out of the loop early (`WeaponRandomizer.cs:1298-1303`).
+  - `SetAutomatedWeaponRanges` loops over the linked grids but reads `this.Turrets` each time (`GridEntity.cs:1736`), so **vanilla turrets on subgrids never get a range set**: neither the 800 m clamp nor `SetWeaponsToMaxRange` reaches them.
+- **[HARD] WeaponCore caps the requested range itself**: `SetBlockTrackingRange` sets the smaller of the request and `min(hardpoint MaxTargetDistance, ammo MaxTrajectory)` (`ApiBackend.cs:1258-1279`). It does nothing while the platform is not `Ready` or a weapon has no active ammo, so an early call is skipped, not stored.
+- **The fix** (drafted for #332, not merged as of 2026-11-13): drop `DefaultRangeWC` and pass 800 or `float.MaxValue` straight to `SetBlockTrackingRange`; collect WeaponCore blocks once per grid; read `grid.Turrets` per linked grid.
+- Dynamically replaced blocks also lose any WeaponCore terminal settings saved in the original prefab blueprint.
+- **Production Rule** (until #332 is fixed upstream): **do not dynamically replace primary WeaponCore weapons**. Bake the exact WeaponCore blocks into the prefab with their ranges, targeting modes and fire rates set. Put long-range vanilla turrets on the main grid, not a subgrid.
 
 ### C. Getting MES to Fire WC Fixed Weapons (Prefab Setup & Proxying)
 - **[HARD] Why MES-driven fixed guns never fire: the default shoot mode ignores MES.** MES calls `ToggleWeaponFire` (`CoreWeapon.cs:443`), which WeaponCore turns into `RequestShootSync(0, On, Signals.On)` (CoreSystems `ApiBackend.cs:1151`). WeaponCore only acts on that "On" trigger when the weapon's shoot mode is not `AiShoot` (or the signal is `Manual`): `onConfirmed = Trigger == On && (ShootMode != AiShoot || Signal == Manual)` (`SessionUpdate.cs:576`). `AiShoot` (terminal: "Auto (AI Controlled)") is the default (`ProtoWeapon.cs:616`), and a fixed gun (`TrackTargets:false`, `TurretAttached:false`) cannot fire itself in it, so the command is dropped. Setting the block to **Mouse Control** makes MES-driven fixed guns fire (confirmed in game); `KeyToggle`/`KeyFire` also pass the code check but are untested. MES and the WC API cannot set the mode, so it must be saved in the prefab (protobuf in the block's `ModStorageComponent`). `scripts/wc_shootmode.py` lists and sets it. `classify` sorts each weapon into TURRET (leave on Auto), FIXED-TRACKING (on Auto it fires itself only at projectiles, and only with `Smart` ammo, §G row D; MES fires it on Mouse Control), FIXED (never fires on Auto) or FLARE (§F). `audit --mods <weapon defs>` lints prefabs: it warns on every FIXED gun left on Auto and every FLARE taken off Auto. Use `--exclude` for prefabs MES never fires, e.g. static Wrecks. If the Timer Block proxy below was built because MES's own firing never worked, this may have been the reason. Details: `aircraft_behaviors_and_tuning.md` section 3B.

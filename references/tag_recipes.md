@@ -290,7 +290,7 @@ A RivalAI profile only runs when something reaches it: behavior → `[Triggers:]
 [IdealMaxSpeed:20]
 ```
 
-- **[HARD code, not flown] Unreliable:** MES sets the slot's profile but not its ID, so the next autopilot update reloads the old profile. Prefer declaring the profile in a slot (`[TertiaryAutopilotData:]`) and switching with `[ChangeAutopilotProfile:true]`. → [behaviors_and_autopilot.md](behaviors_and_autopilot.md) §2
+- **[HARD code, not flown] Needs MES 2.75.03+ (PR #464).** On older builds MES sets the slot's profile but not its ID, so the next autopilot update reloads the old profile; there, declare the profile in a slot (`[TertiaryAutopilotData:]`) and switch with `[ChangeAutopilotProfile:true]`. → [behaviors_and_autopilot.md](behaviors_and_autopilot.md) §2
 - The overwrite only stores the profile in the slot; the change switches to it. Both run in one action, overwrite first.
 - An unknown `[OverwriteAutopilotId:]` is ignored without a log line.
 
