@@ -67,7 +67,7 @@ se-dev-mes/
 ├── evals/                                  # 1.11.0 Benchmark test suite
 │   ├── evals.json                          # 14 challenge scenarios & 55 quantitative assertions
 │   └── files/GVK-Raid-Profiles.sbc         # Intentionally broken SBC fixture for deserializer audits
-├── references/                             # 13 deep-dive reference guides (loaded on demand)
+├── references/                             # 14 deep-dive reference guides (loaded on demand)
 │   ├── tag_recipes.md                      # Audited tag groups per feature (start here for new profiles)
 │   ├── profiles_and_tags.md                # 41 profile schemas, registration phases, tag types
 │   ├── spawning_and_conditions.md          # Spawners, environment gates, threat scoring
@@ -75,6 +75,7 @@ se-dev-mes/
 │   ├── dialogue_and_chat.md                # Dialogue banks, shared chat profiles, chatter triggers, chat sounds
 │   ├── aircraft_behaviors_and_tuning.md    # Attack runs, fixed-gun gates, 90° speed-control braking
 │   ├── manipulation_and_dereliction.md     # Block replacement, weapon randomizer, <Public> rules
+│   ├── bots_and_crews.md                   # Keen combat bots, prefab crews, AiEnabled, bot despawn
 │   ├── events_and_zones.md                 # MES Events vs Triggers, master gates, zero-stripping
 │   ├── economy_and_stores.md               # Store grid sales, purchase spawn placement, store refresh
 │   ├── third_party_integrations.md         # WeaponCore (800m clamp), Shields, AiEnabled, Water Mod

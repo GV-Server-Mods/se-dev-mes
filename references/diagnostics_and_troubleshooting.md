@@ -71,6 +71,8 @@ Controls verbose diagnostic logging for the encounter spawner. Set `<Type>` to a
 
 Also valid (`SpawnerDebugEnum`): `API`, `BlockLogic`, `Entity`, `Error`, `Settings`, `Startup`, `SpawnRecord`, `Dev`.
 
+**[HARD] `All`** (MES `master` after 2.75.03, `9c8e211`, not released): `/MES.SpawnDebug.All.true` turns on every spawner debug type at once, `GameLog` included, so everything also goes to the game log; `.false` turns them all off. Behavior debug has no `All`. Up to 2.75.03 turn types on one at a time.
+
 - **Example**: Enable detailed spawn group condition logging and send output to `SpaceEngineers.log`:
   ```
   /MES.SpawnDebug.SpawnGroup.true
@@ -119,7 +121,8 @@ MES can dump internal diagnostic logs directly to your Windows clipboard for fas
 | `/MES.Info.GetLogging.BehaviorDebug.<Type>` | `/MES.IGLBD.<Type>` | Copies one behavior log buffer, e.g. `/MES.IGLBD.Trigger`. |
 | `/MES.Info.GetGridBehavior` | `/MES.IGGB` | Dumps targeted grid's active behavior, autopilot, and trigger states. |
 | `/MES.Info.GetGridData` | `/MES.IGGD` | Dumps targeted grid's core MES entity parameters. |
-| `/MES.Info.GetEligibleSpawnsAtPosition` | `/MES.GESAP` | Lists all spawn groups eligible to spawn at the player's current location. |
+| `/MES.Info.GetEligibleSpawnsAtPosition` | `/MES.GESAP` | Lists all spawn groups eligible to spawn at the player's current location. On MES `master` after 2.75.03 (`b728e8d` to `88ebcf0`, not released) it adds a `Spawner Status` section: for each spawner, whether the area is eligible, the active NPCs in its area, `Area Current / Max`, the area radius and `Time To Next Spawn Check`. |
+| `/MES.Info.GetActiveNpcs` | | Every NPC grid MES tracks, by ownership class. On `master` after 2.75.03 (`7f05d02`) each grid also lists its `LinkedGrids`. |
 | `/MES.Info.GetThreatScore` | `/MES.GTS` | Calculates and displays player combat threat score at current position. |
 | `/MES.Info.GetDiagnostics` | `/MES.IGD` | General diagnostic telemetry dump. |
 
@@ -359,13 +362,14 @@ When troubleshooting encounter loading or execution failures, search `SpaceEngin
   `scripts/audit_sbc.ps1` reports empty and whitespace-only files (prefab folders included).
 - **Fix**: delete the file, or restore it from git (`git checkout -- <file>`). Never leave a placeholder `.sbc`; a file that should define nothing still needs `<?xml version="1.0"?><Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"></Definitions>`.
 
-### 17. NPC ship with 12 or more grids only partly despawns (`Attempted Despawn 10 Times. Aborting Process.`)
-- **Symptom**: after a behavior despawn, `[ForceDespawn:true]`, spawner cleanup or `/MES.Debug.DeleteGrid` / `RemoveAllNpcs`, the main grid and some wheels, rotor or piston heads stay in the world. Open as MeridiusIX/Modular-Encounters-Systems#412 (checked against `bc71965`).
+### 17. NPC ship with 12 or more grids only partly despawns, up to MES 2.75.02 (`Attempted Despawn 10 Times. Aborting Process.`)
+- **[HARD] Fixed in MES 2.75.03** (MeridiusIX/Modular-Encounters-Systems#412, PRs #431 and #432): the despawn counter and despawn actions moved from the shared NpcData to each grid (`GridEntity.DespawnAttempts`, not saved), and each grid gets its own linked-grid list, refreshed before removal. The rest of this entry applies to 2.75.02 and older.
+- **Symptom**: after a behavior despawn, `[ForceDespawn:true]`, spawner cleanup or `/MES.Debug.DeleteGrid` / `RemoveAllNpcs`, the main grid and some wheels, rotor or piston heads stay in the world.
 - **Log** (`/MES.SpawnDebug.CleanUp.true`): eleven `Grid is Closed.` lines, then `<grid> Attempted Despawn 10 Times. Aborting Process.` for every grid still queued.
 - **[HARD] Cause**: `Cleaning.RemoveGrid` queues the grid and all its linked grids. `Tasks/GridCleanup.cs` removes them one per run, and before each one adds 1 to `grid.Npc.DespawnAttempts`, skipping the grid once the count is above 10. Grids spawned together in this session share one NpcData object (`GridEntity.cs`, looked up by `UniqueSpawnIdentifier` in `NpcManager.SpawnedNpcData`), so the whole ship shares one counter: 11 grids go, the rest are dropped. Seen in GVK on a 13-grid land cargo ship (main grid and 12 wheels); the shared object was confirmed in play by the ship's `DespawnMES` triggers firing when its first wheel was removed. The limit dates from 2021 (`6d5ed75`).
 - **[SOFT] After a world reload** each grid reads its own copy of the NpcData from its storage, so the counter should no longer be shared for ships loaded from a save. `DespawnAttempts` is saved (`[ProtoMember(18)]`), though, so a leftover saved after a failed despawn may still start above 10. Not tested.
-- **Find affected prefabs**: count the `<CubeGrid>` elements per prefab; 12 or more is affected (`scripts/audit_prefabs.ps1` warns). Stations count too: a static base with turrets on rotors is despawned the same way.
-- **Workaround until fixed**: keep NPC prefabs at 11 grids or fewer (merge or remove subgrids, use fewer wheels). MES cannot remove the leftovers either: `/MES.Debug.DeleteGrid` goes through the same cleanup and hits the same spent counter. Delete them as an admin (Space Master, Ctrl+X).
+- **Find affected prefabs**: count the `<CubeGrid>` elements per prefab; 12 or more is affected. Stations count too: a static base with turrets on rotors is despawned the same way.
+- **Workaround on 2.75.02 and older**: keep NPC prefabs at 11 grids or fewer (merge or remove subgrids, use fewer wheels). MES cannot remove the leftovers either: `/MES.Debug.DeleteGrid` goes through the same cleanup and hits the same spent counter. Delete them as an admin (Space Master, Ctrl+X).
 
 ### 18. "Spawn Successful", but nothing appears anywhere
 - **[SOFT, seen once, cause unknown]** Every spawn logged `Spawn Successful` and passed `/MES.GESAP`, but no grid appeared anywhere, planetary installations included, and the cleanup log was empty. A full game restart fixed it.
@@ -390,6 +394,17 @@ Applies to any mod (an encounter pack, a prefab mod) whose Workshop item another
 - Keep the `modinfo.sbmi` that names the item: without it the game creates a new item with a new ID. Its `SteamIDOwner` line plays no part in the check.
 - The game's publish adds no change note; write it on the item's Change Notes page afterwards.
 - SEWorkshopTool (SEWT, the command-line uploader) runs its own owner check with no option to skip it ("Owner mismatch", 0.7.20 `Uploader.cs`), so a contributor item can only be updated from the game.
+
+### 22. Ships with wheels, rotors or pistons count as several NPCs in area spawn limits (MES 2.71.41 and later)
+- **Symptom**: a spawn type stops spawning with `Max SpawnType NPCs Reached/Exceeded for: <type>` (`/MES.SpawnDebug.Spawning.true`) while fewer encounters than its `MaxShipsPerArea` are nearby. `/MES.Info.GetActiveNpcs` lists each wheel and rotor top as an NPC of its own (on `master` after 2.75.03, `/MES.GESAP`'s Spawner Status shows them as extra `Small Grid` entries); the Entity List shows only the root grid.
+- **[HARD] Cause** (`Spawning/PrefabSpawner.cs` `GridsSpawned`, since `9ea651c`, first released in 2.71.41): MES gives the spawn's NpcData to each grid of the prefab before suspensions, rotors and pistons attach their top parts, so every wheel, rotor head, hinge top and piston top is tracked as an NPC of that spawn type, and the area count (`NpcManager.GetAreaNpcCount`) counts each one: a rover with four wheels counts as five. The NpcData is saved with each top part, so the count survives a reload.
+- **Applies to** the spawn types with an area limit (`AreaSize` and `MaxShipsPerArea` in each type's config): space and planetary cargo ships, random encounters, planetary installations and boss encounters. Drones and creatures have no area radius.
+- **Fix pending**: MeridiusIX/Modular-Encounters-Systems#468 (open as of 2026-11-21) skips top-part grids and counts each spawn once. Until it ships, raise `MaxShipsPerArea` for the affected type to allow for the extra grids.
+
+### 23. Other mods' storage on a prefab grid or block is lost when MES spawns it
+- **Symptom**: a prefab grid or block carries another mod's storage (a script's settings, a mod's saved state), and the spawned copy has lost it. Only grids and blocks where MES adds its own storage are affected: every grid (NpcData), NPC thrusters and gyros, and blocks given container types.
+- **[HARD] Cause** (`Spawning/Manipulation/StorageTools.cs` `ApplyCustomBlockStorage` and `ApplyCustomEntityStorage`, unchanged since 2021): MES looks for an existing storage component with TypeId `MyModStorageComponentBase`. Storage that has been through a save and load is written as `MyModStorageComponent`, which is how it appears in a prefab made from a saved grid. MES misses it and adds a second component, and on spawn the second replaces the first.
+- **Fix pending**: MeridiusIX/Modular-Encounters-Systems#469 (open as of 2026-11-21) makes MES add its keys to the existing component. No workaround in the prefab is known.
 
 ---
 

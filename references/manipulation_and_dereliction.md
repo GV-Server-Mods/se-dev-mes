@@ -1,6 +1,6 @@
-# Grid Manipulation, Dereliction & AiEnabled Reference
+# Grid Manipulation & Dereliction Reference
 
-Comprehensive reference for MES grid manipulation profiles, block replacement systems, weapon randomization, dereliction damage physics, and AiEnabled bot spawning.
+Comprehensive reference for MES grid manipulation profiles, block replacement systems, weapon randomization, dereliction damage physics, and loot tables. Bot spawning is in [`bots_and_crews.md`](bots_and_crews.md).
 
 ---
 
@@ -101,34 +101,9 @@ Dereliction transforms clean prefabs into battle-damaged, smoking, sparking ruin
 
 ---
 
-## 4. Bot Spawning (AiEnabled Integration) (`[MES Bot Spawn]`)
+## 4. Bot Spawning (`[MES Bot Spawn]`)
 
-MES integrates with the **AiEnabled** mod through `[MES Bot Spawn]` profiles. A bot profile describes one bot and is used by two different spawn paths:
-
-```xml
-<EntityComponent xsi:type="MyObjectBuilder_InventoryComponentDefinition">
-  <Id>
-    <TypeId>Inventory</TypeId>
-    <SubtypeId>ModPrefix-BotSpawn-Soldier</SubtypeId>
-  </Id>
-  <Description>
-    [MES Bot Spawn]
-    [UseAiEnabled:true]
-    [BotType:<AiEnabled bot subtype>]
-    [BotBehavior:Default]
-    [BotDisplayName:Security]
-    [CanUseSeats:true]
-    [CanDamageGrids:false]
-  </Description>
-</EntityComponent>
-```
-
-1. **Crew inside a live grid (RivalAI Action)**: `[AddBotsToGrid:true]` + `[BotSpawnProfileNames:ModPrefix-BotSpawn-Soldier]` + `[BotCount:<int>]`, optionally `[OnlySpawnBotsInPressurizedRooms:true]`.
-2. **Standalone ground spawns (Spawn Conditions)**: `[CreatureSpawn:true]` + `[BotProfiles:<BotSpawnSubtypeId>]` + `[MinCreatureCount:]`/`[MaxCreatureCount:]` + `[MinCreatureDistance:]`/`[MaxCreatureDistance:]` (`BotSpawner.cs:65` picks one listed profile at random per bot).
-
-### AiEnabled Integration Notes:
-- **Grid Waypoints**: AiEnabled requires grids to have navigable corridors or walkable surfaces for bots to pathfind effectively.
-- `[UseAiEnabled:]` defaults to `true`; without the AiEnabled mod loaded, only vanilla creature/bot types can spawn.
+Moved to [`bots_and_crews.md`](bots_and_crews.md): Keen's combat bots, Keen prefab crews, AiEnabled bots, and the rules that despawn bots.
 
 ---
 

@@ -29,6 +29,10 @@ are listed as notes that do not affect the exit code. List tags (`[RequiredOffer
 and flag tags (`[Owners:]`, `[AllowedActions:]` ...) OR together, so both may repeat. The cache's `repeatable`
 and `field` keys say which is which; tags it cannot classify are not checked.
 
+In a Markdown reference, a fenced block whose info string contains `unreleased` (```` ```xml unreleased ````)
+documents tags from an MES build newer than the installed one. Its unknown tags are listed as notes that do not
+affect the exit code; remove the marker once the installed MES parses them.
+
 Usage:
   python audit_unknown_tags.py <folder-or-file.sbc> [more paths ...]
   python audit_unknown_tags.py path --profile "RivalAI Trigger"       (check only this type; repeatable)
@@ -104,6 +108,7 @@ FIELD_KEY = {}
 CACHE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mes_tag_cache.json")
 TAG_RE = re.compile(r"\[([A-Za-z0-9_]+):([^\]]*)\]")
 HEADER_RE = re.compile(r"^\s*\[([A-Za-z][A-Za-z0-9 ]*)\]", re.M)
+UNRELEASED = "(unreleased)"
 
 
 def load_cache():
@@ -179,21 +184,23 @@ def md_profiles_in(path):
     so a sentence warning that a tag does not exist is not reported. In a tag_recipes.md block,
     each "== <SubtypeId>" line starts a separate profile."""
     text = open(path, encoding="utf-8").read()
-    for fence in re.finditer(r"^```[^\n]*\n(.*?)^```", text, re.M | re.S):
-        body = fence.group(1)
+    for fence in re.finditer(r"^```([^\n]*)\n(.*?)^```", text, re.M | re.S):
+        body = fence.group(2)
         line = text.count("\n", 0, fence.start()) + 1
+        if "unreleased" in fence.group(1):
+            line = "%d %s" % (line, UNRELEASED)
         if re.search(r"^== ", body, re.M):
             for chunk in re.split(r"^== ", body, flags=re.M)[1:]:
                 sid, _, desc = chunk.partition("\n")
                 m = HEADER_RE.search(desc)
                 if m:
-                    yield "line %d %s" % (line, sid.strip()), normalize_header(m.group(1).strip()), desc
+                    yield "line %s %s" % (line, sid.strip()), normalize_header(m.group(1).strip()), desc
             continue
         descs = re.findall(r"<Description>(.*?)</Description>", body, re.S) or [body]
         for desc in descs:
             m = HEADER_RE.search(desc)
             if m:
-                yield "line %d" % line, normalize_header(m.group(1).strip()), desc
+                yield "line %s" % line, normalize_header(m.group(1).strip()), desc
 
 
 def files_under(paths):
@@ -224,6 +231,7 @@ def main():
     bad_values = 0
     repeated = 0
     harmless = 0
+    pending = 0
     for f in files_under(a.paths):
         hits = []
         checked = 0
@@ -265,6 +273,10 @@ def main():
                         hits.append("  %s [%s] [Type:%s] is not a trigger type MES checks for%s" % (
                             sid, header, value, " (did you mean %s?)" % guess[0] if guess else ""))
                     continue
+                if tag not in valid[header] and UNRELEASED in sid:
+                    hits.append("  %s [%s] note: [%s:...] is not in the installed MES yet" % (sid, header, tag))
+                    pending += 1
+                    continue
                 if tag not in valid[header]:
                     guess = difflib.get_close_matches(tag, valid[header], n=1, cutoff=0.8)
                     other = sorted(p for p, tags in valid.items() if tag in tags and p != header)
@@ -288,8 +300,10 @@ def main():
         elif a.show_ok and checked:
             print("%s: OK (%d profiles)" % (f, checked))
     print("\n%d unknown tag(s), %d invalid value(s), %d conflicting single-value tag(s) and %d harmless "
-          "duplicate(s) found." % (total - bad_values - repeated - harmless, bad_values, repeated, harmless))
-    return 1 if total - harmless else 0
+          "duplicate(s) found." % (total - bad_values - repeated - harmless - pending, bad_values, repeated, harmless))
+    if pending:
+        print("%d tag(s) in unreleased blocks are not in the installed MES yet." % pending)
+    return 1 if total - harmless - pending else 0
 
 
 if __name__ == "__main__":

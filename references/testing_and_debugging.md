@@ -23,7 +23,7 @@ Every procedure the agent writes must follow these rules:
 - **Spawn the NPC with MES, never from a blueprint or a pasted prefab.** A pasted grid does not go through the spawner, so it skips the spawn conditions, manipulation, faction ownership and the NPC data the behavior relies on; whatever it does says nothing about the real encounter.
 - **One change per test cycle.** MES reads its profiles when the world loads, so after editing an `.sbc`: save, quit to the main menu, and load the world again (dedicated server: restart). After changing a prefab, delete its `.sbcB5` (`diagnostics_and_troubleshooting.md` §4.7).
 - **Confirm the change is in the game before handing over a test.** A mod built from a project (MDK2, a deploy script) only reaches the game after a build; check the deployed copy in `%AppData%\SpaceEngineers\Mods\<mod>` for the new tag or profile, or a test runs on the old files. A local MES clone used as the mod is live without a build.
-- **Clean up between runs**: `/MES.Debug.RemoveAllNpcs` removes every grid that is mostly NPC-owned and passes MES's basic cleanup checks (Keen economy stations are kept). `/MES.Debug.DeleteGrid` removes the one grid under your crosshair (within 10 km).
+- **Clean up between runs**: `/MES.Debug.RemoveAllNpcs` removes every grid that is mostly NPC-owned and passes MES's basic cleanup checks (Keen economy stations are kept). `/MES.Debug.DeleteGrid` removes the grid under your crosshair (within 10 km) and every grid linked to it, wheels and rotor tops included (`Cleaning.RemoveGrid`).
 
 ---
 
@@ -53,6 +53,8 @@ Every procedure the agent writes must follow these rules:
   - Gate their test conditions on a sandbox boolean (`[SandboxVariables:MyMod_TestSpawns]`). Set it with `/MES.Debug.ChangeBool.MyMod_TestSpawns.true` for a test session and `.false` after. The check runs for admin spawns.
   - Give them `Frequency` 0.1 (one slot), so a random pick rarely gets one while the gate is on. Don't go lower: below 0.05 the group rounds to no slots and never spawns, not even by name.
 - **Test files must never be empty.** A 0-byte `.sbc` stops the whole world from loading (`diagnostics_and_troubleshooting.md` §4.16). Run `scripts/audit_sbc.ps1` before loading. Remove the test profiles before release, or keep them `[AdminSpawnOnly:true]` and behind the gate above.
+- **Area limits need a type with an area** [HARD]. Drones and creatures have no area radius (`Settings.GetSpawnAreaRadius` returns -1), so `MaxShipsPerArea` never stops them. Test an area limit with a cargo ship, installation, random or boss encounter.
+- **Spawning next to your own grids** [HARD]: admin spawns still check the distance from other grids (`MinimumSpawnDistanceFromOtherGrids` for installations, `MinSpawnDistFromEntities` for planetary cargo ships, `MinDistanceFromOtherEntities` for random encounters, in each type's config). `[SkipGridSpawnChecks:true]` in the test conditions profile skips them, and the grid checks along cargo ship paths.
 - **Nothing spawned?** Check in this order: the chat reply (`No Spawning Type From Chat` = wrong type word); `/MES.GESAP` at the spot (lists the groups eligible here for natural spawns, so it also applies timeouts); then the spawn log (§5).
 
 ---
@@ -67,10 +69,10 @@ Look at the grid (crosshair on it, within 10 km) for the `/MES.Info.*` grid comm
 | Which trigger state, which autopilot mode? | `/MES.IGGB` | Trigger list with cooldowns and use state; AutoPilot section with `Forward Thrust Mode` (`Brake To Desired Speed`, `Current Dist / Stop Dist`). |
 | Where is it trying to go? | `/MES.Debug.DrawPaths` (toggle) | Green current waypoint, cyan offset (attack-run line-up, escort slot), magenta planet pathing, red/orange collision evasion. Singleplayer or the hosting machine. |
 | Zones, KPLs | `/MES.Debug.ShowAllZones`, `/MES.Debug.ShowZone.<PublicName>` | Sphere and GPS for each active zone. Only one KPL is drawn at a time. |
-| How was it spawned? | `/MES.IGGD` | The grid's NpcData: `SpawnType`, `SpawnGroupName`, `ConditionIndex` (which conditions profile was used, 0 = the spawn group's own Description), `BehaviorName`, `InitialFaction`, `DespawnAttempts`. |
-| Can it spawn here? | `/MES.GESAP` | Eligible spawn groups at this position. |
+| How was it spawned? | `/MES.IGGD` | The grid's NpcData: `SpawnType`, `SpawnGroupName`, `ConditionIndex` (which conditions profile was used, 0 = the spawn group's own Description), `BehaviorName`, `InitialFaction`, `DespawnAttempts` (from 2.75.03 one count per linked grid). |
+| Can it spawn here? | `/MES.GESAP` | Eligible spawn groups at this position; on MES `master` after 2.75.03 also each spawner's area count and time to its next spawn check (`diagnostics_and_troubleshooting.md` §2C). |
 | Threat score here | `/MES.GTS` | Compare with the group's threat conditions. |
-| Which NPCs exist? | `/MES.Info.GetActiveNpcs` | Every NPC grid MES tracks, by ownership class. |
+| Which NPCs exist? | `/MES.Info.GetActiveNpcs` | Every NPC grid MES tracks, by ownership class (on `master` after 2.75.03 with each grid's linked grids). |
 
 To **change** state for a test, use `/MES.Debug.ChangeBool.<Name>.<true|false>` and `/MES.Debug.ChangeCounter.<Name>.<Amount>` (adds, does not set) for sandbox variables, and `/MES.Debug.CreateKPL.<Faction>.<Radius>.<Minutes>.<MaxEncounters>.<MinThreat>` for a KPL at your position. Natural spawns blocked by a spawn timeout from earlier runs: `/MES.Debug.ClearTimeoutsAtPosition` (or `ClearAllTimeouts`).
 
@@ -137,4 +139,5 @@ Each line: what to do, then what to check. Start every run with the spawn comman
 - **Commands, parents and escorts**: spawn the parent, let it spawn or call its children; debug messages on the sender's and receiver's `CommandReceived` triggers; destroy the parent (`/MES.Debug.DeleteGrid`) and check the children's reaction.
 - **Zones and KPLs**: `/MES.Debug.ShowAllZones` before and after the action that changes the zone; set the sandbox state with `/MES.Debug.ChangeBool` / `ChangeCounter` to test each branch.
 - **Persistence**: save, reload, and repeat the checks above. Counters, KPLs, `ParentId` and trigger state must survive; NPC thrusters must still work (`diagnostics_and_troubleshooting.md` §15).
-- **Despawn and cleanup**: trigger the despawn path the encounter uses (`[DespawnTypeFromSpawner:]`, `behaviors_and_autopilot.md` §9); check every subgrid is gone (wheels, rotors). A ship with 12 or more grids loses only its first 11 (MES #412, `diagnostics_and_troubleshooting.md` §4.17).
+- **Despawn and cleanup**: trigger the despawn path the encounter uses (`[DespawnTypeFromSpawner:]`, `behaviors_and_autopilot.md` §9); check every subgrid is gone (wheels, rotors). Up to MES 2.75.02 a ship with 12 or more grids loses only its first 11 (MES #412, fixed in 2.75.03, `diagnostics_and_troubleshooting.md` §4.17).
+- **Storage on a spawned grid or block** [HARD]: the game saves only the mod storage keys that a loaded mod registers in its `EntityComponents.sbc`, and logs `Not saving ModStorageComponent GUID: <guid>, not claimed` for the rest (SE `MyModStorageComponent`). To check that a prefab's storage survives the spawn, add a marker under a key MES registers but reads only on planets, `MesTemporaryPlanetKey` `8823361C-E6A4-4BD6-8F1D-3C935D9D4AA7` (`StorageTools.cs`), to the prefab grid's storage; spawn it, save, and search the save's `SANDBOX_0_0_0_.sbs` for the key.

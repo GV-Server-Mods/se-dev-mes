@@ -162,16 +162,20 @@ MES interfaces with DarkStar's Defense Shields API:
 
 ## 3. AiEnabled Integration (Hostile Bot Crews)
 
-The AiEnabled framework allows NPC grids to spawn walking, intelligent crew bots and combat androids:
+The AiEnabled mod adds walking bots that path through grids and over terrain. MES spawns them from `[MES Bot Spawn]` profiles; profile tags, spawn paths and despawn rules: [`bots_and_crews.md`](bots_and_crews.md) §8.
 
-- **Profile**: `[MES Bot Spawn]`
-- **Required Subsystems**:
-  - Grids must contain navigable interior corridors.
-  - Spawners can be tied to Cryo Chambers, Medical Rooms, or Cockpits.
-- **Roles**:
-  - `Defender`: Patrols interior rooms and attacks players attempting to grind or hack blocks.
-  - `Crew`: Ambient non-combat personnel.
-  - `Boarder`: Deploys toward nearby player grids if within close proximity.
+- **Profile**: `[MES Bot Spawn]` with `[UseAiEnabled:true]` (the default up to 2.75.03; `false` on MES `master` after it)
+- **[HARD] The role** (MES `BotSpawnProfile.cs`, AiEnabled `Bots/BotFactory.cs`, Workshop copy of 2026-05-22): MES sends the profile's `[BotBehavior:]` as the AiEnabled role (`[CreatureIds:]` spawn groups send the conditions tag `[AiEnabledRole:]` instead). AiEnabled's roles:
+
+  | Side | Roles |
+  | :--- | :--- |
+  | Enemy | `ZOMBIE`, `SOLDIER`, `BRUISER`, `GRINDER`, `GHOST`, `CREATURE` |
+  | Neutral (joins the `NOMAD` faction) | `NOMAD`, `ENFORCER`, `PATRON` |
+  | Friendly (player-owned helpers only) | `REPAIR`, `SCAVENGER`, `COMBAT`, `CREW` |
+
+  - A bot owned by an NPC takes an enemy or neutral role. The name is matched without case, but it must be one of the names above exactly and appear in the AiEnabled config's `AllowedBotRoles`; any other name makes AiEnabled refuse the bot and log `Something attempted to spawn a <role> helper which is not in AllowedBotRoles.`
+  - **MES's default `[BotBehavior:Default]` is not a role, so the bot is refused.** Always set it, e.g. `[BotBehavior:Soldier]`. Read in code, not tested in game.
+  - A blank role (the `[AiEnabledRole:]` default) picks one from the bot subtype: `Space_Skeleton` Grinder, `Space_Zombie` Zombie, `Boss_Bot` Bruiser, `Ghost_Bot` Ghost, anything else Soldier.
 
 ---
 

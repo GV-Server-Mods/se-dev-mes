@@ -61,7 +61,7 @@ Every profile must be defined inside an `<EntityComponent xsi:type="MyObjectBuil
     - `PlayerNear`: Fires when a player enters `TargetDistance`.
     - `TargetNear` / `TargetFar`: Fires based on distance to target grid.
     - `Damage`: Fires when the grid takes damage of a listed type. **[HARD] Needs `[DamageTypes:Any]`** (or specific type names): the list starts empty and the check is `DamageTypes.Contains(type) || DamageTypes.Contains("Any")` (`TriggerSystem.cs:572`), so without it the trigger never fires. `[ExcludedDamageTypes:]` filters types out.
-    - `Compromised`: Fires when grid power, cockpit, or key blocks are destroyed.
+    - `Compromised`: **[HARD]** Fires when the behavior's Remote Control stops working (no power, damaged, turned off) or is removed, after it had worked, on a grid that was NPC-owned and is not being closed (`CoreBehavior.RemoteCompromiseCheck`). It is checked only when the remote's working state changes. On MES `master` after 2.75.03 (`64476e8`, not released) a remote that stops working while the game's EMP disrupts the grid's power counts as still working, so an EMP alone no longer fires it (`/MES.IGGB`: `Block EMPd`). Read in code, not tested: since nothing re-checks the remote when the EMP ends, a remote that also loses its power for real during the EMP seems to stay "working", and `Compromised` never fires.
     - `CommandReceived`: Fires on receiving a broadcast code (`CommandReceiveCode`).
     - `BehaviorTriggerA`–`G`: Triggered internally by AI behaviors (e.g. waypoint arrival, strike breakaway).
     - `Session`: Fires once per game session/load.
