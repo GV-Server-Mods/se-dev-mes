@@ -383,6 +383,14 @@ When troubleshooting encounter loading or execution failures, search `SpaceEngin
 - Result: it works on the host in single player or a listen server, and does nothing to joined or dedicated-server players. The red "Disabled Jetpack" notifications still appear, because the server sends them.
 - No profile setting fixes it. A working version has to switch the jetpack off on the player's own machine (a client-side mod script, or an MES change that messages the client).
 
+### 21. Workshop update refused: "Could not update because you are not the owner of this mod"
+Applies to any mod (an encounter pack, a prefab mod) whose Workshop item another Steam account created, with you added as a contributor. **[HARD]** code (SE `MyGuiScreenMods.OnPublishModQuestionAnswer`, `MyModsLoadListResult`); **[SOFT]** the fix worked in game.
+- Steam accepts a contributor's update; the refusal is the game's own check. Before publishing, the Mods screen looks the item up among your subscriptions and in the mod list of the world the screen was opened from, and stops if that copy's owner isn't you. If neither list holds the item, it publishes straight to the ID in the local mod's `modinfo.sbmi`.
+- **Fix**: unsubscribe from the item and restart the game. Open the Mods screen from a world that doesn't load the item (a new game's settings will do), select the local mod, click Publish and answer Yes to "update". Unsubscribing alone still fails while the screen is opened from a test world that loads the Workshop copy.
+- Keep the `modinfo.sbmi` that names the item: without it the game creates a new item with a new ID. Its `SteamIDOwner` line plays no part in the check.
+- The game's publish adds no change note; write it on the item's Change Notes page afterwards.
+- SEWorkshopTool (SEWT, the command-line uploader) runs its own owner check with no option to skip it ("Owner mismatch", 0.7.20 `Uploader.cs`), so a contributor item can only be updated from the game.
+
 ---
 
 ## 5. Sim-Speed Health & Anti-Clang Physics Mitigations
