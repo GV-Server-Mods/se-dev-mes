@@ -84,7 +84,7 @@ A RivalAI Action only. Event Actions cannot spawn bots (there is no grid to tie 
 **[HARD]** (`ActionSystem.cs:2047`, `BotSpawner.cs:210-340`):
 - **One profile per run**: MES picks one name from `[BotSpawnProfileNames:]` and spawns all `[BotCount:]` bots from it.
 - **Placement**: blocks on the grid matching the profile's `[SpawnBlocks:]`, or the action's `[BotSpawnBlockOverrides:]` in their place (`[SpawnBlockOverrides:]`, as the MES bot primer writes it, is not parsed). With no matching block, `[BotSpawnPointOverrides:{X:0 Y:1 Z:-2}]` gives positions relative to the Remote Control (comma list or repeated tags). With neither, nothing spawns.
-- **`[SpawnSeated:true]` (default)**: only working, unoccupied seats count (cockpits, seats, cryo chambers). Other spawn blocks are skipped, so once the seats are full the remaining bots do not spawn (`No valid SpawnBlocks on grid` in the spawn log). Match `[BotCount:]` to the seats. Bots are seated one tick after they spawn.
+- **`[SpawnSeated:true]` (default)**: only working, unoccupied seats count (cockpits, seats, cryo chambers). Other spawn blocks are skipped, so once the seats are full the remaining bots do not spawn (`No valid SpawnBlocks on grid` in the spawn log). Match `[BotCount:]` to the seats. Bots are seated one tick after they spawn. There is no standing fallback by design: a seat fills its block's space, so it has no safe spot for a standing bot (MES maintainer, 2026-11-21).
 - **`[SpawnSeated:false]`**: seats are skipped; each bot appears at the center of a non-seat spawn block, facing the Remote Control's backward direction, with no gravity correction.
 - **Keen's refusals** go to the game log as `SpawnBot: '<type>' not spawned; ...`: the grid already has an encounter crew, the squad has living bots of another faction, the bot limit is reached, or the bot type or faction is unknown.
 - `[OnlySpawnBotsInPressurizedRooms:]` applies to AiEnabled bots only.
@@ -112,9 +112,9 @@ A RivalAI Action only. Event Actions cannot spawn bots (there is no grid to tie 
 
 ---
 
-## 7. Known Issues (`master` at `88ebcf0`)
+## 7. Known Issues (`master` at `88ebcf0`, re-checked at `6d12572`)
 
-- **Spawn-group bots never spawn.** `[CreatureSpawn:true]` + `[BotProfiles:]` calls the new spawn path with no spawn blocks or points (`BotSpawner.cs:92`), so it logs `No SpawnBlocks nor SpawnPoints defined` and spawns nothing, AiEnabled profiles included (they worked on 2.75.03). Spawn groups using `[CreatureIds:]` are unaffected.
+- **Spawn-group bots never spawn.** `[CreatureSpawn:true]` + `[BotProfiles:]` calls `SpawnBotRequest` without `useBuiltIn` (`BotSpawner.cs:92`), so it takes the built-in path whatever `[UseAiEnabled:]` says; only the RivalAI action reads that tag. With no spawn blocks or points it logs `No SpawnBlocks nor SpawnPoints defined` and spawns nothing, AiEnabled profiles included (they worked on 2.75.03). Spawn groups using `[CreatureIds:]` are unaffected.
 - **The distance sweep** (§2) deletes MES crews away from players. This is game code, not MES; the MES maintainer is waiting on Keen (2026-11-21).
 
 ---
